@@ -14,6 +14,7 @@ import {
   IconTool, // 工具图标
   IconFlask, // 实验瓶图标
   IconServer, // 服务器图标
+  IconTerminal2, // 终端图标
   IconBug, // 漏洞图标
 } from "@tabler/icons-react"
 // 导入路径名 hook
@@ -129,6 +130,11 @@ const data = {
       name: "扫描节点",
       url: "/settings/workers/",
       icon: IconServer,
+    },
+    {
+      name: "系统日志",
+      url: "/settings/system-logs/",
+      icon: IconTerminal2,
     },
     {
       name: "通知设置", // 通知设置
