@@ -228,6 +228,8 @@ def _parse_and_validate_line(line: str) -> Optional[PortScanRecord]:
         if not host and ip:
             host = ip
 
+        logger.info("解析到的主机名: %s, IP: %s, 端口: %s", host, ip, port)
+
         # 步骤 4: 验证字段不为空
         if not host or not ip or port is None:
             logger.warning(
