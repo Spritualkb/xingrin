@@ -31,16 +31,22 @@ def fetch_config_and_setup_django():
         sys.exit(1)
     
     config_url = f"{server_url}/api/workers/config/"
+    print(f"[CONFIG] 正在从配置中心获取配置: {config_url}")
     try:
         resp = requests.get(config_url, timeout=10)
         resp.raise_for_status()
         config = resp.json()
         
         # 数据库配置（必需）
-        os.environ.setdefault("DB_HOST", config['db']['host'])
-        os.environ.setdefault("DB_PORT", config['db']['port'])
-        os.environ.setdefault("DB_NAME", config['db']['name'])
-        os.environ.setdefault("DB_USER", config['db']['user'])
+        db_host = config['db']['host']
+        db_port = config['db']['port']
+        db_name = config['db']['name']
+        db_user = config['db']['user']
+        
+        os.environ.setdefault("DB_HOST", db_host)
+        os.environ.setdefault("DB_PORT", db_port)
+        os.environ.setdefault("DB_NAME", db_name)
+        os.environ.setdefault("DB_USER", db_user)
         os.environ.setdefault("DB_PASSWORD", config['db']['password'])
         
         # Redis 配置
@@ -52,7 +58,12 @@ def fetch_config_and_setup_django():
         os.environ.setdefault("ENABLE_COMMAND_LOGGING", str(config['logging']['enableCommandLogging']).lower())
         os.environ.setdefault("DEBUG", str(config['debug']))
         
-        print(f"[CONFIG] 从配置中心获取配置成功: {config_url}")
+        print(f"[CONFIG] ✓ 配置获取成功")
+        print(f"[CONFIG]   DB_HOST: {db_host}")
+        print(f"[CONFIG]   DB_PORT: {db_port}")
+        print(f"[CONFIG]   DB_NAME: {db_name}")
+        print(f"[CONFIG]   DB_USER: {db_user}")
+        print(f"[CONFIG]   REDIS_URL: {config['redisUrl']}")
         
     except Exception as e:
         print(f"[ERROR] 获取配置失败: {config_url} - {e}", file=sys.stderr)

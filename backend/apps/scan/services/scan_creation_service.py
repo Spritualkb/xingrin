@@ -266,15 +266,26 @@ class ScanCreationService:
         Args:
             scan_data: 扫描任务数据列表
         """
+        logger.info("="*60)
+        logger.info("开始分发扫描任务到 Workers - 数量: %d", len(scan_data))
+        logger.info("="*60)
+        
         # 后台线程需要新的数据库连接
         connection.close()
+        logger.info("已关闭旧数据库连接，准备获取新连接")
         
         distributor = get_task_distributor()
+        logger.info("TaskDistributor 初始化完成")
+        
         scan_repo = DjangoScanRepository()
+        logger.info("ScanRepository 初始化完成")
         
         for data in scan_data:
             scan_id = data['scan_id']
+            logger.info("-"*40)
+            logger.info("准备分发扫描任务 - Scan ID: %s, Target: %s", scan_id, data['target_name'])
             try:
+                logger.info("调用 distributor.execute_scan_flow...")
                 success, message, container_id, worker_id = distributor.execute_scan_flow(
                     scan_id=scan_id,
                     target_name=data['target_name'],
@@ -284,20 +295,29 @@ class ScanCreationService:
                     scheduled_scan_name=data.get('scheduled_scan_name'),
                 )
                 
+                logger.info(
+                    "execute_scan_flow 返回 - success: %s, message: %s, container_id: %s, worker_id: %s",
+                    success, message, container_id, worker_id
+                )
+                
                 if success:
                     if container_id:
                         scan_repo.append_container_id(scan_id, container_id)
+                        logger.info("已记录 container_id: %s", container_id)
                     if worker_id:
                         scan_repo.update_worker(scan_id, worker_id)
+                        logger.info("已记录 worker_id: %s", worker_id)
                     logger.info(
                         "✓ 扫描任务已提交 - Scan ID: %s, Worker: %s",
                         scan_id, worker_id
                     )
                 else:
+                    logger.error("execute_scan_flow 返回失败 - message: %s", message)
                     raise Exception(message)
                     
             except Exception as e:
                 logger.error("提交扫描任务失败 - Scan ID: %s, 错误: %s", scan_id, e)
+                logger.exception("详细堆栈:")
                 try:
                     scan_repo.update_status(
                         scan_id,

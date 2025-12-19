@@ -62,7 +62,7 @@ export function useUpdateNucleiRepo() {
     mutationFn: (data: {
       id: number
       repoUrl?: string
-    }) => nucleiRepoApi.updateRepo(data.id, data),
+    }) => nucleiRepoApi.updateRepo(data.id, { repoUrl: data.repoUrl }),
     onSuccess: (_data, variables) => {
       toast.success("仓库配置已更新")
       queryClient.invalidateQueries({ queryKey: ["nuclei-repos"] })

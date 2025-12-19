@@ -407,8 +407,20 @@ class TaskDistributor:
         Note:
             engine_config 由 Flow 内部通过 scan_id 查询数据库获取
         """
+        logger.info("="*60)
+        logger.info("execute_scan_flow 开始")
+        logger.info("  scan_id: %s", scan_id)
+        logger.info("  target_name: %s", target_name)
+        logger.info("  target_id: %s", target_id)
+        logger.info("  scan_workspace_dir: %s", scan_workspace_dir)
+        logger.info("  engine_name: %s", engine_name)
+        logger.info("  docker_image: %s", self.docker_image)
+        logger.info("="*60)
+        
         # 1. 等待提交间隔（后台线程执行，不阻塞 API）
+        logger.info("等待提交间隔...")
         self._wait_for_submit_interval()
+        logger.info("提交间隔等待完成")
         
         # 2. 选择最佳 Worker
         worker = self.select_best_worker()

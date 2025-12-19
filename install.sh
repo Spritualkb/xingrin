@@ -75,7 +75,12 @@ fi
 
 # 获取真实用户（通过 sudo 运行时 $SUDO_USER 是真实用户）
 REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+# macOS 没有 getent，使用 dscl 或 ~$USER 替代
+if command -v getent &>/dev/null; then
+    REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+else
+    REAL_HOME=$(eval echo "~$REAL_USER")
+fi
 
 # 项目根目录
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -110,13 +115,22 @@ generate_random_string() {
     fi
 }
 
+# 跨平台 sed -i（兼容 macOS 和 Linux）
+sed_inplace() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 # 更新 .env 文件中的某个键
 update_env_var() {
     local file="$1"
     local key="$2"
     local value="$3"
     if grep -q "^$key=" "$file"; then
-        sed -i -e "s|^$key=.*|$key=$value|" "$file"
+        sed_inplace "s|^$key=.*|$key=$value|" "$file"
     else
         echo "$key=$value" >> "$file"
     fi
@@ -357,10 +371,10 @@ if [ -f "$DOCKER_DIR/.env.example" ]; then
             -c "CREATE DATABASE $prefect_db;" 2>/dev/null || true
         success "数据库准备完成"
         
-        sed -i "s/^DB_HOST=.*/DB_HOST=$db_host/" "$DOCKER_DIR/.env"
-        sed -i "s/^DB_PORT=.*/DB_PORT=$db_port/" "$DOCKER_DIR/.env"
-        sed -i "s/^DB_USER=.*/DB_USER=$db_user/" "$DOCKER_DIR/.env"
-        sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_password/" "$DOCKER_DIR/.env"
+        sed_inplace "s/^DB_HOST=.*/DB_HOST=$db_host/" "$DOCKER_DIR/.env"
+        sed_inplace "s/^DB_PORT=.*/DB_PORT=$db_port/" "$DOCKER_DIR/.env"
+        sed_inplace "s/^DB_USER=.*/DB_USER=$db_user/" "$DOCKER_DIR/.env"
+        sed_inplace "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_password/" "$DOCKER_DIR/.env"
         success "已配置远程数据库: $db_user@$db_host:$db_port"
     else
         info "使用本地 PostgreSQL 容器"

@@ -18,6 +18,15 @@
 
 cd "$(dirname "$0")"
 
+# 跨平台 sed -i（兼容 macOS 和 Linux）
+sed_inplace() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 # 解析参数判断模式
 DEV_MODE=false
 for arg in "$@"; do
@@ -92,7 +101,7 @@ if [ -f "VERSION" ]; then
     if [ -n "$NEW_VERSION" ]; then
         # 更新 .env 中的 IMAGE_TAG（所有节点将使用此版本的镜像）
         if grep -q "^IMAGE_TAG=" "docker/.env"; then
-            sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$NEW_VERSION/" "docker/.env"
+            sed_inplace "s/^IMAGE_TAG=.*/IMAGE_TAG=$NEW_VERSION/" "docker/.env"
             echo -e "    ${GREEN}+${NC} 版本同步: IMAGE_TAG=$NEW_VERSION"
         else
             echo "IMAGE_TAG=$NEW_VERSION" >> "docker/.env"

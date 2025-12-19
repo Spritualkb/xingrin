@@ -75,9 +75,9 @@ export const nucleiRepoApi = {
     return response.data
   },
 
-  /** 更新仓库 */
+  /** 更新仓库（部分更新） */
   updateRepo: async (repoId: number, payload: UpdateRepoPayload): Promise<NucleiRepoResponse> => {
-    const response = await api.put<NucleiRepoResponse>(`${BASE_URL}${repoId}/`, payload)
+    const response = await api.patch<NucleiRepoResponse>(`${BASE_URL}${repoId}/`, payload)
     return response.data
   },
 

@@ -198,9 +198,27 @@ class NucleiTemplateRepoService:
 
         # 判断是 clone 还是 pull
         if git_dir.is_dir():
-            # 已有仓库，执行 pull
-            cmd = ["git", "-C", str(local_path), "pull", "--ff-only"]
-            action = "pull"
+            # 检查远程地址是否变化
+            current_remote = subprocess.run(
+                ["git", "-C", str(local_path), "remote", "get-url", "origin"],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            current_url = current_remote.stdout.strip() if current_remote.returncode == 0 else ""
+            
+            if current_url != obj.repo_url:
+                # 远程地址变化，删除旧目录重新 clone
+                logger.info("nuclei 模板仓库 %s 远程地址变化，重新 clone: %s -> %s", obj.id, current_url, obj.repo_url)
+                shutil.rmtree(local_path)
+                local_path.mkdir(parents=True, exist_ok=True)
+                cmd = ["git", "clone", "--depth", "1", obj.repo_url, str(local_path)]
+                action = "clone"
+            else:
+                # 已有仓库且地址未变，执行 pull
+                cmd = ["git", "-C", str(local_path), "pull", "--ff-only"]
+                action = "pull"
         else:
             # 新仓库，执行 clone
             if local_path.exists() and not local_path.is_dir():

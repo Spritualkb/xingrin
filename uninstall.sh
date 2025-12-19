@@ -80,12 +80,12 @@ if [[ $ans_stop =~ ^[Yy]$ ]]; then
     # 先强制停止并删除可能占用网络的容器（xingrin-agent 等）
     docker rm -f xingrin-agent xingrin-watchdog 2>/dev/null || true
     
-    # 停止两种模式的容器
+    # 停止两种模式的容器（不带 -v，volume 在第 5 步单独处理）
     [ -f "docker-compose.yml" ] && ${COMPOSE_CMD} -f docker-compose.yml down 2>/dev/null || true
     [ -f "docker-compose.dev.yml" ] && ${COMPOSE_CMD} -f docker-compose.dev.yml down 2>/dev/null || true
     
     # 手动删除网络（以防 compose 未能删除）
-    docker network rm xingrin_network 2>/dev/null || true
+    docker network rm xingrin_network docker_default 2>/dev/null || true
     
     success "容器和网络已停止/删除（如存在）。"
 else
@@ -156,19 +156,28 @@ ans_db=${ans_db:-Y}
 
 if [[ $ans_db =~ ^[Yy]$ ]]; then
     info "尝试删除与 XingRin 相关的 Postgres 容器和数据卷..."
-    # docker-compose 项目名为 docker，常见资源名如下（忽略不存在的情况）：
-    # - 容器: docker-postgres-1
-    # - 数据卷: docker_postgres_data（对应 compose 中的 postgres_data 卷）
-    docker rm -f docker-postgres-1 2>/dev/null || true
-    docker volume rm docker_postgres_data 2>/dev/null || true
-    success "本地 Postgres 容器及数据卷已尝试删除（不存在会自动忽略）。"
+    # 删除可能的容器名（不同 compose 版本命名不同）
+    docker rm -f docker-postgres-1 xingrin-postgres postgres 2>/dev/null || true
+    
+    # 删除可能的 volume 名（取决于项目名和 compose 配置）
+    # 先列出要删除的 volume
+    for vol in postgres_data docker_postgres_data xingrin_postgres_data; do
+        if docker volume inspect "$vol" >/dev/null 2>&1; then
+            if docker volume rm "$vol" 2>/dev/null; then
+                success "已删除 volume: $vol"
+            else
+                warn "无法删除 volume: $vol（可能正在被使用，请先停止所有容器）"
+            fi
+        fi
+    done
+    success "本地 Postgres 数据卷清理完成。"
 else
     warn "已保留本地 Postgres 容器和 volume。"
 fi
 
-step "[6/6] 是否删除与 XingRin 相关的 Docker 镜像？(y/N)"
+step "[6/6] 是否删除与 XingRin 相关的 Docker 镜像？(Y/n)"
 read -r ans_images
-ans_images=${ans_images:-N}
+ans_images=${ans_images:-Y}
 
 if [[ $ans_images =~ ^[Yy]$ ]]; then
     info "正在删除 Docker 镜像..."
@@ -199,9 +208,29 @@ if [[ $ans_images =~ ^[Yy]$ ]]; then
     fi
     
     docker rmi redis:7-alpine 2>/dev/null || true
+    
+    # 删除本地构建的开发镜像
+    docker rmi docker-server docker-frontend docker-nginx docker-agent docker-worker 2>/dev/null || true
+    docker rmi "docker-worker:${IMAGE_TAG}-dev" 2>/dev/null || true
+    
     success "Docker 镜像已删除（如存在）。"
 else
     warn "已保留 Docker 镜像。"
+fi
+
+# 清理构建缓存（可选，会导致下次构建变慢）
+echo ""
+echo -n -e "${BOLD}${CYAN}[?] 是否清理 Docker 构建缓存？(y/N) ${RESET}"
+echo -e "${YELLOW}（清理后下次构建会很慢，一般不需要）${RESET}"
+read -r ans_cache
+ans_cache=${ans_cache:-N}
+
+if [[ $ans_cache =~ ^[Yy]$ ]]; then
+    info "清理 Docker 构建缓存..."
+    docker builder prune -af 2>/dev/null || true
+    success "构建缓存已清理。"
+else
+    warn "已保留构建缓存（推荐）。"
 fi
 
 success "卸载流程已完成。"
