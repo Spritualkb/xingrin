@@ -184,7 +184,8 @@ class WorkerNodeViewSet(viewsets.ModelViewSet):
         import redis
         from django.conf import settings as django_settings
         
-        redis_client = redis.from_url(django_settings.REDIS_URL)
+        redis_url = f"redis://{django_settings.REDIS_HOST}:{django_settings.REDIS_PORT}/{django_settings.REDIS_DB}"
+        redis_client = redis.from_url(redis_url)
         lock_key = f"agent_update_lock:{worker.id}"
         
         # 尝试获取锁（60秒过期，防止重复触发）
