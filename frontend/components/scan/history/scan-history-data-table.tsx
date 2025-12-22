@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -126,6 +127,7 @@ export function ScanHistoryDataTable({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   
   // 使用外部分页状态或内部默认状态
   const [internalPagination, setInternalPagination] = React.useState<{ pageIndex: number, pageSize: number }>({
@@ -151,7 +153,11 @@ export function ScanHistoryDataTable({
       rowSelection,
       columnFilters,
       pagination,
+      columnSizing,
     },
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    onColumnSizingChange: setColumnSizing,
     // 服务端分页配置
     pageCount: paginationInfo?.totalPages ?? -1,
     manualPagination: !!paginationInfo,
@@ -279,8 +285,8 @@ export function ScanHistoryDataTable({
       )}
 
       {/* 表格容器 */}
-      <div className="overflow-x-auto">
-        <Table className="w-full">
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full" style={{ minWidth: table.getCenterTotalSize() }}>
           {/* 表头 */}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -291,13 +297,28 @@ export function ScanHistoryDataTable({
               >
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead 
+                      key={header.id} 
+                      colSpan={header.colSpan}
+                      style={{ width: header.getSize() }}
+                      className="relative group"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                            bg-transparent hover:bg-primary/50 group-hover:bg-border
+                            ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                        />
+                      )}
                     </TableHead>
                   )
                 })}
@@ -316,7 +337,7 @@ export function ScanHistoryDataTable({
                   style={{ borderColor: "var(--sidebar)" }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -4,15 +4,18 @@
  */
 import { useEffect, useState, useCallback } from 'react'
 
-// 可用的颜色主题（colors 数组用于预览）
+// 可用的颜色主题（colors 数组用于预览，isDark 表示是否为暗色主题）
 export const COLOR_THEMES = [
-  { id: 'vercel', name: 'Vercel', color: '#000000', colors: ['#000000', '#ffffff', '#666666', '#999999'] },
-  { id: 'violet-bloom', name: 'Violet Bloom', color: '#7c3aed', colors: ['#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd'] },
-  { id: 'bubblegum', name: 'Bubblegum', color: '#d946a8', colors: ['#d946a8', '#ec4899', '#f472b6', '#f9a8d4'] },
-  { id: 'quantum-rose', name: 'Quantum Rose', color: '#e11d48', colors: ['#e11d48', '#f43f5e', '#fb7185', '#fda4af'] },
-  { id: 'clean-slate', name: 'Clean Slate', color: '#3b82f6', colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'] },
-  { id: 'cosmic-night', name: 'Cosmic Night', color: '#6366f1', colors: ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'] },
-  { id: 'candyland', name: 'Candyland', color: '#f5a5b8', colors: ['#f5a5b8', '#9dd5f5', '#f9e87c', '#f5a5c8'] },
+  { id: 'vercel', name: 'Vercel', color: '#000000', colors: ['#ffffff', '#000000', '#666666', '#999999'], isDark: false },
+  { id: 'vercel-dark', name: 'Vercel Dark', color: '#000000', colors: ['#000000', '#ffffff', '#333333', '#666666'], isDark: true },
+  { id: 'violet-bloom', name: 'Violet Bloom', color: '#7c3aed', colors: ['#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd'], isDark: false },
+  { id: 'bubblegum', name: 'Bubblegum', color: '#d946a8', colors: ['#d946a8', '#ec4899', '#f472b6', '#f9a8d4'], isDark: false },
+  { id: 'quantum-rose', name: 'Quantum Rose', color: '#e11d48', colors: ['#e11d48', '#f43f5e', '#fb7185', '#fda4af'], isDark: false },
+  { id: 'clean-slate', name: 'Clean Slate', color: '#3b82f6', colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'], isDark: false },
+  { id: 'cosmic-night', name: 'Cosmic Night', color: '#6366f1', colors: ['#1e1b4b', '#6366f1', '#818cf8', '#a5b4fc'], isDark: true },
+  { id: 'candyland', name: 'Candyland', color: '#f5a5b8', colors: ['#f5a5b8', '#9dd5f5', '#f9e87c', '#f5a5c8'], isDark: false },
+  { id: 'cyberpunk-1', name: 'Cyberpunk', color: '#00ffff', colors: ['#0f172a', '#00ffff', '#a855f7', '#ec4899'], isDark: true },
+  { id: 'gundam', name: 'Gundam', color: '#3b82f6', colors: ['#f8fafc', '#3b82f6', '#ef4444', '#facc15'], isDark: false },
 ] as const
 
 export type ColorThemeId = typeof COLOR_THEMES[number]['id']
@@ -35,6 +38,14 @@ function applyTheme(themeId: ColorThemeId) {
   
   const root = document.documentElement
   root.setAttribute('data-theme', themeId)
+  
+  // 根据主题的 isDark 属性设置 dark class
+  const themeConfig = COLOR_THEMES.find(t => t.id === themeId)
+  if (themeConfig?.isDark) {
+    root.classList.add('dark')
+  } else {
+    root.classList.remove('dark')
+  }
   
   console.log('应用主题:', themeId, '当前 html:', root.getAttribute('data-theme'), root.className)
 }

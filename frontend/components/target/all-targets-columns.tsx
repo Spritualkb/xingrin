@@ -256,6 +256,10 @@ export const createAllTargetsColumns = ({
   // 选择列
   {
     id: "select",
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
+    enableResizing: false,
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -280,6 +284,9 @@ export const createAllTargetsColumns = ({
   // 目标名称列
   {
     accessorKey: "name",
+    size: 300,
+    minSize: 200,
+    maxSize: 500,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Target" />
     ),
@@ -295,6 +302,9 @@ export const createAllTargetsColumns = ({
   // 所属组织列
   {
     accessorKey: "organizations",
+    size: 200,
+    minSize: 150,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Organization" />
     ),
@@ -356,6 +366,9 @@ export const createAllTargetsColumns = ({
   // 创建时间列
   {
     accessorKey: "createdAt",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Added On" />
     ),
@@ -372,6 +385,9 @@ export const createAllTargetsColumns = ({
   // 最后扫描时间列
   {
     accessorKey: "lastScannedAt",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Scanned" />
     ),
@@ -391,6 +407,10 @@ export const createAllTargetsColumns = ({
   // 操作列
   {
     id: "actions",
+    size: 120,
+    minSize: 100,
+    maxSize: 150,
+    enableResizing: false,
     cell: ({ row }) => (
       <TargetRowActions
         target={row.original}

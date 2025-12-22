@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -102,6 +103,7 @@ export function TargetsDataTable({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   // 使用外部分页状态或内部状态
   const [internalPagination, setInternalPagination] = React.useState<{ pageIndex: number, pageSize: number }>({
     pageIndex: 0,
@@ -159,7 +161,11 @@ export function TargetsDataTable({
       rowSelection,
       columnFilters,
       pagination,
+      columnSizing,
     },
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    onColumnSizingChange: setColumnSizing,
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -275,21 +281,36 @@ export function TargetsDataTable({
       </div>
 
       {/* 表格容器 */}
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table style={{ minWidth: table.getCenterTotalSize() }}>
           {/* 表头 */}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead 
+                      key={header.id} 
+                      colSpan={header.colSpan}
+                      style={{ width: header.getSize() }}
+                      className="relative group"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                            bg-transparent hover:bg-primary/50 group-hover:bg-border
+                            ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                        />
+                      )}
                     </TableHead>
                   )
                 })}
@@ -307,7 +328,7 @@ export function TargetsDataTable({
                   className="group"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

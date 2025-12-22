@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { TruncatedUrlCell } from "@/components/ui/truncated-cell"
 import { IconDots } from "@tabler/icons-react"
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner"
@@ -64,6 +65,10 @@ export function createDirectoryColumns({
     // 选择列
     {
       id: "select",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
       header: ({ table }) => (
         <Checkbox
           checked={
@@ -87,9 +92,9 @@ export function createDirectoryColumns({
     // URL 列
     {
       accessorKey: "url",
-      size: 500,
-      minSize: 300,
-      maxSize: 700,
+      size: 400,
+      minSize: 200,
+      maxSize: 800,
       header: ({ column }) => {
         return (
           <Button
@@ -110,23 +115,15 @@ export function createDirectoryColumns({
       },
       cell: ({ row }) => {
         const url = row.getValue("url") as string
-        return (
-          <span 
-            className="text-sm font-mono break-all cursor-pointer hover:text-primary leading-relaxed"
-            onClick={() => {
-              navigator.clipboard.writeText(url)
-              toast.success("URL 已复制")
-            }}
-            title="点击复制"
-          >
-            {url}
-          </span>
-        )
+        return <TruncatedUrlCell value={url} />
       },
     },
     // Status 列
     {
       accessorKey: "status",
+      size: 80,
+      minSize: 60,
+      maxSize: 120,
       header: ({ column }) => {
         return (
           <Button
@@ -150,6 +147,9 @@ export function createDirectoryColumns({
     // Content Length 列
     {
       accessorKey: "contentLength",
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       header: ({ column }) => {
         return (
           <Button
@@ -176,6 +176,9 @@ export function createDirectoryColumns({
     // Words 列
     {
       accessorKey: "words",
+      size: 80,
+      minSize: 60,
+      maxSize: 120,
       header: ({ column }) => {
         return (
           <Button
@@ -202,6 +205,9 @@ export function createDirectoryColumns({
     // Lines 列
     {
       accessorKey: "lines",
+      size: 80,
+      minSize: 60,
+      maxSize: 120,
       header: ({ column }) => {
         return (
           <Button
@@ -228,6 +234,9 @@ export function createDirectoryColumns({
     // Content Type 列
     {
       accessorKey: "contentType",
+      size: 120,
+      minSize: 80,
+      maxSize: 200,
       header: "Content Type",
       cell: ({ row }) => {
         const contentType = row.getValue("contentType") as string
@@ -241,6 +250,9 @@ export function createDirectoryColumns({
     // Duration 列
     {
       accessorKey: "duration",
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       header: ({ column }) => {
         return (
           <Button
@@ -267,6 +279,9 @@ export function createDirectoryColumns({
     // Discovered At 列
     {
       accessorKey: "discoveredAt",
+      size: 150,
+      minSize: 120,
+      maxSize: 200,
       header: ({ column }) => {
         return (
           <Button
@@ -293,6 +308,10 @@ export function createDirectoryColumns({
     // 操作列
     {
       id: "actions",
+      size: 60,
+      minSize: 60,
+      maxSize: 60,
+      enableResizing: false,
       cell: ({ row }) => {
         const directory = row.original
 

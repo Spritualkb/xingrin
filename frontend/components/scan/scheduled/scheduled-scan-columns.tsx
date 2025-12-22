@@ -179,6 +179,9 @@ export const createScheduledScanColumns = ({
   // 任务名称列
   {
     accessorKey: "name",
+    size: 200,
+    minSize: 150,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Task Name" />
     ),
@@ -215,6 +218,9 @@ export const createScheduledScanColumns = ({
   // 扫描引擎列
   {
     accessorKey: "engineName",
+    size: 120,
+    minSize: 80,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Scan Engine" />
     ),
@@ -232,6 +238,9 @@ export const createScheduledScanColumns = ({
   {
     accessorKey: "cronExpression",
     header: "Cron Expression",
+    size: 150,
+    minSize: 100,
+    maxSize: 200,
     cell: ({ row }) => {
       const cron = row.original.cronExpression
       return (
@@ -252,6 +261,9 @@ export const createScheduledScanColumns = ({
   {
     accessorKey: "scanMode",
     header: "Target",
+    size: 180,
+    minSize: 120,
+    maxSize: 280,
     cell: ({ row }) => {
       const scanMode = row.original.scanMode
       const organizationName = row.original.organizationName
@@ -282,6 +294,9 @@ export const createScheduledScanColumns = ({
   // 启用状态列
   {
     accessorKey: "isEnabled",
+    size: 100,
+    minSize: 80,
+    maxSize: 130,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -307,6 +322,9 @@ export const createScheduledScanColumns = ({
   // 下次执行时间列
   {
     accessorKey: "nextRunTime",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Next Run" />
     ),
@@ -323,6 +341,9 @@ export const createScheduledScanColumns = ({
   // 执行次数列
   {
     accessorKey: "runCount",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Run Count" />
     ),
@@ -337,6 +358,9 @@ export const createScheduledScanColumns = ({
   // 上次执行时间列
   {
     accessorKey: "lastRunTime",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Run" />
     ),
@@ -353,6 +377,10 @@ export const createScheduledScanColumns = ({
   // 操作列
   {
     id: "actions",
+    size: 60,
+    minSize: 60,
+    maxSize: 60,
+    enableResizing: false,
     cell: ({ row }) => (
       <ScheduledScanRowActions
         onEdit={() => handleEdit(row.original)}

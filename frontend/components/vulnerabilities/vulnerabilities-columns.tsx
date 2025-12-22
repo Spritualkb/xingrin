@@ -1,17 +1,14 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Eye, MoreHorizontal } from "lucide-react"
+import { Eye } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { TruncatedUrlCell, TruncatedCell } from "@/components/ui/truncated-cell"
 
 import type { Vulnerability, VulnerabilitySeverity } from "@/types/vulnerability.types"
-
-import { CopyablePopoverContent } from "@/components/ui/copyable-popover-content"
-import { TRUNCATE_LENGTHS } from "@/components/ui/truncated-cell"
 
 // 统一的漏洞严重程度颜色配置（与图表一致）
 const severityConfig: Record<VulnerabilitySeverity, { label: string; className: string }> = {
@@ -34,6 +31,10 @@ export function createVulnerabilityColumns({
   return [
     {
       id: "select",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
       header: ({ table }) => (
         <Checkbox
           checked={
@@ -57,6 +58,9 @@ export function createVulnerabilityColumns({
     {
       accessorKey: "severity",
       header: "Status",
+      size: 80,
+      minSize: 60,
+      maxSize: 120,
       cell: ({ row }) => {
         const severity = row.getValue("severity") as VulnerabilitySeverity
         const config = severityConfig[severity]
@@ -70,6 +74,9 @@ export function createVulnerabilityColumns({
     {
       accessorKey: "source",
       header: "Source",
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       cell: ({ row }) => {
         const source = row.getValue("source") as string
         return (
@@ -82,6 +89,9 @@ export function createVulnerabilityColumns({
     {
       accessorKey: "vulnType",
       header: "Vuln Type",
+      size: 150,
+      minSize: 100,
+      maxSize: 250,
       cell: ({ row }) => {
         const vulnType = row.getValue("vulnType") as string
         const vulnerability = row.original
@@ -103,47 +113,20 @@ export function createVulnerabilityColumns({
     {
       accessorKey: "url",
       header: "URL",
-      size: 300,
-      minSize: 200,
-      maxSize: 400,
+      size: 500,
+      minSize: 300,
+      maxSize: 700,
       cell: ({ row }) => {
         const url = row.original.url
-        if (!url) return <span className="text-muted-foreground">-</span>
-        
-        const maxLength = TRUNCATE_LENGTHS.url
-        const isLong = url.length > maxLength
-        const displayUrl = isLong ? url.substring(0, maxLength) + "..." : url
-        
-        return (
-          <div className="flex items-center gap-1 w-[280px] min-w-[280px]">
-            <a 
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline truncate"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {displayUrl}
-            </a>
-            {isLong && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded text-muted-foreground cursor-pointer hover:bg-accent hover:text-foreground flex-shrink-0 transition-colors">
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent className="w-96 p-3">
-                  <CopyablePopoverContent value={url} className="font-mono text-xs" />
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        )
+        return <TruncatedUrlCell value={url} />
       },
     },
     {
       accessorKey: "discoveredAt",
       header: "Discovered At",
+      size: 150,
+      minSize: 120,
+      maxSize: 200,
       cell: ({ row }) => {
         const discoveredAt = row.getValue("discoveredAt") as string
         return (
@@ -156,6 +139,10 @@ export function createVulnerabilityColumns({
     {
       id: "actions",
       header: "",
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
+      enableResizing: false,
       cell: ({ row }) => {
         const vulnerability = row.original
 

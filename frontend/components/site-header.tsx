@@ -5,8 +5,6 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 // 导入通知抽屉组件
 import { NotificationDrawer } from "@/components/notifications"
-// 导入主题切换组件
-import { ThemeToggle } from "@/components/theme-toggle"
 // 导入颜色主题切换组件
 import { ColorThemeSwitcher } from "@/components/color-theme-switcher"
 // 导入快速扫描组件
@@ -35,9 +33,6 @@ export function SiteHeader() {
           
           {/* 颜色主题切换按钮 */}
           <ColorThemeSwitcher />
-          
-          {/* 亮暗模式切换按钮 */}
-          <ThemeToggle />
           
           {/* GitHub 链接按钮,在小屏幕上隐藏 */}
           <Button variant="ghost" asChild size="sm" className="hidden sm:flex">

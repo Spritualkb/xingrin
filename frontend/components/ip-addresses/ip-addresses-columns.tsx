@@ -14,7 +14,7 @@ import {
 
 import type { IPAddress } from "@/types/ip-address.types"
 
-import { TruncatedCell } from "@/components/ui/truncated-cell"
+import { TruncatedCell, TruncatedUrlCell } from "@/components/ui/truncated-cell"
 
 interface DataTableColumnHeaderProps<TData, TValue> {
   column: Column<TData, TValue>
@@ -58,6 +58,10 @@ export function createIPAddressColumns(params: {
     // 选择列
     {
       id: "select",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
       header: ({ table }) => (
         <Checkbox
           checked={
@@ -81,6 +85,9 @@ export function createIPAddressColumns(params: {
     // IP 列
     {
       accessorKey: "ip",
+      size: 150,
+      minSize: 100,
+      maxSize: 200,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="IP Address" />
       ),
@@ -91,6 +98,9 @@ export function createIPAddressColumns(params: {
     // host 列
     {
       accessorKey: "hosts",
+      size: 200,
+      minSize: 150,
+      maxSize: 350,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Hosts" />
       ),
@@ -137,6 +147,9 @@ export function createIPAddressColumns(params: {
     // discoveredAt 列
     {
       accessorKey: "discoveredAt",
+      size: 150,
+      minSize: 120,
+      maxSize: 200,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Discovered At" />
       ),
@@ -148,6 +161,9 @@ export function createIPAddressColumns(params: {
     // 开放端口列
     {
       accessorKey: "ports",
+      size: 250,
+      minSize: 150,
+      maxSize: 400,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Open Ports" />
       ),

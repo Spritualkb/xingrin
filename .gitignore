@@ -96,6 +96,7 @@ backend/vendor/
 .idea/
 .cursor/
 .claude/
+.kiro/
 .playwright-mcp/
 *.swp
 *.swo

@@ -60,6 +60,10 @@ export function createWebSiteColumns({
   return [
     {
       id: "select",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
       header: ({ table }) => (
         <Checkbox
           checked={
@@ -85,18 +89,22 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="URL" />
       ),
-      size: 300,
+      size: 400,
       minSize: 200,
-      maxSize: 400,
-      cell: ({ row }) => (
-        <TruncatedUrlCell value={row.getValue("url")} />
-      ),
+      maxSize: 700,
+      cell: ({ row }) => {
+        const url = row.getValue("url") as string
+        return <TruncatedUrlCell value={url} />
+      },
     },
     {
       accessorKey: "host",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Host" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 250,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("host")} maxLength="host" mono />
       ),
@@ -106,6 +114,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Title" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("title")} maxLength="title" />
       ),
@@ -115,6 +126,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
+      size: 80,
+      minSize: 60,
+      maxSize: 100,
       cell: ({ row }) => {
         const statusCode = row.getValue("statusCode") as number
         if (!statusCode) return "-"
@@ -136,6 +150,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Content Length" />
       ),
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       cell: ({ row }) => {
         const contentLength = row.getValue("contentLength") as number
         if (!contentLength) return "-"
@@ -147,6 +164,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Location" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("location")} maxLength="location" />
       ),
@@ -156,6 +176,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Web Server" />
       ),
+      size: 120,
+      minSize: 80,
+      maxSize: 200,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("webserver")} maxLength="webServer" />
       ),
@@ -165,6 +188,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Content Type" />
       ),
+      size: 120,
+      minSize: 80,
+      maxSize: 200,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("contentType")} maxLength="contentType" />
       ),
@@ -174,6 +200,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Technologies" />
       ),
+      size: 200,
+      minSize: 150,
+      maxSize: 300,
       cell: ({ row }) => {
         const tech = row.getValue("tech") as string[]
         if (!tech || tech.length === 0) return "-"
@@ -222,6 +251,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Body Preview" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("bodyPreview")} maxLength="bodyPreview" />
       ),
@@ -231,6 +263,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="VHost" />
       ),
+      size: 80,
+      minSize: 60,
+      maxSize: 100,
       cell: ({ row }) => {
         const vhost = row.getValue("vhost") as boolean | null
         if (vhost === null) return "-"
@@ -246,6 +281,9 @@ export function createWebSiteColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Discovered At" />
       ),
+      size: 150,
+      minSize: 120,
+      maxSize: 200,
       cell: ({ row }) => {
         const discoveredAt = row.getValue("discoveredAt") as string
         return <div className="text-sm">{discoveredAt ? formatDate(discoveredAt) : "-"}</div>

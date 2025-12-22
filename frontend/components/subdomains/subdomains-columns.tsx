@@ -59,6 +59,10 @@ export const createSubdomainColumns = ({
   // 选择列
   {
     id: "select",
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
+    enableResizing: false,
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -83,6 +87,9 @@ export const createSubdomainColumns = ({
   // 子域名列
   {
     accessorKey: "name",
+    size: 400,
+    minSize: 200,
+    maxSize: 600,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Subdomain" />
     ),
@@ -99,6 +106,9 @@ export const createSubdomainColumns = ({
   // 发现时间列
   {
     accessorKey: "discoveredAt",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Discovered At" />
     ),

@@ -187,6 +187,9 @@ export const createEngineColumns = ({
   // 引擎名称列 - 可点击编辑
   {
     accessorKey: "name",
+    size: 200,
+    minSize: 150,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Engine Name" />
     ),
@@ -212,6 +215,9 @@ export const createEngineColumns = ({
   {
     id: "subdomain_discovery",
     header: "Subdomain Discovery",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.subdomain_discovery} />
@@ -223,6 +229,9 @@ export const createEngineColumns = ({
   {
     id: "port_scan",
     header: "Port Scan",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.port_scan} />
@@ -234,6 +243,9 @@ export const createEngineColumns = ({
   {
     id: "site_scan",
     header: "Site Scan",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.site_scan} />
@@ -245,6 +257,9 @@ export const createEngineColumns = ({
   {
     id: "directory_scan",
     header: "Directory Scan",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.directory_scan} />
@@ -256,6 +271,9 @@ export const createEngineColumns = ({
   {
     id: "url_fetch",
     header: "URL Fetch",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.url_fetch} />
@@ -267,6 +285,9 @@ export const createEngineColumns = ({
   {
     id: "osint",
     header: "OSINT",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.osint} />
@@ -278,6 +299,9 @@ export const createEngineColumns = ({
   {
     id: "vulnerability_scan",
     header: "Vulnerability Scan",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.vulnerability_scan} />
@@ -289,6 +313,9 @@ export const createEngineColumns = ({
   {
     id: "waf_detection",
     header: "WAF Detection",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.waf_detection} />
@@ -300,6 +327,9 @@ export const createEngineColumns = ({
   {
     id: "screenshot",
     header: "Screenshot",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: ({ row }) => {
       const features = parseEngineFeatures(row.original)
       return <FeatureStatus enabled={features.screenshot} />
@@ -310,6 +340,10 @@ export const createEngineColumns = ({
   // 操作列
   {
     id: "actions",
+    size: 60,
+    minSize: 60,
+    maxSize: 60,
+    enableResizing: false,
     cell: ({ row }) => (
       <EngineRowActions
         engine={row.original}

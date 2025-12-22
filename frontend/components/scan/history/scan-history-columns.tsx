@@ -186,6 +186,10 @@ export const createScanHistoryColumns = ({
   // 选择列
   {
     id: "select",
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
+    enableResizing: false,
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -210,6 +214,9 @@ export const createScanHistoryColumns = ({
   // Target 列
   {
     accessorKey: "targetName",
+    size: 200,
+    minSize: 150,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Target" />
     ),
@@ -276,6 +283,9 @@ export const createScanHistoryColumns = ({
   {
     accessorKey: "summary",
     header: "Summary",
+    size: 250,
+    minSize: 180,
+    maxSize: 400,
     cell: ({ row }) => {
       const summary = (row.getValue("summary") as {
         subdomains: number
@@ -428,6 +438,9 @@ export const createScanHistoryColumns = ({
   // Engine Name 列
   {
     accessorKey: "engineName",
+    size: 120,
+    minSize: 80,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Engine Name" />
     ),
@@ -444,6 +457,9 @@ export const createScanHistoryColumns = ({
   // Created At 列
   {
     accessorKey: "createdAt",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created At" />
     ),
@@ -460,6 +476,9 @@ export const createScanHistoryColumns = ({
   // Status 列
   {
     accessorKey: "status",
+    size: 100,
+    minSize: 80,
+    maxSize: 130,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -478,6 +497,9 @@ export const createScanHistoryColumns = ({
   {
     accessorKey: "progress",
     header: "Progress",
+    size: 150,
+    minSize: 120,
+    maxSize: 200,
     cell: ({ row }) => {
       const progress = row.getValue("progress") as number
       const status = row.original.status
@@ -512,6 +534,10 @@ export const createScanHistoryColumns = ({
   // 操作列
   {
     id: "actions",
+    size: 120,
+    minSize: 100,
+    maxSize: 150,
+    enableResizing: false,
     cell: ({ row }) => {
       const scan = row.original
       const canStop = scan.status === 'running' || scan.status === 'initiated'

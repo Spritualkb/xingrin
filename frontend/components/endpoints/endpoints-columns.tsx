@@ -88,6 +88,10 @@ export function createEndpointColumns({
   return [
     {
       id: "select",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
       header: ({ table }) => (
         <Checkbox
           checked={
@@ -113,18 +117,22 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="URL" />
       ),
-      size: 300,
+      size: 400,
       minSize: 200,
-      maxSize: 400,
-      cell: ({ row }) => (
-        <TruncatedUrlCell value={row.getValue("url")} />
-      ),
+      maxSize: 700,
+      cell: ({ row }) => {
+        const url = row.getValue("url") as string
+        return <TruncatedUrlCell value={url} />
+      },
     },
     {
       accessorKey: "title",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Title" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("title")} maxLength="title" />
       ),
@@ -134,6 +142,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
+      size: 80,
+      minSize: 60,
+      maxSize: 100,
       cell: ({ row }) => {
         const status = row.getValue("statusCode") as number | null | undefined
         return <HttpStatusBadge statusCode={status} />
@@ -144,6 +155,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Content Length" />
       ),
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       cell: ({ row }) => {
         const len = row.getValue("contentLength") as number | null | undefined
         if (len === null || len === undefined) {
@@ -157,6 +171,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Location" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("location")} maxLength="location" />
       ),
@@ -166,6 +183,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Web Server" />
       ),
+      size: 120,
+      minSize: 80,
+      maxSize: 200,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("webserver")} maxLength="webServer" />
       ),
@@ -175,6 +195,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Content Type" />
       ),
+      size: 120,
+      minSize: 80,
+      maxSize: 200,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("contentType")} maxLength="contentType" />
       ),
@@ -184,6 +207,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Technologies" />
       ),
+      size: 200,
+      minSize: 150,
+      maxSize: 300,
       cell: ({ row }) => {
         const tech = (row.getValue("tech") as string[] | null | undefined) || []
         if (!tech.length) return <span className="text-sm text-muted-foreground">-</span>
@@ -232,6 +258,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Body Preview" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 300,
       cell: ({ row }) => (
         <TruncatedCell value={row.getValue("bodyPreview")} maxLength="bodyPreview" />
       ),
@@ -241,6 +270,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="VHost" />
       ),
+      size: 80,
+      minSize: 60,
+      maxSize: 100,
       cell: ({ row }) => {
         const vhost = row.getValue("vhost") as boolean | null | undefined
         if (vhost === null || vhost === undefined) return <span className="text-sm text-muted-foreground">-</span>
@@ -252,6 +284,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Tags" />
       ),
+      size: 150,
+      minSize: 100,
+      maxSize: 250,
       cell: ({ row }) => {
         const tags = (row.getValue("tags") as string[] | null | undefined) || []
         if (!tags.length) {
@@ -278,6 +313,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Response Time" />
       ),
+      size: 100,
+      minSize: 80,
+      maxSize: 150,
       cell: ({ row }) => {
         const rt = row.getValue("responseTime") as number | null | undefined
         if (rt === null || rt === undefined) {
@@ -292,6 +330,9 @@ export function createEndpointColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Discovered At" />
       ),
+      size: 150,
+      minSize: 120,
+      maxSize: 200,
       cell: ({ row }) => {
         const discoveredAt = row.getValue("discoveredAt") as string | undefined
         return <div className="text-sm">{discoveredAt ? formatDate(discoveredAt) : "-"}</div>

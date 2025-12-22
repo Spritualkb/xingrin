@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -98,6 +99,7 @@ export function VulnerabilitiesDataTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
   const [internalPagination, setInternalPagination] = React.useState({
@@ -138,14 +140,18 @@ export function VulnerabilitiesDataTable({
       columnVisibility,
       rowSelection,
       columnFilters,
+      columnSizing,
       pagination: tablePagination,
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnSizingChange: setColumnSizing,
     onPaginationChange: (updater) => {
       const nextPagination =
         typeof updater === "function" ? updater(tablePagination) : updater
@@ -288,20 +294,34 @@ export function VulnerabilitiesDataTable({
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table style={{ minWidth: table.getCenterTotalSize() }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead 
+                      key={header.id}
+                      style={{ width: header.getSize() }}
+                      className="relative group"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                            bg-transparent hover:bg-primary/50 group-hover:bg-border
+                            ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                        />
+                      )}
                     </TableHead>
                   )
                 })}
@@ -316,7 +336,10 @@ export function VulnerabilitiesDataTable({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

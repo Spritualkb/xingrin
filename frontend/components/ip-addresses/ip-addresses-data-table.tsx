@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -95,6 +96,7 @@ export function IPAddressesDataTable({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
   const [internalPagination, setInternalPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -134,7 +136,11 @@ export function IPAddressesDataTable({
       rowSelection,
       columnFilters,
       pagination: tablePagination,
+      columnSizing,
     },
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    onColumnSizingChange: setColumnSizing,
     getRowId: (row) => row.ip, // IP 地址本身就是唯一标识
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -281,19 +287,33 @@ export function IPAddressesDataTable({
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table style={{ minWidth: table.getCenterTotalSize() }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead 
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="relative group"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                    {header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onDoubleClick={() => header.column.resetSize()}
+                        className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                          bg-transparent hover:bg-primary/50 group-hover:bg-border
+                          ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                      />
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -308,7 +328,7 @@ export function IPAddressesDataTable({
                   className="group"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

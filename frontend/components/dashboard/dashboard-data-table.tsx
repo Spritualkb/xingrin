@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -68,6 +69,8 @@ export function DashboardDataTable() {
   const [activeTab, setActiveTab] = React.useState("scans")
   const [vulnColumnVisibility, setVulnColumnVisibility] = React.useState<VisibilityState>({})
   const [scanColumnVisibility, setScanColumnVisibility] = React.useState<VisibilityState>({})
+  const [vulnColumnSizing, setVulnColumnSizing] = React.useState<ColumnSizingState>({})
+  const [scanColumnSizing, setScanColumnSizing] = React.useState<ColumnSizingState>({})
   
   // 漏洞详情弹窗
   const [selectedVuln, setSelectedVuln] = React.useState<Vulnerability | null>(null)
@@ -190,8 +193,12 @@ export function DashboardDataTable() {
     columns: vulnColumns,
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setVulnColumnVisibility,
+    onColumnSizingChange: setVulnColumnSizing,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
     state: {
       columnVisibility: vulnColumnVisibility,
+      columnSizing: vulnColumnSizing,
     },
     manualPagination: true,
     pageCount: vulnQuery.data?.pagination?.totalPages ?? -1,
@@ -203,8 +210,12 @@ export function DashboardDataTable() {
     columns: scanColumns,
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setScanColumnVisibility,
+    onColumnSizingChange: setScanColumnSizing,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
     state: {
       columnVisibility: scanColumnVisibility,
+      columnSizing: scanColumnSizing,
     },
     manualPagination: true,
     pageCount: scanQuery.data?.totalPages ?? -1,
@@ -300,14 +311,28 @@ export function DashboardDataTable() {
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table style={{ minWidth: vulnTable.getCenterTotalSize() }}>
                 <TableHeader>
                   {vulnTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
+                        <TableHead 
+                          key={header.id}
+                          style={{ width: header.getSize() }}
+                          className="relative group"
+                        >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanResize() && (
+                            <div
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              onDoubleClick={() => header.column.resetSize()}
+                              className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                                bg-transparent hover:bg-primary/50 group-hover:bg-border
+                                ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                            />
+                          )}
                         </TableHead>
                       ))}
                     </TableRow>
@@ -321,7 +346,7 @@ export function DashboardDataTable() {
                         className="hover:bg-muted/50"
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
+                          <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
@@ -346,14 +371,28 @@ export function DashboardDataTable() {
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table style={{ minWidth: scanTable.getCenterTotalSize() }}>
                 <TableHeader>
                   {scanTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
+                        <TableHead 
+                          key={header.id}
+                          style={{ width: header.getSize() }}
+                          className="relative group"
+                        >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanResize() && (
+                            <div
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              onDoubleClick={() => header.column.resetSize()}
+                              className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none 
+                                bg-transparent hover:bg-primary/50 group-hover:bg-border
+                                ${header.column.getIsResizing() ? 'bg-primary' : ''}`}
+                            />
+                          )}
                         </TableHead>
                       ))}
                     </TableRow>
@@ -367,7 +406,7 @@ export function DashboardDataTable() {
                         className="hover:bg-muted/50"
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
+                          <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
