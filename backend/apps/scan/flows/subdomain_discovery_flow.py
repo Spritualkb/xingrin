@@ -352,6 +352,10 @@ def subdomain_discovery_flow(
         Stage 4: DNS 存活验证（可选） - 通用存活验证
         Final: 保存到数据库
     
+    注意：
+        - 子域名发现只对 DOMAIN 类型目标有意义
+        - IP 和 CIDR 类型目标会自动跳过
+    
     Args:
         scan_id: 扫描任务 ID
         target_name: 目标名称（域名）
@@ -389,6 +393,21 @@ def subdomain_discovery_flow(
         if not target_name:
             logger.warning("未提供目标域名，跳过子域名发现扫描")
             return _empty_result(scan_id, '', scan_workspace_dir)
+        
+        # ==================== 检查 Target 类型 ====================
+        # 子域名发现只对 DOMAIN 类型有意义，IP 和 CIDR 类型跳过
+        from apps.targets.services import TargetService
+        from apps.targets.models import Target
+        
+        target_service = TargetService()
+        target = target_service.get_target(target_id)
+        
+        if target and target.type != Target.TargetType.DOMAIN:
+            logger.info(
+                "跳过子域名发现扫描: Target 类型为 %s (ID=%d, Name=%s)，子域名发现仅适用于域名类型",
+                target.type, target_id, target_name
+            )
+            return _empty_result(scan_id, target_name, scan_workspace_dir)
         
         # 导入任务函数
         from apps.scan.tasks.subdomain_discovery import (

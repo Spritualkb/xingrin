@@ -1,9 +1,14 @@
 """
-基于 domain_name（域名）的 URL 获取 Flow
+基于 Target 根域名的 URL 被动收集 Flow
 
-主要用于像 waymore 这种按域名输入（input_type = 'domain_name'）的工具：
-- 直接对目标域名（target_name/domain_name）执行 URL 被动收集
-- 不再依赖 domains_file（子域名列表文件）
+用于 waymore 等被动收集工具：
+- 输入：Target 的根域名（target_name，如 example.com）
+- 工具会自动从第三方源（Wayback Machine、Common Crawl 等）查询该域名及其子域名的历史 URL
+- 不需要遍历子域名列表，工具内部会处理 *.example.com
+
+注意：
+- 此 Flow 只对 DOMAIN 类型 Target 有效
+- IP 和 CIDR 类型会自动跳过（被动收集工具不支持）
 """
 
 # Django 环境初始化
@@ -34,17 +39,48 @@ def domain_name_url_fetch_flow(
     domain_name_tools: Dict[str, dict],
 ) -> dict:
     """
-    基于 target_name/domain_name 域名执行 URL 获取子 Flow（当前主要用于 waymore）。
+    基于 Target 根域名执行 URL 被动收集（当前主要用于 waymore）
 
     执行流程：
-    1. 校验 target_name 是否为域名
-    2. 使用传入的 domain_name_tools 工具列表
-    3. 为每个工具构建命令并并行执行
+    1. 校验 Target 类型（IP/CIDR 类型跳过）
+    2. 使用传入的工具列表对根域名执行被动收集
+    3. 工具内部会自动查询该域名及其子域名的历史 URL
     4. 汇总结果文件列表
+    
+    Args:
+        scan_id: 扫描 ID
+        target_id: 目标 ID
+        target_name: Target 根域名（如 example.com），不是子域名列表
+        output_dir: 输出目录
+        domain_name_tools: 被动收集工具配置（如 waymore）
+    
+    注意：
+    - 此 Flow 只对 DOMAIN 类型 Target 有效
+    - IP 和 CIDR 类型会自动跳过（waymore 等工具不支持）
+    - 工具会自动收集 *.target_name 的所有历史 URL，无需遍历子域名
     """
     try:
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
+
+        # 检查 Target 类型，IP/CIDR 类型跳过
+        from apps.targets.services import TargetService
+        from apps.targets.models import Target
+        
+        target_service = TargetService()
+        target = target_service.get_target(target_id)
+        
+        if target and target.type != Target.TargetType.DOMAIN:
+            logger.info(
+                "跳过 domain_name URL 获取: Target 类型为 %s (ID=%d, Name=%s)，waymore 等工具仅适用于域名类型",
+                target.type, target_id, target_name
+            )
+            return {
+                "success": True,
+                "result_files": [],
+                "failed_tools": [],
+                "successful_tools": [],
+            }
 
         # 复用公共域名校验逻辑，确保 target_name 是合法域名
         validate_domain(target_name)

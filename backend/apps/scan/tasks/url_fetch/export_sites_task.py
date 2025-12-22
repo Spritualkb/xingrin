@@ -1,106 +1,110 @@
-"""导出 Endpoint URL 到文件的 Task
+"""
+导出站点 URL 列表任务
 
-基于 EndpointService.iter_endpoint_urls_by_target 按目标流式导出端点 URL，
-用于漏洞扫描（如 Dalfox XSS）的输入文件生成。
+从 WebSite 表导出站点 URL 列表到文件（用于 katana 等爬虫工具）
 
-默认值模式：
-- 如果没有 Endpoint，根据 Target 类型生成默认 URL
-- DOMAIN: http(s)://target_name
-- IP: http(s)://ip
-- CIDR: 展开为所有 IP 的 http(s)://ip
+使用流式写入，避免内存溢出
+
+懒加载模式：
+- 如果 WebSite 表为空，根据 Target 类型生成默认 URL
+- DOMAIN: 写入 http(s)://domain
+- IP: 写入 http(s)://ip
+- CIDR: 展开为所有 IP
 """
 
 import logging
 import ipaddress
 from pathlib import Path
-from typing import Dict, Optional
-
 from prefect import task
+from typing import Optional
 
-from apps.asset.services import EndpointService
 from apps.targets.services import TargetService
 from apps.targets.models import Target
 
 logger = logging.getLogger(__name__)
 
 
-@task(name="export_endpoints")
-def export_endpoints_task(
-    target_id: int,
+@task(
+    name='export_sites_for_url_fetch',
+    retries=1,
+    log_prints=True
+)
+def export_sites_task(
     output_file: str,
-    batch_size: int = 1000,
+    target_id: int,
+    scan_id: int,
     target_name: Optional[str] = None,
-) -> Dict[str, object]:
-    """导出目标下的所有 Endpoint URL 到文本文件。
-
-    默认值模式：如果没有 Endpoint，根据 Target 类型生成默认 URL
-
+    batch_size: int = 1000
+) -> dict:
+    """
+    导出站点 URL 列表到文件（用于 katana 等爬虫工具）
+    
+    懒加载模式：
+    - 如果 WebSite 表为空，根据 Target 类型生成默认 URL
+    - 数据库只存储"真实发现"的资产
+    
     Args:
+        output_file: 输出文件路径
         target_id: 目标 ID
-        output_file: 输出文件路径（绝对路径）
-        batch_size: 每次从数据库迭代的批大小
-        target_name: 目标名称（用于默认值模式）
-
+        scan_id: 扫描 ID
+        target_name: 目标名称（用于懒加载时写入默认值）
+        batch_size: 批次大小（内存优化）
+        
     Returns:
         dict: {
-            "success": bool,
-            "output_file": str,
-            "total_count": int,
+            'output_file': str,  # 输出文件路径
+            'asset_count': int,  # 资产数量
         }
+        
+    Raises:
+        ValueError: 参数错误
+        RuntimeError: 执行失败
     """
     try:
-        logger.info("开始导出 Endpoint URL - Target ID: %d, 输出文件: %s", target_id, output_file)
-
+        logger.info("开始导出站点 URL 列表 - Target ID: %d", target_id)
+        
+        # 确保输出目录存在
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        service = EndpointService()
-        url_iterator = service.iter_endpoint_urls_by_target(target_id, chunk_size=batch_size)
-
-        total_count = 0
-        with open(output_path, "w", encoding="utf-8", buffering=8192) as f:
-            for url in url_iterator:
+        
+        # 从 WebSite 表导出站点 URL
+        from apps.asset.services import WebSiteService
+        
+        website_service = WebSiteService()
+        
+        # 流式写入文件
+        asset_count = 0
+        with open(output_path, 'w') as f:
+            for url in website_service.iter_website_urls_by_target(target_id, batch_size):
                 f.write(f"{url}\n")
-                total_count += 1
-
-                if total_count % 10000 == 0:
-                    logger.info("已导出 %d 个 Endpoint URL...", total_count)
-
+                asset_count += 1
+                
+                if asset_count % batch_size == 0:
+                    f.flush()
+        
         # ==================== 懒加载模式：根据 Target 类型生成默认 URL ====================
-        if total_count == 0:
-            total_count = _write_default_urls(target_id, target_name, output_path)
-
-        logger.info(
-            "✓ Endpoint URL 导出完成 - 总数: %d, 文件: %s (%.2f KB)",
-            total_count,
-            str(output_path),
-            output_path.stat().st_size / 1024,
-        )
-
+        if asset_count == 0:
+            asset_count = _write_default_urls(target_id, target_name, output_path)
+        
+        logger.info("✓ 站点 URL 导出完成 - 文件: %s, 数量: %d", output_file, asset_count)
+        
         return {
-            "success": True,
-            "output_file": str(output_path),
-            "total_count": total_count,
+            'output_file': output_file,
+            'asset_count': asset_count,
         }
-
-    except FileNotFoundError as e:
-        logger.error("输出目录不存在: %s", e)
-        raise
-    except PermissionError as e:
-        logger.error("文件写入权限不足: %s", e)
-        raise
+        
     except Exception as e:
-        logger.exception("导出 Endpoint URL 失败: %s", e)
-        raise
+        logger.error("导出站点 URL 失败: %s", e, exc_info=True)
+        raise RuntimeError(f"导出站点 URL 失败: {e}") from e
 
 
 def _write_default_urls(target_id: int, target_name: Optional[str], output_path: Path) -> int:
     """
-    懒加载模式：根据 Target 类型生成默认 URL
+    懒加载模式：根据 Target 类型生成默认 URL 列表
     
     Args:
         target_id: 目标 ID
-        target_name: 目标名称（可选，如果为空则从数据库查询）
+        target_name: 目标名称
         output_path: 输出文件路径
         
     Returns:

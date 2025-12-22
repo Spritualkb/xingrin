@@ -23,7 +23,7 @@ def _export_sites_file(target_id: int, scan_id: int, target_name: str, output_di
     """
     导出站点 URL 列表到文件
     
-    默认值模式：如果没有站点，写入默认 URL 到文件（不写入数据库）
+    懒加载模式：如果 WebSite 表为空，根据 Target 类型生成默认 URL
     
     Args:
         target_id: 目标 ID
@@ -34,14 +34,13 @@ def _export_sites_file(target_id: int, scan_id: int, target_name: str, output_di
     Returns:
         tuple: (file_path, count)
     """
-    from apps.scan.tasks.url_fetch import export_target_assets_task
+    from apps.scan.tasks.url_fetch import export_sites_task
     
     output_file = str(output_dir / "sites.txt")
-    result = export_target_assets_task(
+    result = export_sites_task(
         output_file=output_file,
         target_id=target_id,
         scan_id=scan_id,
-        input_type="sites_file",
         target_name=target_name
     )
     
