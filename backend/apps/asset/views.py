@@ -147,20 +147,26 @@ class SubdomainViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
-        """导出子域名（纯文本，一行一个）"""
+        """导出子域名为 CSV 格式
+        
+        CSV 列：name, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime
+        
         target_pk = self.kwargs.get('target_pk')
         if not target_pk:
             raise DRFValidationError('必须在目标下导出')
         
-        def line_iterator():
-            for name in self.service.iter_subdomain_names_by_target(target_pk):
-                yield f"{name}\n"
-
+        data_iterator = self.service.iter_raw_data_for_csv_export(target_id=target_pk)
+        
+        headers = ['name', 'discovered_at']
+        formatters = {'discovered_at': format_datetime}
+        
         response = StreamingHttpResponse(
-            line_iterator(),
-            content_type='text/plain; charset=utf-8',
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
         )
-        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-subdomains.txt"'
+        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-subdomains.csv"'
         return response
 
 
@@ -191,20 +197,33 @@ class WebSiteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
-        """导出站点 URL（纯文本，一行一个）"""
+        """导出网站为 CSV 格式
+        
+        CSV 列：url, host, location, title, status_code, content_length, content_type, webserver, tech, body_preview, vhost, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime, format_list_field
+        
         target_pk = self.kwargs.get('target_pk')
         if not target_pk:
             raise DRFValidationError('必须在目标下导出')
         
-        def line_iterator():
-            for url in self.service.iter_website_urls_by_target(target_pk):
-                yield f"{url}\n"
-
+        data_iterator = self.service.iter_raw_data_for_csv_export(target_id=target_pk)
+        
+        headers = [
+            'url', 'host', 'location', 'title', 'status_code',
+            'content_length', 'content_type', 'webserver', 'tech',
+            'body_preview', 'vhost', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+            'tech': lambda x: format_list_field(x, separator=','),
+        }
+        
         response = StreamingHttpResponse(
-            line_iterator(),
-            content_type='text/plain; charset=utf-8',
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
         )
-        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-websites.txt"'
+        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-websites.csv"'
         return response
 
 
@@ -235,20 +254,31 @@ class DirectoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
-        """导出目录 URL（纯文本，一行一个）"""
+        """导出目录为 CSV 格式
+        
+        CSV 列：url, status, content_length, words, lines, content_type, duration, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime
+        
         target_pk = self.kwargs.get('target_pk')
         if not target_pk:
             raise DRFValidationError('必须在目标下导出')
         
-        def line_iterator():
-            for url in self.service.iter_directory_urls_by_target(target_pk):
-                yield f"{url}\n"
-
+        data_iterator = self.service.iter_raw_data_for_csv_export(target_id=target_pk)
+        
+        headers = [
+            'url', 'status', 'content_length', 'words',
+            'lines', 'content_type', 'duration', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+        }
+        
         response = StreamingHttpResponse(
-            line_iterator(),
-            content_type='text/plain; charset=utf-8',
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
         )
-        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-directories.txt"'
+        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-directories.csv"'
         return response
 
 
@@ -279,20 +309,34 @@ class EndpointViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
-        """导出端点 URL（纯文本，一行一个）"""
+        """导出端点为 CSV 格式
+        
+        CSV 列：url, host, location, title, status_code, content_length, content_type, webserver, tech, body_preview, vhost, matched_gf_patterns, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime, format_list_field
+        
         target_pk = self.kwargs.get('target_pk')
         if not target_pk:
             raise DRFValidationError('必须在目标下导出')
         
-        def line_iterator():
-            for url in self.service.iter_endpoint_urls_by_target(target_pk):
-                yield f"{url}\n"
-
+        data_iterator = self.service.iter_raw_data_for_csv_export(target_id=target_pk)
+        
+        headers = [
+            'url', 'host', 'location', 'title', 'status_code',
+            'content_length', 'content_type', 'webserver', 'tech',
+            'body_preview', 'vhost', 'matched_gf_patterns', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+            'tech': lambda x: format_list_field(x, separator=','),
+            'matched_gf_patterns': lambda x: format_list_field(x, separator=','),
+        }
+        
         response = StreamingHttpResponse(
-            line_iterator(),
-            content_type='text/plain; charset=utf-8',
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
         )
-        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-endpoints.txt"'
+        response['Content-Disposition'] = f'attachment; filename="target-{target_pk}-endpoints.csv"'
         return response
 
 
@@ -404,16 +448,26 @@ class SubdomainSnapshotViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
+        """导出子域名快照为 CSV 格式
+        
+        CSV 列：name, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime
+        
         scan_pk = self.kwargs.get('scan_pk')
         if not scan_pk:
             raise DRFValidationError('必须在扫描下导出')
         
-        def line_iterator():
-            for name in self.service.iter_subdomain_names_by_scan(scan_pk):
-                yield f"{name}\n"
-
-        response = StreamingHttpResponse(line_iterator(), content_type='text/plain; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-subdomains.txt"'
+        data_iterator = self.service.iter_raw_data_for_csv_export(scan_id=scan_pk)
+        
+        headers = ['name', 'discovered_at']
+        formatters = {'discovered_at': format_datetime}
+        
+        response = StreamingHttpResponse(
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
+        )
+        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-subdomains.csv"'
         return response
 
 
@@ -438,16 +492,33 @@ class WebsiteSnapshotViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
+        """导出网站快照为 CSV 格式
+        
+        CSV 列：url, host, location, title, status_code, content_length, content_type, webserver, tech, body_preview, vhost, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime, format_list_field
+        
         scan_pk = self.kwargs.get('scan_pk')
         if not scan_pk:
             raise DRFValidationError('必须在扫描下导出')
         
-        def line_iterator():
-            for url in self.service.iter_website_urls_by_scan(scan_pk):
-                yield f"{url}\n"
-
-        response = StreamingHttpResponse(line_iterator(), content_type='text/plain; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-websites.txt"'
+        data_iterator = self.service.iter_raw_data_for_csv_export(scan_id=scan_pk)
+        
+        headers = [
+            'url', 'host', 'location', 'title', 'status_code',
+            'content_length', 'content_type', 'webserver', 'tech',
+            'body_preview', 'vhost', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+            'tech': lambda x: format_list_field(x, separator=','),
+        }
+        
+        response = StreamingHttpResponse(
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
+        )
+        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-websites.csv"'
         return response
 
 
@@ -472,16 +543,31 @@ class DirectorySnapshotViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
+        """导出目录快照为 CSV 格式
+        
+        CSV 列：url, status, content_length, words, lines, content_type, duration, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime
+        
         scan_pk = self.kwargs.get('scan_pk')
         if not scan_pk:
             raise DRFValidationError('必须在扫描下导出')
         
-        def line_iterator():
-            for url in self.service.iter_directory_urls_by_scan(scan_pk):
-                yield f"{url}\n"
-
-        response = StreamingHttpResponse(line_iterator(), content_type='text/plain; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-directories.txt"'
+        data_iterator = self.service.iter_raw_data_for_csv_export(scan_id=scan_pk)
+        
+        headers = [
+            'url', 'status', 'content_length', 'words',
+            'lines', 'content_type', 'duration', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+        }
+        
+        response = StreamingHttpResponse(
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
+        )
+        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-directories.csv"'
         return response
 
 
@@ -506,16 +592,34 @@ class EndpointSnapshotViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, **kwargs):
+        """导出端点快照为 CSV 格式
+        
+        CSV 列：url, host, location, title, status_code, content_length, content_type, webserver, tech, body_preview, vhost, matched_gf_patterns, discovered_at
+        """
+        from apps.common.utils import generate_csv_rows, format_datetime, format_list_field
+        
         scan_pk = self.kwargs.get('scan_pk')
         if not scan_pk:
             raise DRFValidationError('必须在扫描下导出')
         
-        def line_iterator():
-            for url in self.service.iter_endpoint_urls_by_scan(scan_pk):
-                yield f"{url}\n"
-
-        response = StreamingHttpResponse(line_iterator(), content_type='text/plain; charset=utf-8')
-        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-endpoints.txt"'
+        data_iterator = self.service.iter_raw_data_for_csv_export(scan_id=scan_pk)
+        
+        headers = [
+            'url', 'host', 'location', 'title', 'status_code',
+            'content_length', 'content_type', 'webserver', 'tech',
+            'body_preview', 'vhost', 'matched_gf_patterns', 'discovered_at'
+        ]
+        formatters = {
+            'discovered_at': format_datetime,
+            'tech': lambda x: format_list_field(x, separator=','),
+            'matched_gf_patterns': lambda x: format_list_field(x, separator=','),
+        }
+        
+        response = StreamingHttpResponse(
+            generate_csv_rows(data_iterator, headers, formatters),
+            content_type='text/csv; charset=utf-8'
+        )
+        response['Content-Disposition'] = f'attachment; filename="scan-{scan_pk}-endpoints.csv"'
         return response
 
 

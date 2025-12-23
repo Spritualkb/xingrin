@@ -1,7 +1,7 @@
 """WebSite Service - 网站业务逻辑层"""
 
 import logging
-from typing import List
+from typing import List, Iterator
 
 from apps.asset.repositories import DjangoWebSiteRepository
 from apps.asset.dtos import WebSiteDTO
@@ -52,6 +52,18 @@ class WebSiteService:
     def iter_website_urls_by_target(self, target_id: int, chunk_size: int = 1000):
         """流式获取目标下的所有站点 URL"""
         return self.repo.get_urls_for_export(target_id=target_id, batch_size=chunk_size)
+
+    def iter_raw_data_for_csv_export(self, target_id: int) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+        
+        Yields:
+            原始数据字典
+        """
+        return self.repo.iter_raw_data_for_export(target_id=target_id)
 
 
 __all__ = ['WebSiteService']

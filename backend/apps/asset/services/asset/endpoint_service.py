@@ -70,3 +70,15 @@ class EndpointService:
         queryset = self.repo.get_by_target(target_id)
         for url in queryset.values_list('url', flat=True).iterator(chunk_size=chunk_size):
             yield url
+
+    def iter_raw_data_for_csv_export(self, target_id: int) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+        
+        Yields:
+            原始数据字典
+        """
+        return self.repo.iter_raw_data_for_export(target_id=target_id)

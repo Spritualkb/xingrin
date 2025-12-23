@@ -1,7 +1,7 @@
 """Directory Snapshot Repository - 目录快照数据访问层"""
 
 import logging
-from typing import List
+from typing import List, Iterator
 from django.db import transaction
 
 from apps.asset.models import DirectorySnapshot
@@ -82,3 +82,31 @@ class DjangoDirectorySnapshotRepository:
 
     def get_all(self):
         return DirectorySnapshot.objects.all().order_by('-discovered_at')
+
+    def iter_raw_data_for_export(
+        self, 
+        scan_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            scan_id: 扫描 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            包含所有目录字段的字典
+        """
+        qs = (
+            DirectorySnapshot.objects
+            .filter(scan_id=scan_id)
+            .values(
+                'url', 'status', 'content_length', 'words',
+                'lines', 'content_type', 'duration', 'discovered_at'
+            )
+            .order_by('url')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row

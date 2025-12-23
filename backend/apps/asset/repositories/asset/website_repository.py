@@ -3,7 +3,7 @@ Django ORM 实现的 WebSite Repository
 """
 
 import logging
-from typing import List, Generator, Optional
+from typing import List, Generator, Optional, Iterator
 from django.db import transaction
 
 from apps.asset.models.asset_models import WebSite
@@ -155,3 +155,32 @@ class DjangoWebSiteRepository:
         except Exception as e:
             logger.error(f"批量创建 WebSite 失败: {e}")
             raise
+
+    def iter_raw_data_for_export(
+        self, 
+        target_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            包含所有网站字段的字典
+        """
+        qs = (
+            WebSite.objects
+            .filter(target_id=target_id)
+            .values(
+                'url', 'host', 'location', 'title', 'status_code',
+                'content_length', 'content_type', 'webserver', 'tech',
+                'body_preview', 'vhost', 'discovered_at'
+            )
+            .order_by('url')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row

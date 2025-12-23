@@ -97,3 +97,31 @@ class DjangoDirectoryRepository:
         except Exception as e:
             logger.error("流式导出目录 URL 失败 - Target ID: %s, 错误: %s", target_id, e)
             raise
+
+    def iter_raw_data_for_export(
+        self, 
+        target_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            包含所有目录字段的字典
+        """
+        qs = (
+            Directory.objects
+            .filter(target_id=target_id)
+            .values(
+                'url', 'status', 'content_length', 'words',
+                'lines', 'content_type', 'duration', 'discovered_at'
+            )
+            .order_by('url')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row

@@ -1,7 +1,7 @@
 """EndpointSnapshot Repository - Django ORM 实现"""
 
 import logging
-from typing import List
+from typing import List, Iterator
 
 from apps.asset.models.snapshot_models import EndpointSnapshot
 from apps.asset.dtos.snapshot import EndpointSnapshotDTO
@@ -78,3 +78,32 @@ class DjangoEndpointSnapshotRepository:
 
     def get_all(self):
         return EndpointSnapshot.objects.all().order_by('-discovered_at')
+
+    def iter_raw_data_for_export(
+        self, 
+        scan_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            scan_id: 扫描 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            包含所有端点字段的字典
+        """
+        qs = (
+            EndpointSnapshot.objects
+            .filter(scan_id=scan_id)
+            .values(
+                'url', 'host', 'location', 'title', 'status_code',
+                'content_length', 'content_type', 'webserver', 'tech',
+                'body_preview', 'vhost', 'matched_gf_patterns', 'discovered_at'
+            )
+            .order_by('url')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row

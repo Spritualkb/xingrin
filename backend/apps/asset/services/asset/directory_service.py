@@ -49,5 +49,17 @@ class DirectoryService:
         """流式获取目标下的所有目录 URL"""
         return self.repo.get_urls_for_export(target_id=target_id, batch_size=chunk_size)
 
+    def iter_raw_data_for_csv_export(self, target_id: int) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+        
+        Yields:
+            原始数据字典
+        """
+        return self.repo.iter_raw_data_for_export(target_id=target_id)
+
 
 __all__ = ['DirectoryService']

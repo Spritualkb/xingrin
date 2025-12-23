@@ -105,5 +105,17 @@ class SubdomainService:
         # 通过仓储层统一访问数据库，内部已使用 iterator() 做流式查询
         return self.repo.get_domains_for_export(target_id=target_id, batch_size=chunk_size)
 
+    def iter_raw_data_for_csv_export(self, target_id: int):
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+        
+        Yields:
+            原始数据字典 {name, discovered_at}
+        """
+        return self.repo.iter_raw_data_for_export(target_id=target_id)
+
 
 __all__ = ['SubdomainService']

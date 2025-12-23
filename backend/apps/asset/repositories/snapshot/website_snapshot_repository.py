@@ -1,7 +1,7 @@
 """WebsiteSnapshot Repository - Django ORM 实现"""
 
 import logging
-from typing import List
+from typing import List, Iterator
 
 from apps.asset.models.snapshot_models import WebsiteSnapshot
 from apps.asset.dtos.snapshot import WebsiteSnapshotDTO
@@ -78,3 +78,46 @@ class DjangoWebsiteSnapshotRepository:
 
     def get_all(self):
         return WebsiteSnapshot.objects.all().order_by('-discovered_at')
+
+    def iter_raw_data_for_export(
+        self, 
+        scan_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            scan_id: 扫描 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            包含所有网站字段的字典
+        """
+        qs = (
+            WebsiteSnapshot.objects
+            .filter(scan_id=scan_id)
+            .values(
+                'url', 'host', 'location', 'title', 'status',
+                'content_length', 'content_type', 'web_server', 'tech',
+                'body_preview', 'vhost', 'discovered_at'
+            )
+            .order_by('url')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            # 重命名字段以匹配 CSV 表头
+            yield {
+                'url': row['url'],
+                'host': row['host'],
+                'location': row['location'],
+                'title': row['title'],
+                'status_code': row['status'],
+                'content_length': row['content_length'],
+                'content_type': row['content_type'],
+                'webserver': row['web_server'],
+                'tech': row['tech'],
+                'body_preview': row['body_preview'],
+                'vhost': row['vhost'],
+                'discovered_at': row['discovered_at'],
+            }

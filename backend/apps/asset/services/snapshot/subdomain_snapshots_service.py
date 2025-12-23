@@ -77,3 +77,15 @@ class SubdomainSnapshotsService:
         queryset = self.subdomain_snapshot_repo.get_by_scan(scan_id)
         for snapshot in queryset.iterator(chunk_size=chunk_size):
             yield snapshot.name
+
+    def iter_raw_data_for_csv_export(self, scan_id: int) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            scan_id: 扫描 ID
+        
+        Yields:
+            原始数据字典 {name, discovered_at}
+        """
+        return self.subdomain_snapshot_repo.iter_raw_data_for_export(scan_id=scan_id)

@@ -100,6 +100,57 @@ export function DirectoriesView({
     setSelectedDirectories(selectedRows)
   }, [])
 
+  // 格式化日期为 YYYY-MM-DD HH:MM:SS（与后端一致）
+  const formatDateForCSV = (dateString: string): string => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  }
+
+  // CSV 转义
+  const escapeCSV = (value: string | number | boolean | null | undefined): string => {
+    if (value === null || value === undefined) return ''
+    const str = String(value)
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`
+    }
+    return str
+  }
+
+  // 将纳秒转换为毫秒
+  const formatDurationNsToMs = (durationNs: number | null | undefined): string => {
+    if (durationNs === null || durationNs === undefined) return ''
+    return String(Math.floor(durationNs / 1_000_000))
+  }
+
+  // 生成 CSV 内容
+  const generateCSV = (items: Directory[]): string => {
+    const BOM = '\ufeff'
+    const headers = [
+      'url', 'status', 'content_length', 'words',
+      'lines', 'content_type', 'duration', 'discovered_at'
+    ]
+    
+    const rows = items.map(item => [
+      escapeCSV(item.url),
+      escapeCSV(item.status),
+      escapeCSV(item.contentLength),
+      escapeCSV(item.words),
+      escapeCSV(item.lines),
+      escapeCSV(item.contentType),
+      escapeCSV(formatDurationNsToMs(item.duration)),
+      escapeCSV(formatDateForCSV(item.discoveredAt))
+    ].join(','))
+    
+    return BOM + [headers.join(','), ...rows].join('\n')
+  }
+
   // 处理下载所有目录
   const handleDownloadAll = async () => {
     try {
@@ -115,8 +166,8 @@ export function DirectoriesView({
         if (!directories || directories.length === 0) {
           return
         }
-        const content = directories.map((item) => item.url).join("\n")
-        blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+        const csvContent = generateCSV(directories)
+        blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
       }
 
       if (!blob) return
@@ -125,7 +176,7 @@ export function DirectoriesView({
       const a = document.createElement("a")
       const prefix = scanId ? `scan-${scanId}` : targetId ? `target-${targetId}` : "directories"
       a.href = url
-      a.download = `${prefix}-directories-${Date.now()}.txt`
+      a.download = `${prefix}-directories-${Date.now()}.csv`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -141,13 +192,13 @@ export function DirectoriesView({
     if (selectedDirectories.length === 0) {
       return
     }
-    const content = selectedDirectories.map((item) => item.url).join("\n")
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+    const csvContent = generateCSV(selectedDirectories)
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     const prefix = scanId ? `scan-${scanId}` : targetId ? `target-${targetId}` : "directories"
     a.href = url
-    a.download = `${prefix}-directories-selected-${Date.now()}.txt`
+    a.download = `${prefix}-directories-selected-${Date.now()}.csv`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

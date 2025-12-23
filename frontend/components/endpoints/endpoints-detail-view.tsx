@@ -124,6 +124,63 @@ export function EndpointsDetailView({
     [formatDate]
   )
 
+  // 格式化日期为 YYYY-MM-DD HH:MM:SS（与后端一致）
+  const formatDateForCSV = (dateString: string): string => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  }
+
+  // CSV 转义
+  const escapeCSV = (value: string | number | boolean | null | undefined): string => {
+    if (value === null || value === undefined) return ''
+    const str = String(value)
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`
+    }
+    return str
+  }
+
+  // 格式化数组为逗号分隔字符串
+  const formatArrayForCSV = (arr: string[] | undefined): string => {
+    if (!arr || arr.length === 0) return ''
+    return arr.join(',')
+  }
+
+  // 生成 CSV 内容
+  const generateCSV = (items: Endpoint[]): string => {
+    const BOM = '\ufeff'
+    const headers = [
+      'url', 'host', 'location', 'title', 'status_code',
+      'content_length', 'content_type', 'webserver', 'tech',
+      'body_preview', 'vhost', 'matched_gf_patterns', 'discovered_at'
+    ]
+    
+    const rows = items.map(item => [
+      escapeCSV(item.url),
+      escapeCSV(item.host),
+      escapeCSV(item.location),
+      escapeCSV(item.title),
+      escapeCSV(item.statusCode),
+      escapeCSV(item.contentLength),
+      escapeCSV(item.contentType),
+      escapeCSV(item.webserver),
+      escapeCSV(formatArrayForCSV(item.tech)),
+      escapeCSV(item.bodyPreview),
+      escapeCSV(item.vhost),
+      escapeCSV(formatArrayForCSV(item.tags ?? undefined)),
+      escapeCSV(formatDateForCSV(item.discoveredAt ?? ''))
+    ].join(','))
+    
+    return BOM + [headers.join(','), ...rows].join('\n')
+  }
+
   // 下载所有端点 URL
   const handleDownloadAll = async () => {
     try {
@@ -140,8 +197,8 @@ export function EndpointsDetailView({
         if (!endpoints || endpoints.length === 0) {
           return
         }
-        const content = endpoints.map((item) => item.url).join("\n")
-        blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+        const csvContent = generateCSV(endpoints)
+        blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
       }
 
       if (!blob) return
@@ -150,7 +207,7 @@ export function EndpointsDetailView({
       const a = document.createElement("a")
       const prefix = scanId ? `scan-${scanId}` : targetId ? `target-${targetId}` : "endpoints"
       a.href = url
-      a.download = `${prefix}-endpoints-${Date.now()}.txt`
+      a.download = `${prefix}-endpoints-${Date.now()}.csv`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -166,13 +223,13 @@ export function EndpointsDetailView({
     if (selectedEndpoints.length === 0) {
       return
     }
-    const content = selectedEndpoints.map((item) => item.url).join("\n")
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+    const csvContent = generateCSV(selectedEndpoints)
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     const prefix = scanId ? `scan-${scanId}` : targetId ? `target-${targetId}` : "endpoints"
     a.href = url
-    a.download = `${prefix}-endpoints-selected-${Date.now()}.txt`
+    a.download = `${prefix}-endpoints-selected-${Date.now()}.csv`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

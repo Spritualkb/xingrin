@@ -82,3 +82,28 @@ class DjangoSubdomainRepository:
         ).only('id', 'name')
         
         return {sd.name: sd for sd in subdomains}
+
+    def iter_raw_data_for_export(
+        self, 
+        target_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            target_id: 目标 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            {'name': 'sub.example.com', 'discovered_at': datetime}
+        """
+        qs = (
+            Subdomain.objects
+            .filter(target_id=target_id)
+            .values('name', 'discovered_at')
+            .order_by('name')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row

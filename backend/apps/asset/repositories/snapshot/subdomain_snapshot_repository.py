@@ -1,7 +1,7 @@
 """Django ORM 实现的 SubdomainSnapshot Repository"""
 
 import logging
-from typing import List
+from typing import List, Iterator
 
 from apps.asset.models.snapshot_models import SubdomainSnapshot
 from apps.asset.dtos import SubdomainSnapshotDTO
@@ -65,3 +65,28 @@ class DjangoSubdomainSnapshotRepository:
 
     def get_all(self):
         return SubdomainSnapshot.objects.all().order_by('-discovered_at')
+
+    def iter_raw_data_for_export(
+        self, 
+        scan_id: int,
+        batch_size: int = 1000
+    ) -> Iterator[dict]:
+        """
+        流式获取原始数据用于 CSV 导出
+        
+        Args:
+            scan_id: 扫描 ID
+            batch_size: 每批数据量
+        
+        Yields:
+            {'name': 'sub.example.com', 'discovered_at': datetime}
+        """
+        qs = (
+            SubdomainSnapshot.objects
+            .filter(scan_id=scan_id)
+            .values('name', 'discovered_at')
+            .order_by('name')
+        )
+        
+        for row in qs.iterator(chunk_size=batch_size):
+            yield row
