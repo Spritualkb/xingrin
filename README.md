@@ -25,23 +25,16 @@
 
 ---
 
-<p align="center">
-  <b>🌗 明暗模式切换</b>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/light.png" alt="Light Mode" width="49%">
-  <img src="docs/screenshots/dark.png" alt="Dark Mode" width="49%">
-</p>
 
 <p align="center">
   <b>🎨 多种 UI 主题</b>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/bubblegum.png" alt="Bubblegum" width="32%">
-  <img src="docs/screenshots/cosmic-night.png" alt="Cosmic Night" width="32%">
-  <img src="docs/screenshots/quantum-rose.png" alt="Quantum Rose" width="32%">
+  <img src="docs/screenshots/light.png" alt="Light Mode" width="24%">
+  <img src="docs/screenshots/bubblegum.png" alt="Bubblegum" width="24%">
+  <img src="docs/screenshots/cosmic-night.png" alt="Cosmic Night" width="24%">
+  <img src="docs/screenshots/quantum-rose.png" alt="Quantum Rose" width="24%">
 </p>
 
 ## 📚 文档
