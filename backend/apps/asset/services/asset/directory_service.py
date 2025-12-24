@@ -5,6 +5,7 @@ from typing import List, Iterator
 
 from apps.asset.repositories import DjangoDirectoryRepository
 from apps.asset.dtos import DirectoryDTO
+from apps.common.validators import is_valid_url
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,54 @@ class DirectoryService:
         except Exception as e:
             logger.error(f"批量 upsert 目录失败: {e}")
             raise
+    
+    def bulk_create_urls(self, target_id: int, urls: List[str]) -> int:
+        """
+        批量创建目录（仅 URL，使用 ignore_conflicts）
+        
+        验证 URL 格式，过滤无效 URL，去重后批量创建。
+        已存在的记录会被跳过。
+        
+        Args:
+            target_id: 目标 ID
+            urls: URL 列表
+            
+        Returns:
+            int: 实际创建的记录数
+        """
+        if not urls:
+            return 0
+        
+        # 过滤有效 URL 并去重
+        valid_urls = []
+        seen = set()
+        for url in urls:
+            if not isinstance(url, str):
+                continue
+            url = url.strip()
+            if not url or url in seen:
+                continue
+            if not is_valid_url(url):
+                continue
+            seen.add(url)
+            valid_urls.append(url)
+        
+        if not valid_urls:
+            return 0
+        
+        # 获取创建前的数量
+        count_before = self.repo.count_by_target(target_id)
+        
+        # 创建 DTO 列表并批量创建
+        directory_dtos = [
+            DirectoryDTO(url=url, target_id=target_id)
+            for url in valid_urls
+        ]
+        self.repo.bulk_create_ignore_conflicts(directory_dtos)
+        
+        # 获取创建后的数量
+        count_after = self.repo.count_by_target(target_id)
+        return count_after - count_before
     
     def get_directories_by_target(self, target_id: int):
         """获取目标下的所有目录"""

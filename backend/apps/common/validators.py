@@ -205,6 +205,26 @@ def validate_url(url: str) -> None:
         raise ValueError(f"URL 格式无效: {url}")
 
 
+def is_valid_url(url: str, max_length: int = 2000) -> bool:
+    """
+    判断是否为有效 URL（不抛异常）
+    
+    Args:
+        url: URL 字符串
+        max_length: URL 最大长度，默认 2000
+        
+    Returns:
+        bool: 是否为有效 URL
+    """
+    if not url or len(url) > max_length:
+        return False
+    try:
+        validate_url(url)
+        return True
+    except ValueError:
+        return False
+
+
 def detect_input_type(input_str: str) -> str:
     """
     检测输入类型（用于快速扫描输入解析）
