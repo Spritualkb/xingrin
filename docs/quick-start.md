@@ -12,11 +12,10 @@
 - **操作系统**: Ubuntu 18.04+ / Debian 10+
 - **权限**: sudo 管理员权限
 - **端口要求**: 需要开放以下端口
-  - `80` - HTTP 访问（自动跳转到 HTTPS）
-  - `443` - HTTPS 访问（主要访问端口）
+  - `8083` - HTTPS 访问（主要访问端口）
   - `5432` - PostgreSQL 数据库（如使用本地数据库）
   - `6379` - Redis 缓存服务
-  - 后端 API 仅容器内监听 8888，由 nginx 反代到 80/443，对公网无需放行 8888
+  - 后端 API 仅容器内监听 8888，由 nginx 反代到 8083，对公网无需放行 8888
 
 ## 一键安装
 
@@ -45,7 +44,7 @@ sudo ./install.sh --no-frontend
 
 ### 3. 访问系统
 安装完成后，访问：
-- **Web 界面**: https://你的服务器IP/
+- **Web 界面**: https://你的服务器IP:8083/
 
 **默认账号**：
 - 用户名: `admin`
@@ -60,13 +59,12 @@ sudo ./install.sh --no-frontend
 
 #### 必须放行的端口
 ```
-80    - HTTP 访问
-443   - HTTPS 访问  
+8083  - HTTPS 访问（主要访问端口）
 3000  - 前端服务（开发模式）
 5432  - PostgreSQL（如使用本地数据库）
 6379  - Redis 缓存
 ```
-> 后端 API 默认仅在容器内 8888 监听，由 nginx 反代到 80/443，对公网无需放行 8888。
+> 后端 API 默认仅在容器内 8888 监听，由 nginx 反代到 8083，对公网无需放行 8888。
 
 #### 推荐方案
 - **国外 VPS**：如 Vultr、DigitalOcean、Linode 等，默认开放所有端口，无需额外配置
@@ -195,8 +193,7 @@ IMAGE_TAG=v1.0.0        # 镜像版本（自动设置）
 #### 1. 端口被占用
 ```bash
 # 检查端口占用
-sudo netstat -tlnp | grep :80
-sudo netstat -tlnp | grep :443
+sudo netstat -tlnp | grep :8083
 
 # 停止占用端口的服务
 sudo systemctl stop apache2  # 如果是 Apache

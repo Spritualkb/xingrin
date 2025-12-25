@@ -290,6 +290,7 @@ NUCLEI_TEMPLATES_REPO_URL = os.getenv('NUCLEI_TEMPLATES_REPO_URL', 'https://gith
 
 # 对外访问主机与端口（供 Worker 访问 Django 使用）
 PUBLIC_HOST = os.getenv('PUBLIC_HOST', 'localhost').strip()
+PUBLIC_PORT = os.getenv('PUBLIC_PORT', '8083').strip()  # 对外 HTTPS 端口
 SERVER_PORT = os.getenv('SERVER_PORT', '8888')
 
 # ============================================

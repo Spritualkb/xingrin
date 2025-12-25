@@ -238,7 +238,7 @@ class WorkerNodeViewSet(viewsets.ModelViewSet):
                     docker run -d --pull=always \
                         --name xingrin-agent \
                         --restart always \
-                        -e HEARTBEAT_API_URL="https://{django_settings.PUBLIC_HOST}" \
+                        -e HEARTBEAT_API_URL="https://{django_settings.PUBLIC_HOST}:{getattr(django_settings, 'PUBLIC_PORT', '8083')}" \
                         -e WORKER_ID="{worker_id}" \
                         -e IMAGE_TAG="{target_version}" \
                         -v /proc:/host/proc:ro \

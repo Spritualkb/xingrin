@@ -242,8 +242,9 @@ class WorkerDeployConsumer(AsyncWebsocketConsumer):
             return
 
         # 远程 Worker 通过 nginx HTTPS 访问（nginx 反代到后端 8888）
-        # 使用 https://{PUBLIC_HOST} 而不是直连 8888 端口
-        heartbeat_api_url = f"https://{public_host}"  # 基础 URL，agent 会加 /api/...
+        # 使用 https://{PUBLIC_HOST}:{PUBLIC_PORT} 而不是直连 8888 端口
+        public_port = getattr(settings, 'PUBLIC_PORT', '8083')
+        heartbeat_api_url = f"https://{public_host}:{public_port}"
 
         session_name = f'xingrin_deploy_{self.worker_id}'
         remote_script_path = '/tmp/xingrin_deploy.sh'

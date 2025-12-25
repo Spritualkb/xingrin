@@ -245,7 +245,7 @@ A: 更新字典内容后会重新计算 hash，Worker 下次使用时会检测�
 
 A: 检查：
 1. `PUBLIC_HOST` 是否配置为 Server 的外网 IP 或域名
-2. Nginx 443 (HTTPS) 是否可达（远程 Worker 通过 nginx 访问后端）
+2. Nginx 8083 (HTTPS) 是否可达（远程 Worker 通过 nginx 访问后端）
 3. Worker 到 Server 的网络是否通畅
 
 ### Q: 如何批量导入字典？

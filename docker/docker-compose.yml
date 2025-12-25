@@ -95,8 +95,7 @@ services:
       frontend:
         condition: service_started
     ports:
-      - "80:80"
-      - "443:443"
+      - "8083:8083"
     volumes:
       - ./nginx/ssl:/etc/nginx/ssl:ro
 

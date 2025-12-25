@@ -234,7 +234,7 @@ class TaskDistributor:
         else:
             # 远程：通过 Nginx 反向代理访问（HTTPS，不直连 8888 端口）
             network_arg = ""
-            server_url = f"https://{settings.PUBLIC_HOST}"
+            server_url = f"https://{settings.PUBLIC_HOST}:{settings.PUBLIC_PORT}"
         
         # 挂载路径（所有节点统一使用固定路径）
         host_results_dir = settings.HOST_RESULTS_DIR  # /opt/xingrin/results
