@@ -37,13 +37,13 @@ export function DataTableColumnHeader<TData, TValue>({
       className={cn("-ml-3 h-8 data-[state=open]:bg-accent", className)}
       onClick={() => column.toggleSorting(sorted === "asc")}
     >
-      <span>{title}</span>
+      <span className="whitespace-nowrap">{title}</span>
       {sorted === "desc" ? (
-        <ChevronDown className="ml-2 h-4 w-4" />
+        <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
       ) : sorted === "asc" ? (
-        <ChevronUp className="ml-2 h-4 w-4" />
+        <ChevronUp className="ml-2 h-4 w-4 shrink-0" />
       ) : (
-        <ChevronsUpDown className="ml-2 h-4 w-4" />
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
       )}
     </Button>
   )

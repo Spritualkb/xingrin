@@ -117,7 +117,7 @@ export function DataTablePagination<TData>({
         </div>
 
         {/* 页码信息 */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+        <div className="flex items-center justify-center text-sm font-medium whitespace-nowrap">
           Page {pageIndex + 1} of {totalPages || 1}
         </div>
 

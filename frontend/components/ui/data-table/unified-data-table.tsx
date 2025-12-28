@@ -447,7 +447,7 @@ export function UnifiedDataTable<TData>({
       {/* 表格 - 按照 TanStack Table 官方推荐使用 CSS 变量 */}
       <div className={cn("rounded-md border overflow-x-auto", tableClassName)}>
         <table 
-          className="w-full caption-bottom text-sm table-fixed"
+          className="w-full caption-bottom text-sm"
           style={{ 
             ...columnSizeVars,
             minWidth: table.getTotalSize(),
@@ -462,6 +462,7 @@ export function UnifiedDataTable<TData>({
                     colSpan={header.colSpan}
                     style={{ 
                       width: `calc(var(--header-${header.id}-size) * 1px)`,
+                      minWidth: `calc(var(--header-${header.id}-size) * 1px)`,
                     }}
                     className="relative group"
                   >
@@ -487,6 +488,7 @@ export function UnifiedDataTable<TData>({
                       key={cell.id} 
                       style={{ 
                         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                        minWidth: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                       }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
