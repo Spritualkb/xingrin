@@ -127,11 +127,11 @@ export function WappalyzerFingerprintDialog({
       cpe: data.cpe.trim(),
       cookies: parseJson(data.cookies),
       headers: parseJson(data.headers),
-      script_src: parseArray(data.scriptSrc),
+      scriptSrc: parseArray(data.scriptSrc),
       html: parseArray(data.html),
       implies: parseArray(data.implies),
-      js: [],
-      meta: {},
+      js: [] as string[],
+      meta: {} as Record<string, string[]>,
     }
 
     try {

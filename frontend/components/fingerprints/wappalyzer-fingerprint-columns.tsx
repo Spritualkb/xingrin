@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -7,6 +8,66 @@ import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
 
 interface ColumnOptions {
   formatDate: (date: string) => string
+}
+
+/**
+ * 可展开文本单元格组件
+ */
+function ExpandableTextCell({ value, maxLength = 80 }: { value: string | null | undefined; maxLength?: number }) {
+  const [expanded, setExpanded] = useState(false)
+  
+  if (!value) return <span className="text-muted-foreground">-</span>
+  
+  const needsExpand = value.length > maxLength
+  
+  return (
+    <div className="flex flex-col gap-1">
+      <div 
+        className={`text-sm text-muted-foreground break-all cursor-pointer hover:text-foreground transition-colors ${!expanded ? 'line-clamp-2' : ''}`}
+        onClick={() => needsExpand && setExpanded(!expanded)}
+        title={needsExpand ? (expanded ? "点击收起" : "点击展开") : undefined}
+      >
+        {value}
+      </div>
+      {needsExpand && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-primary hover:underline self-start"
+        >
+          {expanded ? "收起" : "展开"}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 可展开链接单元格组件
+ */
+function ExpandableLinkCell({ value, maxLength = 50 }: { value: string | null | undefined; maxLength?: number }) {
+  const [expanded, setExpanded] = useState(false)
+  
+  if (!value) return <span className="text-muted-foreground">-</span>
+  
+  const needsExpand = value.length > maxLength
+  
+  return (
+    <div className="flex flex-col gap-1">
+      <div 
+        className={`text-sm text-muted-foreground break-all ${!expanded ? 'line-clamp-1' : ''}`}
+      >
+        {value}
+      </div>
+      {needsExpand && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-primary hover:underline self-start"
+        >
+          {expanded ? "收起" : "展开"}
+        </button>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -38,6 +99,7 @@ export function createWappalyzerFingerprintColumns({
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
       size: 40,
     },
     // 应用名称
@@ -47,6 +109,7 @@ export function createWappalyzerFingerprintColumns({
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("name")}</div>
       ),
+      enableResizing: true,
       size: 180,
     },
     // 分类
@@ -71,42 +134,23 @@ export function createWappalyzerFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 120,
     },
     // 描述
     {
       accessorKey: "description",
       header: "Description",
-      cell: ({ row }) => {
-        const desc = row.getValue("description") as string
-        if (!desc) return "-"
-        return (
-          <div className="text-sm text-muted-foreground truncate max-w-xs" title={desc}>
-            {desc}
-          </div>
-        )
-      },
+      cell: ({ row }) => <ExpandableTextCell value={row.getValue("description")} />,
+      enableResizing: true,
       size: 250,
     },
     // 官网
     {
       accessorKey: "website",
       header: "Website",
-      cell: ({ row }) => {
-        const website = row.getValue("website") as string
-        if (!website) return "-"
-        return (
-          <a 
-            href={website} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-primary hover:underline truncate block max-w-[200px]"
-            title={website}
-          >
-            {website}
-          </a>
-        )
-      },
+      cell: ({ row }) => <ExpandableLinkCell value={row.getValue("website")} />,
+      enableResizing: true,
       size: 200,
     },
     // 检测方式数量
@@ -134,6 +178,7 @@ export function createWappalyzerFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 180,
     },
     // 创建时间
@@ -148,6 +193,7 @@ export function createWappalyzerFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 160,
     },
   ]

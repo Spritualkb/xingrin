@@ -7,7 +7,6 @@ import {
   useWappalyzerFingerprints,
   useBulkDeleteWappalyzerFingerprints,
   useDeleteAllWappalyzerFingerprints,
-  useImportWappalyzerFingerprints,
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
 import { WappalyzerFingerprintDataTable } from "./wappalyzer-fingerprint-data-table"
@@ -25,16 +24,18 @@ export function WappalyzerFingerprintView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
 
+  // 查询数据
   const { data, isLoading, isFetching, error, refetch } = useWappalyzerFingerprints({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     filter: filterQuery || undefined,
   })
 
+  // Mutations
   const bulkDeleteMutation = useBulkDeleteWappalyzerFingerprints()
   const deleteAllMutation = useDeleteAllWappalyzerFingerprints()
-  const importMutation = useImportWappalyzerFingerprints()
 
+  // 搜索状态
   React.useEffect(() => {
     if (!isFetching && isSearching) {
       setIsSearching(false)
@@ -47,6 +48,7 @@ export function WappalyzerFingerprintView() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
   }
 
+  // 格式化日期
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString("zh-CN", {
       year: "numeric",
@@ -58,6 +60,7 @@ export function WappalyzerFingerprintView() {
     })
   }
 
+  // 导出
   const handleExport = async () => {
     try {
       const blob = await FingerprintService.exportWappalyzerFingerprints()
@@ -75,6 +78,7 @@ export function WappalyzerFingerprintView() {
     }
   }
 
+  // 批量删除
   const handleBulkDelete = async () => {
     if (selectedFingerprints.length === 0) return
 
@@ -88,6 +92,7 @@ export function WappalyzerFingerprintView() {
     }
   }
 
+  // 删除所有
   const handleDeleteAll = async () => {
     try {
       const result = await deleteAllMutation.mutateAsync()
@@ -97,26 +102,32 @@ export function WappalyzerFingerprintView() {
     }
   }
 
-  const handleImport = async (file: File) => {
-    try {
-      const result = await importMutation.mutateAsync(file)
-      toast.success(`导入成功：创建 ${result.created} 条，失败 ${result.failed} 条`)
-      refetch()
-    } catch (error: any) {
-      toast.error(error.message || "导入失败")
-    }
-  }
-
+  // 列定义
   const columns = useMemo(
     () => createWappalyzerFingerprintColumns({ formatDate }),
     []
   )
 
+  // 转换数据
   const fingerprints: WappalyzerFingerprint[] = useMemo(() => {
     if (!data?.results) return []
     return data.results
   }, [data])
 
+  // 稳定 paginationInfo 引用，避免不必要的重新渲染
+  const total = data?.total ?? 0
+  const page = data?.page ?? 1
+  const serverPageSize = data?.pageSize ?? 10
+  const totalPages = data?.totalPages ?? 1
+  
+  const paginationInfo = useMemo(() => ({
+    total,
+    page,
+    pageSize: serverPageSize,
+    totalPages,
+  }), [total, page, serverPageSize, totalPages])
+
+  // 错误状态
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -137,8 +148,9 @@ export function WappalyzerFingerprintView() {
     )
   }
 
+  // 加载状态
   if (isLoading && !data) {
-    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={6} />
+    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={7} />
   }
 
   return (
@@ -157,22 +169,18 @@ export function WappalyzerFingerprintView() {
         onDeleteAll={handleDeleteAll}
         totalCount={data?.total || 0}
         pagination={pagination}
-        setPagination={setPagination}
-        paginationInfo={{
-          total: data?.total || 0,
-          page: data?.page || 1,
-          pageSize: data?.pageSize || 10,
-          totalPages: data?.totalPages || 1,
-        }}
+        paginationInfo={paginationInfo}
         onPaginationChange={setPagination}
       />
 
+      {/* 添加指纹对话框 */}
       <WappalyzerFingerprintDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => refetch()}
       />
 
+      {/* 导入指纹对话框 */}
       <ImportFingerprintDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}

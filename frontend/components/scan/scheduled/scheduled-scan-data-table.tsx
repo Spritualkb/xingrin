@@ -1,67 +1,19 @@
 "use client"
 
 import * as React from "react"
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  ColumnSizingState,
-  flexRender,
-  getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-  VisibilityState,
-} from "@tanstack/react-table"
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
-  IconLayoutColumns,
-  IconPlus,
-  IconSearch,
-  IconLoader2,
-} from "@tabler/icons-react"
-
+import type { ColumnDef } from "@tanstack/react-table"
+import { IconSearch, IconLoader2 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-
+import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { ScheduledScan } from "@/types/scheduled-scan.types"
+import type { PaginationInfo } from "@/types/common.types"
 
-// 组件属性类型定义
 interface ScheduledScanDataTableProps {
   data: ScheduledScan[]
   columns: ColumnDef<ScheduledScan>[]
   onAddNew?: () => void
   searchPlaceholder?: string
-  searchColumn?: string
   searchValue?: string
   onSearch?: (value: string) => void
   isSearching?: boolean
@@ -77,8 +29,7 @@ interface ScheduledScanDataTableProps {
 
 /**
  * 定时扫描数据表格组件
- * 用于显示和管理定时扫描任务数据
- * 包含搜索、分页、列显示控制等功能
+ * 使用 UnifiedDataTable 统一组件
  */
 export function ScheduledScanDataTable({
   data = [],
@@ -89,7 +40,6 @@ export function ScheduledScanDataTable({
   onSearch,
   isSearching = false,
   addButtonText = "新建定时扫描",
-  // 服务端分页
   page = 1,
   pageSize = 10,
   total = 0,
@@ -116,52 +66,57 @@ export function ScheduledScanDataTable({
     }
   }
 
-  // 表格状态管理
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
+  // 转换为 UnifiedDataTable 需要的分页格式
+  const pagination = { pageIndex: page - 1, pageSize }
+  const paginationInfo: PaginationInfo = {
+    total,
+    totalPages,
+    page,
+    pageSize,
+  }
 
-  // 过滤有效数据
-  const validData = React.useMemo(() => {
-    return (data || []).filter(
-      (item) => item && typeof item.id !== "undefined" && item.id !== null
-    )
-  }, [data])
+  const handlePaginationChange = (newPagination: { pageIndex: number; pageSize: number }) => {
+    if (newPagination.pageSize !== pageSize && onPageSizeChange) {
+      onPageSizeChange(newPagination.pageSize)
+    }
+    if (newPagination.pageIndex !== page - 1 && onPageChange) {
+      onPageChange(newPagination.pageIndex + 1)
+    }
+  }
 
-  // 创建表格实例
-  const table = useReactTable({
-    data: validData,
-    columns,
-    state: {
-      sorting,
-      columnVisibility,
-      columnFilters,
-      pagination: { pageIndex: page - 1, pageSize },
-      columnSizing,
-    },
-    enableColumnResizing: true,
-    columnResizeMode: 'onChange',
-    onColumnSizingChange: setColumnSizing,
-    pageCount: totalPages,
-    manualPagination: true,
-    getRowId: (row) => row.id.toString(),
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
+  // 列标签映射
+  const columnLabels: Record<string, string> = {
+    name: "任务名称",
+    engineName: "扫描引擎",
+    cronExpression: "Cron 表达式",
+    scanMode: "扫描范围",
+    isEnabled: "状态",
+    nextRunTime: "下次执行",
+    runCount: "执行次数",
+    lastRunTime: "上次执行",
+  }
 
   return (
-    <div className="w-full">
-      {/* 工具栏 */}
-      <div className="flex items-center justify-between">
-        {/* 搜索框 */}
+    <UnifiedDataTable
+      data={data}
+      columns={columns}
+      getRowId={(row) => String(row.id)}
+      // 分页
+      pagination={pagination}
+      paginationInfo={paginationInfo}
+      onPaginationChange={handlePaginationChange}
+      // 选择
+      enableRowSelection={false}
+      // 批量操作
+      showBulkDelete={false}
+      onAddNew={onAddNew}
+      addButtonLabel={addButtonText}
+      // 列控制
+      columnLabels={columnLabels}
+      // 空状态
+      emptyMessage="暂无数据"
+      // 自定义搜索框
+      toolbarLeft={
         <div className="flex items-center space-x-2">
           <Input
             placeholder={searchPlaceholder}
@@ -178,221 +133,7 @@ export function ScheduledScanDataTable({
             )}
           </Button>
         </div>
-
-        {/* 右侧操作按钮 */}
-        <div className="flex items-center space-x-2">
-          {/* 列显示控制 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                Columns
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" && column.getCanHide()
-                )
-                .map((column) => {
-                  const columnNameMap: Record<string, string> = {
-                    name: "任务名称",
-                    engineName: "扫描引擎",
-                    cronExpression: "Cron 表达式",
-                    scanMode: "扫描范围",
-                    isEnabled: "状态",
-                    nextRunTime: "下次执行",
-                    runCount: "执行次数",
-                    lastRunTime: "上次执行",
-                  }
-
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {columnNameMap[column.id] || column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 添加新记录按钮 */}
-          {onAddNew && (
-            <Button onClick={onAddNew} size="sm">
-              <IconPlus />
-              {addButtonText}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div
-        className="border-b mt-4"
-        style={{ borderColor: "var(--sidebar-border)" }}
-      />
-
-      {/* 表格容器 */}
-      <div className="rounded-md border overflow-x-auto">
-        <Table style={{ minWidth: table.getCenterTotalSize() }}>
-          {/* 表头 */}
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-b"
-                style={{ borderColor: "var(--sidebar-border)" }}
-              >
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead 
-                      key={header.id} 
-                      colSpan={header.colSpan}
-                      style={{ width: header.getSize() }}
-                      className="relative group"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      {header.column.getCanResize() && (
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          onDoubleClick={() => header.column.resetSize()}
-                          className="absolute right-0 top-0 h-full w-4 cursor-col-resize select-none touch-none z-10"
-                        >
-                          <div className="absolute right-0 top-0 h-full w-1 bg-transparent group-hover:bg-border" />
-                        </div>
-                      )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          {/* 表体 */}
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="group border-b [&>td]:py-2 last:border-b-0"
-                  style={{ borderColor: "var(--sidebar)" }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow
-                className="border-b"
-                style={{ borderColor: "var(--sidebar)" }}
-              >
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* 分页控制 */}
-      <div className="border-t border-border pt-4 flex items-center justify-end px-2">
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          {/* 每页显示数量选择 */}
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="rows-per-page" className="text-sm font-medium">
-              Rows per page
-            </Label>
-            <Select
-              value={`${pageSize}`}
-              onValueChange={(value) => {
-                if (onPageSizeChange) {
-                  onPageSizeChange(Number(value))
-                }
-              }}
-            >
-              <SelectTrigger className="h-8 w-[90px]" id="rows-per-page">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[10, 20, 50, 100, 200, 500, 1000].map((size) => (
-                  <SelectItem key={size} value={`${size}`}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 页码信息 */}
-          <div className="flex w-[120px] items-center justify-center text-sm font-medium">
-            Page {page} of {totalPages}
-          </div>
-
-          {/* 分页按钮 */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => onPageChange?.(1)}
-              disabled={page <= 1}
-            >
-              <span className="sr-only">Go to first page</span>
-              <IconChevronsLeft />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => onPageChange?.(page - 1)}
-              disabled={page <= 1}
-            >
-              <span className="sr-only">Go to previous page</span>
-              <IconChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => onPageChange?.(page + 1)}
-              disabled={page >= totalPages}
-            >
-              <span className="sr-only">Go to next page</span>
-              <IconChevronRight />
-            </Button>
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => onPageChange?.(totalPages)}
-              disabled={page >= totalPages}
-            >
-              <span className="sr-only">Go to last page</span>
-              <IconChevronsRight />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+      }
+    />
   )
 }

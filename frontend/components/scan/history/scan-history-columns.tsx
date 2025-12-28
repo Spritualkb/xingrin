@@ -209,7 +209,7 @@ export const createScanHistoryColumns = ({
   {
     accessorKey: "targetName",
     size: 350,
-    minSize: 250,
+    minSize: 100,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Target" />
     ),

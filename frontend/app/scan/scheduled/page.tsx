@@ -165,7 +165,6 @@ export default function ScheduledScanPage() {
           columns={columns}
           onAddNew={handleAddNew}
           searchPlaceholder="搜索任务名称..."
-          searchColumn="name"
           searchValue={searchQuery}
           onSearch={handleSearchChange}
           isSearching={isSearching}

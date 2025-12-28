@@ -38,6 +38,7 @@ export function createEholeFingerprintColumns({
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
       size: 40,
     },
     // CMS 名称
@@ -47,6 +48,7 @@ export function createEholeFingerprintColumns({
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("cms")}</div>
       ),
+      enableResizing: true,
       size: 200,
     },
     // 匹配方式
@@ -61,6 +63,7 @@ export function createEholeFingerprintColumns({
           </Badge>
         )
       },
+      enableResizing: true,
       size: 100,
     },
     // 匹配位置
@@ -75,6 +78,7 @@ export function createEholeFingerprintColumns({
           </Badge>
         )
       },
+      enableResizing: true,
       size: 100,
     },
     // 关键词
@@ -92,6 +96,7 @@ export function createEholeFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 300,
     },
     // 类型
@@ -103,6 +108,7 @@ export function createEholeFingerprintColumns({
         if (!type || type === "-") return "-"
         return <Badge variant="outline">{type}</Badge>
       },
+      enableResizing: true,
       size: 100,
     },
     // 重点资产
@@ -115,6 +121,7 @@ export function createEholeFingerprintColumns({
           <Badge variant="destructive">重点</Badge>
         ) : null
       },
+      enableResizing: true,
       size: 80,
     },
     // 创建时间
@@ -129,6 +136,7 @@ export function createEholeFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 160,
     },
   ]

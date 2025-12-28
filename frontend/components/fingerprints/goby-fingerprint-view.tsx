@@ -7,7 +7,6 @@ import {
   useGobyFingerprints,
   useBulkDeleteGobyFingerprints,
   useDeleteAllGobyFingerprints,
-  useImportGobyFingerprints,
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
 import { GobyFingerprintDataTable } from "./goby-fingerprint-data-table"
@@ -25,16 +24,18 @@ export function GobyFingerprintView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
 
+  // 查询数据
   const { data, isLoading, isFetching, error, refetch } = useGobyFingerprints({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     filter: filterQuery || undefined,
   })
 
+  // Mutations
   const bulkDeleteMutation = useBulkDeleteGobyFingerprints()
   const deleteAllMutation = useDeleteAllGobyFingerprints()
-  const importMutation = useImportGobyFingerprints()
 
+  // 搜索状态
   React.useEffect(() => {
     if (!isFetching && isSearching) {
       setIsSearching(false)
@@ -47,6 +48,7 @@ export function GobyFingerprintView() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
   }
 
+  // 格式化日期
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString("zh-CN", {
       year: "numeric",
@@ -58,6 +60,7 @@ export function GobyFingerprintView() {
     })
   }
 
+  // 导出
   const handleExport = async () => {
     try {
       const blob = await FingerprintService.exportGobyFingerprints()
@@ -75,6 +78,7 @@ export function GobyFingerprintView() {
     }
   }
 
+  // 批量删除
   const handleBulkDelete = async () => {
     if (selectedFingerprints.length === 0) return
 
@@ -88,6 +92,7 @@ export function GobyFingerprintView() {
     }
   }
 
+  // 删除所有
   const handleDeleteAll = async () => {
     try {
       const result = await deleteAllMutation.mutateAsync()
@@ -97,26 +102,32 @@ export function GobyFingerprintView() {
     }
   }
 
-  const handleImport = async (file: File) => {
-    try {
-      const result = await importMutation.mutateAsync(file)
-      toast.success(`导入成功：创建 ${result.created} 条，失败 ${result.failed} 条`)
-      refetch()
-    } catch (error: any) {
-      toast.error(error.message || "导入失败")
-    }
-  }
-
+  // 列定义
   const columns = useMemo(
     () => createGobyFingerprintColumns({ formatDate }),
     []
   )
 
+  // 转换数据
   const fingerprints: GobyFingerprint[] = useMemo(() => {
     if (!data?.results) return []
     return data.results
   }, [data])
 
+  // 稳定 paginationInfo 引用，避免不必要的重新渲染
+  const total = data?.total ?? 0
+  const page = data?.page ?? 1
+  const serverPageSize = data?.pageSize ?? 10
+  const totalPages = data?.totalPages ?? 1
+  
+  const paginationInfo = useMemo(() => ({
+    total,
+    page,
+    pageSize: serverPageSize,
+    totalPages,
+  }), [total, page, serverPageSize, totalPages])
+
+  // 错误状态
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -137,8 +148,9 @@ export function GobyFingerprintView() {
     )
   }
 
+  // 加载状态
   if (isLoading && !data) {
-    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={5} />
+    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={6} />
   }
 
   return (
@@ -157,22 +169,18 @@ export function GobyFingerprintView() {
         onDeleteAll={handleDeleteAll}
         totalCount={data?.total || 0}
         pagination={pagination}
-        setPagination={setPagination}
-        paginationInfo={{
-          total: data?.total || 0,
-          page: data?.page || 1,
-          pageSize: data?.pageSize || 10,
-          totalPages: data?.totalPages || 1,
-        }}
+        paginationInfo={paginationInfo}
         onPaginationChange={setPagination}
       />
 
+      {/* 添加指纹对话框 */}
       <GobyFingerprintDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => refetch()}
       />
 
+      {/* 导入指纹对话框 */}
       <ImportFingerprintDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}

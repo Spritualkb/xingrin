@@ -114,6 +114,19 @@ export function EholeFingerprintView() {
     return data.results
   }, [data])
 
+  // 稳定 paginationInfo 引用，避免不必要的重新渲染
+  const total = data?.total ?? 0
+  const page = data?.page ?? 1
+  const serverPageSize = data?.pageSize ?? 10
+  const totalPages = data?.totalPages ?? 1
+  
+  const paginationInfo = useMemo(() => ({
+    total,
+    page,
+    pageSize: serverPageSize,
+    totalPages,
+  }), [total, page, serverPageSize, totalPages])
+
   // 错误状态
   if (error) {
     return (
@@ -156,13 +169,7 @@ export function EholeFingerprintView() {
         onDeleteAll={handleDeleteAll}
         totalCount={data?.total || 0}
         pagination={pagination}
-        setPagination={setPagination}
-        paginationInfo={{
-          total: data?.total || 0,
-          page: data?.page || 1,
-          pageSize: data?.pageSize || 10,
-          totalPages: data?.totalPages || 1,
-        }}
+        paginationInfo={paginationInfo}
         onPaginationChange={setPagination}
       />
 

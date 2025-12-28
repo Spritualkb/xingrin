@@ -266,7 +266,6 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
         onBulkDelete={hideToolbar ? undefined : handleBulkDelete}
         onSelectionChange={setSelectedScans}
         searchPlaceholder="搜索目标名称..."
-        searchColumn="targetName"
         searchValue={searchQuery}
         onSearch={handleSearchChange}
         isSearching={isSearching}

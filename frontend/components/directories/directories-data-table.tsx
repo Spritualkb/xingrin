@@ -1,63 +1,14 @@
 "use client"
 
 import * as React from "react"
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  ColumnSizingState,
-  flexRender,
-  getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-  VisibilityState,
-} from "@tanstack/react-table"
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
-  IconLayoutColumns,
-  IconTrash,
-  IconDownload,
-  IconPlus,
-} from "@tabler/icons-react"
-
+import type { ColumnDef } from "@tanstack/react-table"
+import { IconPlus } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { SmartFilterInput, type FilterField } from "@/components/common/smart-filter-input"
-
+import { UnifiedDataTable } from "@/components/ui/data-table"
+import type { FilterField } from "@/components/common/smart-filter-input"
 import type { Directory } from "@/types/directory.types"
 import type { PaginationInfo } from "@/types/common.types"
+import type { DownloadOption } from "@/types/data-table.types"
 
 // 目录页面的过滤字段配置
 const DIRECTORY_FILTER_FIELDS: FilterField[] = [
@@ -107,396 +58,89 @@ export function DirectoriesDataTable({
   onDownloadSelected,
   onBulkAdd,
 }: DirectoriesDataTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
-  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({})
-  const [internalPagination, setInternalPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const [selectedRows, setSelectedRows] = React.useState<Directory[]>([])
 
   // 处理智能过滤搜索
-  const handleSmartSearch = (_filters: any[], rawQuery: string) => {
+  const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
       onFilterChange(rawQuery)
     }
   }
 
-  const useServerPagination = !!paginationInfo && !!pagination && !!setPagination
-  const tablePagination = useServerPagination ? pagination : internalPagination
-  const setTablePagination = useServerPagination ? setPagination : setInternalPagination
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      columnSizing,
-      pagination: tablePagination,
-    },
-    getRowId: (row) => row.id.toString(),
-    enableRowSelection: true,
-    enableColumnResizing: true,
-    columnResizeMode: 'onChange',
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnSizingChange: setColumnSizing,
-    onPaginationChange: (updater) => {
-      const nextPagination =
-        typeof updater === "function" ? updater(tablePagination) : updater
-      setTablePagination?.(nextPagination as { pageIndex: number; pageSize: number })
-      onPaginationChange?.(nextPagination)
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: useServerPagination,
-    pageCount: useServerPagination
-      ? paginationInfo?.totalPages ?? -1
-      : Math.ceil(data.length / tablePagination.pageSize) || 1,
-  })
-
-  const totalItems = useServerPagination
-    ? paginationInfo?.total ?? data.length
-    : table.getFilteredRowModel().rows.length
-
   // 处理选中行变化
-  React.useEffect(() => {
-    if (onSelectionChange) {
-      const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original)
-      onSelectionChange(selectedRows)
-    }
-  }, [rowSelection, onSelectionChange, table])
+  const handleSelectionChange = (rows: Directory[]) => {
+    setSelectedRows(rows)
+    onSelectionChange?.(rows)
+  }
+
+  // 列标签映射
+  const columnLabels: Record<string, string> = {
+    url: "URL",
+    status: "Status",
+    contentLength: "Length",
+    words: "Words",
+    lines: "Lines",
+    contentType: "Content Type",
+    duration: "Duration",
+    createdAt: "Created At",
+  }
+
+  // 下载选项
+  const downloadOptions: DownloadOption[] = []
+  if (onDownloadAll) {
+    downloadOptions.push({
+      key: "all",
+      label: "Download All Directories",
+      onClick: onDownloadAll,
+    })
+  }
+  if (onDownloadSelected) {
+    downloadOptions.push({
+      key: "selected",
+      label: "Download Selected Directories",
+      onClick: onDownloadSelected,
+      disabled: (count) => count === 0,
+    })
+  }
 
   return (
-    <div className="w-full space-y-4">
-      {/* 工具栏 */}
-      <div className="flex flex-col gap-4 @container/toolbar">
-        {/* 第一行：搜索和列控制 */}
-        <div className="flex flex-col gap-4 @xl/toolbar:flex-row @xl/toolbar:items-center @xl/toolbar:justify-between">
-          {/* 智能过滤搜索框 */}
-          <SmartFilterInput
-            fields={DIRECTORY_FILTER_FIELDS}
-            examples={DIRECTORY_FILTER_EXAMPLES}
-            value={filterValue}
-            onSearch={handleSmartSearch}
-            className="flex-1 max-w-xl"
-          />
-
-          <div className="flex items-center gap-2">
-            {/* 列可见性控制 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <IconLayoutColumns className="mr-2 h-4 w-4" />
-                  Columns
-                  <IconChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {table
-                  .getAllColumns()
-                  .filter(
-                    (column) =>
-                      typeof column.accessorFn !== "undefined" && column.getCanHide()
-                  )
-                  .map((column) => {
-                    const columnTitle = {
-                      url: "URL",
-                      status: "Status",
-                      contentLength: "Length",
-                      words: "Words",
-                      lines: "Lines",
-                      contentType: "Content Type",
-                      duration: "Duration",
-                      createdAt: "Created At",
-                    }[column.id] || column.id
-
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {columnTitle}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* 下载按钮 */}
-            {(onDownloadAll || onDownloadSelected) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <IconDownload />
-                    Download
-                    <IconChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>Download Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {onDownloadAll && (
-                    <DropdownMenuItem onClick={onDownloadAll}>
-                      <IconDownload className="h-4 w-4" />
-                      Download All Directories
-                    </DropdownMenuItem>
-                  )}
-                  {onDownloadSelected && (
-                    <DropdownMenuItem 
-                      onClick={onDownloadSelected}
-                      disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-                    >
-                      <IconDownload className="h-4 w-4" />
-                      Download Selected Directories
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* 批量添加按钮 */}
-            {onBulkAdd && (
-              <Button onClick={onBulkAdd} size="sm" variant="outline">
-                <IconPlus />
-                批量添加
-              </Button>
-            )}
-
-            {/* 批量删除按钮 */}
-            {onBulkDelete && (
-              <Button 
-                onClick={onBulkDelete}
-                size="sm"
-                variant="outline"
-                disabled={table.getFilteredSelectedRowModel().rows.length === 0}
-                className={
-                  table.getFilteredSelectedRowModel().rows.length === 0
-                    ? "text-muted-foreground"
-                    : "text-destructive hover:text-destructive hover:bg-destructive/10"
-                }
-              >
-                <IconTrash />
-                Delete
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 表格 */}
-      <div className="rounded-md border overflow-x-auto">
-        <Table style={{ minWidth: table.getCenterTotalSize() }}>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead 
-                      key={header.id}
-                      style={{ width: header.getSize() }}
-                      className="relative group"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      {/* 列宽拖拽手柄 */}
-                      {header.column.getCanResize() && (
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          onDoubleClick={() => header.column.resetSize()}
-                          className="absolute -right-2.5 top-0 h-full w-5 cursor-col-resize select-none touch-none bg-transparent flex justify-center"
-                        >
-                          <div className="w-1.5 h-full bg-transparent group-hover:bg-border" />
-                        </div>
-                      )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* 分页控制 */}
-      <div className="flex flex-col gap-4 @container/pagination">
-        <div className="flex flex-col gap-4 @xl/pagination:flex-row @xl/pagination:items-center @xl/pagination:justify-between">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div>
-              {table.getFilteredSelectedRowModel().rows.length > 0 && (
-                <span>
-                  已选择 {table.getFilteredSelectedRowModel().rows.length} /{" "}
-                  {totalItems} 条
-                </span>
-              )}
-              {table.getFilteredSelectedRowModel().rows.length === 0 && (
-                <span>共 {totalItems} 条</span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 @sm/pagination:flex-row @sm/pagination:items-center">
-            {/* 每页显示条数 */}
-            <div className="flex items-center gap-2">
-              <Label htmlFor="pageSize" className="text-sm text-muted-foreground whitespace-nowrap">
-                每页显示
-              </Label>
-              <Select
-                value={`${tablePagination.pageSize}`}
-                onValueChange={(value) => {
-                  const newPageSize = Number(value)
-                  const newPagination = {
-                    pageSize: newPageSize,
-                    pageIndex: 0,
-                  }
-                  setTablePagination(newPagination)
-                  onPaginationChange?.(newPagination)
-                }}
-              >
-                <SelectTrigger id="pageSize" className="h-9 w-[70px]">
-                  <SelectValue placeholder={tablePagination.pageSize} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 50, 100, 200, 500, 1000].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 分页按钮 */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center text-sm font-medium whitespace-nowrap">
-                第 {tablePagination.pageIndex + 1} /{" "}
-                {table.getPageCount() || 1} 页
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => {
-                    const newPagination = {
-                      ...tablePagination,
-                      pageIndex: 0,
-                    }
-                    setTablePagination(newPagination)
-                    onPaginationChange?.(newPagination)
-                  }}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <span className="sr-only">跳转到第一页</span>
-                  <IconChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => {
-                    const newPagination = {
-                      ...tablePagination,
-                      pageIndex: tablePagination.pageIndex - 1,
-                    }
-                    setTablePagination(newPagination)
-                    onPaginationChange?.(newPagination)
-                  }}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <span className="sr-only">Previous page</span>
-                  <IconChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => {
-                    const newPagination = {
-                      ...tablePagination,
-                      pageIndex: tablePagination.pageIndex + 1,
-                    }
-                    setTablePagination(newPagination)
-                    onPaginationChange?.(newPagination)
-                  }}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <span className="sr-only">Next page</span>
-                  <IconChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => {
-                    const newPagination = {
-                      ...tablePagination,
-                      pageIndex: table.getPageCount() - 1,
-                    }
-                    setTablePagination(newPagination)
-                    onPaginationChange?.(newPagination)
-                  }}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <span className="sr-only">跳转到最后一页</span>
-                  <IconChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <UnifiedDataTable
+      data={data}
+      columns={columns}
+      getRowId={(row) => String(row.id)}
+      // 分页
+      pagination={pagination}
+      setPagination={setPagination}
+      paginationInfo={paginationInfo}
+      onPaginationChange={onPaginationChange}
+      // 智能过滤
+      searchMode="smart"
+      searchValue={filterValue}
+      onSearch={handleSmartSearch}
+      isSearching={isSearching}
+      filterFields={DIRECTORY_FILTER_FIELDS}
+      filterExamples={DIRECTORY_FILTER_EXAMPLES}
+      // 选择
+      onSelectionChange={handleSelectionChange}
+      // 批量操作
+      onBulkDelete={onBulkDelete}
+      bulkDeleteLabel="Delete"
+      showAddButton={false}
+      // 下载
+      downloadOptions={downloadOptions.length > 0 ? downloadOptions : undefined}
+      // 列控制
+      columnLabels={columnLabels}
+      // 空状态
+      emptyMessage="暂无数据"
+      // 自定义工具栏按钮
+      toolbarRight={
+        onBulkAdd ? (
+          <Button onClick={onBulkAdd} size="sm" variant="outline">
+            <IconPlus className="h-4 w-4" />
+            批量添加
+          </Button>
+        ) : undefined
+      }
+    />
   )
 }

@@ -268,7 +268,6 @@ export function OrganizationDetailView({
           onBulkDelete={handleBulkDelete}
           onSelectionChange={setSelectedTargets}
           searchPlaceholder="搜索目标名称..."
-          searchColumn="name"
           searchValue={searchQuery}
           onSearch={handleSearchChange}
           isSearching={isSearching}

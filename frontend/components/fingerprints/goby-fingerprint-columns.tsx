@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -7,6 +8,42 @@ import type { GobyFingerprint } from "@/types/fingerprint.types"
 
 interface ColumnOptions {
   formatDate: (date: string) => string
+}
+
+/**
+ * 规则详情单元格组件 - 默认显示3条，超出可展开
+ */
+function RuleDetailsCell({ rules }: { rules: any[] }) {
+  const [expanded, setExpanded] = React.useState(false)
+  
+  if (!rules || rules.length === 0) return <span className="text-muted-foreground">-</span>
+  
+  const displayRules = expanded ? rules : rules.slice(0, 3)
+  const hasMore = rules.length > 3
+  
+  return (
+    <div className="flex flex-col gap-1">
+      <div 
+        className="font-mono text-xs text-muted-foreground space-y-0.5 max-w-md cursor-pointer hover:text-foreground transition-colors"
+        onClick={() => hasMore && setExpanded(!expanded)}
+        title={hasMore ? (expanded ? "点击收起" : "点击展开") : undefined}
+      >
+        {displayRules.map((r, idx) => (
+          <div key={idx} className={expanded ? "break-all" : "truncate"}>
+            <span className="text-primary">{r.label}</span>: {r.feature}
+          </div>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-primary hover:underline self-start"
+        >
+          {expanded ? "收起" : "展开"}
+        </button>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -38,6 +75,7 @@ export function createGobyFingerprintColumns({
       ),
       enableSorting: false,
       enableHiding: false,
+      enableResizing: false,
       size: 40,
     },
     // 产品名称
@@ -47,6 +85,7 @@ export function createGobyFingerprintColumns({
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("name")}</div>
       ),
+      enableResizing: true,
       size: 200,
     },
     // 逻辑表达式
@@ -61,6 +100,7 @@ export function createGobyFingerprintColumns({
           </Badge>
         )
       },
+      enableResizing: true,
       size: 120,
     },
     // 规则数量
@@ -75,28 +115,15 @@ export function createGobyFingerprintColumns({
           </Badge>
         )
       },
+      enableResizing: true,
       size: 100,
     },
     // 规则详情
     {
       id: "ruleDetails",
       header: "Rule Details",
-      cell: ({ row }) => {
-        const rules = row.original.rule || []
-        if (rules.length === 0) return "-"
-        return (
-          <div className="font-mono text-xs text-muted-foreground space-y-0.5 max-w-md">
-            {rules.slice(0, 3).map((r, idx) => (
-              <div key={idx} className="truncate">
-                <span className="text-primary">{r.label}</span>: {r.feature}
-              </div>
-            ))}
-            {rules.length > 3 && (
-              <div className="text-muted-foreground">...还有 {rules.length - 3} 条</div>
-            )}
-          </div>
-        )
-      },
+      cell: ({ row }) => <RuleDetailsCell rules={row.original.rule || []} />,
+      enableResizing: true,
       size: 300,
     },
     // 创建时间
@@ -111,6 +138,7 @@ export function createGobyFingerprintColumns({
           </div>
         )
       },
+      enableResizing: true,
       size: 160,
     },
   ]

@@ -213,7 +213,6 @@ export function OrganizationTargetsDetailView({
         onBulkDelete={handleBulkDelete}
         onSelectionChange={setSelectedTargets}
         searchPlaceholder="搜索目标名称..."
-        searchColumn="name"
         addButtonText="关联目标"
         pagination={pagination}
         setPagination={setPagination}
