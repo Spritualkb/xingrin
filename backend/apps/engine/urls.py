@@ -7,7 +7,11 @@ from .views import (
     WordlistViewSet,
     NucleiTemplateRepoViewSet,
 )
-from .views.fingerprints import EholeFingerprintViewSet
+from .views.fingerprints import (
+    EholeFingerprintViewSet,
+    GobyFingerprintViewSet,
+    WappalyzerFingerprintViewSet,
+)
 
 
 # 创建路由器
@@ -18,6 +22,8 @@ router.register(r"wordlists", WordlistViewSet, basename="wordlist")
 router.register(r"nuclei/repos", NucleiTemplateRepoViewSet, basename="nuclei-repos")
 # 指纹管理
 router.register(r"fingerprints/ehole", EholeFingerprintViewSet, basename="ehole-fingerprint")
+router.register(r"fingerprints/goby", GobyFingerprintViewSet, basename="goby-fingerprint")
+router.register(r"fingerprints/wappalyzer", WappalyzerFingerprintViewSet, basename="wappalyzer-fingerprint")
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -1,6 +1,8 @@
 """初始化内置指纹库
 
 - EHole 指纹: ehole.json -> 导入到数据库
+- Goby 指纹: goby.json -> 导入到数据库
+- Wappalyzer 指纹: wappalyzer.json -> 导入到数据库
 
 可重复执行：如果数据库已有数据则跳过，只在空库时导入。
 """
@@ -12,8 +14,12 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from apps.engine.models import EholeFingerprint
-from apps.engine.services.fingerprints import EholeFingerprintService
+from apps.engine.models import EholeFingerprint, GobyFingerprint, WappalyzerFingerprint
+from apps.engine.services.fingerprints import (
+    EholeFingerprintService,
+    GobyFingerprintService,
+    WappalyzerFingerprintService,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +34,20 @@ DEFAULT_FINGERPRINTS = [
         "service": EholeFingerprintService,
         "data_key": "fingerprint",  # JSON 中指纹数组的 key
     },
-    # TODO: 后续添加 Goby, Wappalyzer
+    {
+        "type": "goby",
+        "filename": "goby.json",
+        "model": GobyFingerprint,
+        "service": GobyFingerprintService,
+        "data_key": None,  # Goby 是数组格式，直接使用整个 JSON
+    },
+    {
+        "type": "wappalyzer",
+        "filename": "wappalyzer.json",
+        "model": WappalyzerFingerprint,
+        "service": WappalyzerFingerprintService,
+        "data_key": "apps",  # Wappalyzer 使用 apps 对象
+    },
 ]
 
 
@@ -79,8 +98,8 @@ class Command(BaseCommand):
                 failed += 1
                 continue
 
-            # 提取指纹数据
-            fingerprints = json_data.get(data_key, [])
+            # 提取指纹数据（根据不同格式处理）
+            fingerprints = self._extract_fingerprints(json_data, data_key, fp_type)
             if not fingerprints:
                 self.stdout.write(self.style.WARNING(
                     f"[{fp_type}] 指纹文件中没有有效数据，跳过"
@@ -109,3 +128,33 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"指纹初始化完成: 成功 {initialized}, 已存在跳过 {skipped}, 失败 {failed}"
         ))
+
+    def _extract_fingerprints(self, json_data, data_key, fp_type):
+        """
+        根据不同格式提取指纹数据，兼容数组和对象两种格式
+        
+        支持的格式：
+        - 数组格式: [...] 或 {"key": [...]}
+        - 对象格式: {...} 或 {"key": {...}} -> 转换为 [{"name": k, ...v}]
+        """
+        # 获取目标数据
+        if data_key is None:
+            # 直接使用整个 JSON
+            target = json_data
+        else:
+            # 从指定 key 获取，支持多个可能的 key（如 apps/technologies）
+            if data_key == "apps":
+                target = json_data.get("apps") or json_data.get("technologies") or {}
+            else:
+                target = json_data.get(data_key, [])
+        
+        # 根据数据类型处理
+        if isinstance(target, list):
+            # 已经是数组格式，直接返回
+            return target
+        elif isinstance(target, dict):
+            # 对象格式，转换为数组 [{"name": key, ...value}]
+            return [{"name": name, **data} if isinstance(data, dict) else {"name": name}
+                    for name, data in target.items()]
+        
+        return []

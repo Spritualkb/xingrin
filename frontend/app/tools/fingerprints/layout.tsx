@@ -18,8 +18,8 @@ import { useFingerprintStats } from "@/hooks/use-fingerprints"
 // 指纹库说明
 const FINGERPRINT_HELP = `
 • EHole: 红队重点资产识别工具，支持关键词、favicon hash 等方式识别
-• Goby: 攻击面测绘工具，包含大量 Web 应用和设备指纹（即将支持）
-• Wappalyzer: 浏览器扩展，可识别网站使用的技术栈（即将支持）
+• Goby: 攻击面测绘工具，包含大量 Web 应用和设备指纹
+• Wappalyzer: 浏览器扩展，可识别网站使用的技术栈
 `.trim()
 
 /**
@@ -101,8 +101,8 @@ export default function FingerprintsLayout({
                   )}
                 </Link>
               </TabsTrigger>
-              <TabsTrigger value="goby" asChild disabled>
-                <Link href={tabPaths.goby} className="flex items-center gap-0.5 opacity-50 cursor-not-allowed">
+              <TabsTrigger value="goby" asChild>
+                <Link href={tabPaths.goby} className="flex items-center gap-0.5">
                   Goby
                   {counts.goby > 0 && (
                     <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">
@@ -111,8 +111,8 @@ export default function FingerprintsLayout({
                   )}
                 </Link>
               </TabsTrigger>
-              <TabsTrigger value="wappalyzer" asChild disabled>
-                <Link href={tabPaths.wappalyzer} className="flex items-center gap-0.5 opacity-50 cursor-not-allowed">
+              <TabsTrigger value="wappalyzer" asChild>
+                <Link href={tabPaths.wappalyzer} className="flex items-center gap-0.5">
                   Wappalyzer
                   {counts.wappalyzer > 0 && (
                     <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">

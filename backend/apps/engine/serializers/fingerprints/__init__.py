@@ -4,7 +4,11 @@
 """
 
 from .ehole import EholeFingerprintSerializer
+from .goby import GobyFingerprintSerializer
+from .wappalyzer import WappalyzerFingerprintSerializer
 
 __all__ = [
     "EholeFingerprintSerializer",
+    "GobyFingerprintSerializer",
+    "WappalyzerFingerprintSerializer",
 ]

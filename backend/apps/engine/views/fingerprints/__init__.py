@@ -5,8 +5,12 @@
 
 from .base import BaseFingerprintViewSet
 from .ehole import EholeFingerprintViewSet
+from .goby import GobyFingerprintViewSet
+from .wappalyzer import WappalyzerFingerprintViewSet
 
 __all__ = [
     "BaseFingerprintViewSet",
     "EholeFingerprintViewSet",
+    "GobyFingerprintViewSet",
+    "WappalyzerFingerprintViewSet",
 ]

@@ -16,21 +16,127 @@ import {
   DropzoneContent,
   DropzoneEmptyState,
 } from "@/components/ui/dropzone"
-import { useImportEholeFingerprints } from "@/hooks/use-fingerprints"
+import {
+  useImportEholeFingerprints,
+  useImportGobyFingerprints,
+  useImportWappalyzerFingerprints,
+} from "@/hooks/use-fingerprints"
+
+type FingerprintType = "ehole" | "goby" | "wappalyzer"
 
 interface ImportFingerprintDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  fingerprintType?: FingerprintType
+}
+
+// 指纹类型配置
+const FINGERPRINT_CONFIG: Record<FingerprintType, {
+  title: string
+  description: string
+  formatHint: string
+  validate: (json: any) => { valid: boolean; error?: string }
+}> = {
+  ehole: {
+    title: "导入 EHole 指纹",
+    description: "上传 EHole 格式的 JSON 指纹文件",
+    formatHint: '{"fingerprint": [...]}',
+    validate: (json) => {
+      if (!json.fingerprint) {
+        return { valid: false, error: "无效的 EHole 格式：缺少 fingerprint 字段" }
+      }
+      if (!Array.isArray(json.fingerprint)) {
+        return { valid: false, error: "无效的 EHole 格式：fingerprint 必须是数组" }
+      }
+      if (json.fingerprint.length === 0) {
+        return { valid: false, error: "指纹数据为空" }
+      }
+      const first = json.fingerprint[0]
+      if (!first.cms || !first.keyword) {
+        return { valid: false, error: "无效的 EHole 格式：指纹缺少必要字段 (cms, keyword)" }
+      }
+      return { valid: true }
+    },
+  },
+  goby: {
+    title: "导入 Goby 指纹",
+    description: "上传 Goby 格式的 JSON 指纹文件",
+    formatHint: "[{...}] 或 {...}",
+    validate: (json) => {
+      // 支持数组和对象两种格式
+      if (Array.isArray(json)) {
+        if (json.length === 0) {
+          return { valid: false, error: "指纹数据为空" }
+        }
+        const first = json[0]
+        if (!first.product || !first.rule) {
+          return { valid: false, error: "无效的 Goby 格式：指纹缺少必要字段 (product, rule)" }
+        }
+      } else if (typeof json === "object" && json !== null) {
+        if (Object.keys(json).length === 0) {
+          return { valid: false, error: "指纹数据为空" }
+        }
+      } else {
+        return { valid: false, error: "无效的 Goby 格式：必须是数组或对象" }
+      }
+      return { valid: true }
+    },
+  },
+  wappalyzer: {
+    title: "导入 Wappalyzer 指纹",
+    description: "上传 Wappalyzer 格式的 JSON 指纹文件",
+    formatHint: '{"apps": {...}} 或 [{...}]',
+    validate: (json) => {
+      // 支持数组格式
+      if (Array.isArray(json)) {
+        if (json.length === 0) {
+          return { valid: false, error: "指纹数据为空" }
+        }
+        return { valid: true }
+      }
+      // 支持对象格式 (apps 或 technologies)
+      const apps = json.apps || json.technologies
+      if (apps) {
+        if (typeof apps !== "object" || Array.isArray(apps)) {
+          return { valid: false, error: "无效的 Wappalyzer 格式：apps/technologies 必须是对象" }
+        }
+        if (Object.keys(apps).length === 0) {
+          return { valid: false, error: "指纹数据为空" }
+        }
+        return { valid: true }
+      }
+      // 直接是对象格式
+      if (typeof json === "object" && json !== null) {
+        if (Object.keys(json).length === 0) {
+          return { valid: false, error: "指纹数据为空" }
+        }
+        return { valid: true }
+      }
+      return { valid: false, error: "无效的 Wappalyzer 格式" }
+    },
+  },
 }
 
 export function ImportFingerprintDialog({
   open,
   onOpenChange,
   onSuccess,
+  fingerprintType = "ehole",
 }: ImportFingerprintDialogProps) {
   const [files, setFiles] = useState<File[]>([])
-  const importMutation = useImportEholeFingerprints()
+  
+  const eholeImportMutation = useImportEholeFingerprints()
+  const gobyImportMutation = useImportGobyFingerprints()
+  const wappalyzerImportMutation = useImportWappalyzerFingerprints()
+
+  const config = FINGERPRINT_CONFIG[fingerprintType]
+  
+  const importMutation = {
+    ehole: eholeImportMutation,
+    goby: gobyImportMutation,
+    wappalyzer: wappalyzerImportMutation,
+  }[fingerprintType]
 
   const handleDrop = (acceptedFiles: File[]) => {
     setFiles(acceptedFiles)
@@ -49,25 +155,9 @@ export function ImportFingerprintDialog({
       const text = await file.text()
       const json = JSON.parse(text)
 
-      if (!json.fingerprint) {
-        toast.error("无效的 EHole 格式：缺少 fingerprint 字段")
-        return
-      }
-
-      if (!Array.isArray(json.fingerprint)) {
-        toast.error("无效的 EHole 格式：fingerprint 必须是数组")
-        return
-      }
-
-      if (json.fingerprint.length === 0) {
-        toast.error("指纹数据为空")
-        return
-      }
-
-      // 检查第一条数据的基本字段
-      const first = json.fingerprint[0]
-      if (!first.cms || !first.keyword) {
-        toast.error("无效的 EHole 格式：指纹缺少必要字段 (cms, keyword)")
+      const validation = config.validate(json)
+      if (!validation.valid) {
+        toast.error(validation.error)
         return
       }
     } catch (e) {
@@ -98,9 +188,9 @@ export function ImportFingerprintDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>导入指纹</DialogTitle>
+          <DialogTitle>{config.title}</DialogTitle>
           <DialogDescription>
-            上传 EHole 格式的 JSON 指纹文件
+            {config.description}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,9 +208,9 @@ export function ImportFingerprintDialog({
           </Dropzone>
 
           <p className="text-xs text-muted-foreground mt-3">
-            支持 EHole 格式的 JSON 文件，格式如：{" "}
+            支持的 JSON 格式：{" "}
             <code className="bg-muted px-1 rounded">
-              {`{"fingerprint": [...]}`}
+              {config.formatHint}
             </code>
           </p>
         </div>

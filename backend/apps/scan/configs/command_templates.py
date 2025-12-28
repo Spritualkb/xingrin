@@ -235,13 +235,10 @@ FINGERPRINT_DETECT_COMMANDS = {
         # --json: JSON 格式输出（每行一条）
         'base': "xingfinger -l '{urls_file}' -s --json",
         'optional': {
-            # 自定义指纹库路径（当前只实现 ehole，以后扩展其他）
+            # 自定义指纹库路径
             'ehole': '--ehole {ehole}',
-            # 以后扩展：
-            # 'goby': '--goby {goby}',
-            # 'wappalyzer': '--wappalyzer {wappalyzer}',
-            # 'fingers': '--fingers {fingers}',
-            # 'fingerprinthub': '--fingerprint {fingerprinthub}',
+            'goby': '--goby {goby}',
+            'wappalyzer': '--wappalyzer {wappalyzer}',
         }
     },
 }
