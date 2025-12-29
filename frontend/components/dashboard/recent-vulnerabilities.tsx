@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -23,28 +24,43 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { IconExternalLink } from "@tabler/icons-react"
 import type { VulnerabilitySeverity } from "@/types/vulnerability.types"
+import { useTranslations } from "next-intl"
+import { useLocale } from "next-intl"
 
 // 统一的漏洞严重程度颜色配置（与图表一致）
-const severityConfig: Record<VulnerabilitySeverity, { label: string; className: string }> = {
-  critical: { label: "Critical", className: "bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/20 dark:text-[#f85149]" },
-  high: { label: "High", className: "bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20" },
-  medium: { label: "Medium", className: "bg-[#d4a72c]/10 text-[#d4a72c] border border-[#d4a72c]/20" },
-  low: { label: "Low", className: "bg-[#238636]/10 text-[#238636] border border-[#238636]/20 dark:text-[#3fb950]" },
-  info: { label: "Info", className: "bg-[#848d97]/10 text-[#848d97] border border-[#848d97]/20" },
-}
-
-function formatTime(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
+const severityStyles: Record<VulnerabilitySeverity, string> = {
+  critical: "bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/20 dark:text-[#f85149]",
+  high: "bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20",
+  medium: "bg-[#d4a72c]/10 text-[#d4a72c] border border-[#d4a72c]/20",
+  low: "bg-[#238636]/10 text-[#238636] border border-[#238636]/20 dark:text-[#3fb950]",
+  info: "bg-[#848d97]/10 text-[#848d97] border border-[#848d97]/20",
 }
 
 export function RecentVulnerabilities() {
   const router = useRouter()
+  const t = useTranslations("dashboard.recentVulns")
+  const tSeverity = useTranslations("severity")
+  const tColumns = useTranslations("columns")
+  const locale = useLocale()
+  
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const severityConfig = useMemo(() => ({
+    critical: { label: tSeverity("critical"), className: severityStyles.critical },
+    high: { label: tSeverity("high"), className: severityStyles.high },
+    medium: { label: tSeverity("medium"), className: severityStyles.medium },
+    low: { label: tSeverity("low"), className: severityStyles.low },
+    info: { label: tSeverity("info"), className: severityStyles.info },
+  }), [tSeverity])
+
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", "recent-vulnerabilities"],
     queryFn: () => VulnerabilityService.getAllVulnerabilities({ page: 1, pageSize: 5 }),
@@ -56,14 +72,14 @@ export function RecentVulnerabilities() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>最近漏洞</CardTitle>
-          <CardDescription>最近发现的安全漏洞</CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </div>
         <Link 
           href="/vulnerabilities/" 
           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
         >
-          查看全部
+          {t("viewAll")}
           <IconExternalLink className="h-3.5 w-3.5" />
         </Link>
       </CardHeader>
@@ -76,18 +92,18 @@ export function RecentVulnerabilities() {
           </div>
         ) : vulnerabilities.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            暂无漏洞数据
+            {t("noData")}
           </div>
         ) : (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead>创建时间</TableHead>
+                  <TableHead>{tColumns("common.status")}</TableHead>
+                  <TableHead>{tColumns("vulnerability.source")}</TableHead>
+                  <TableHead>{tColumns("common.type")}</TableHead>
+                  <TableHead>{tColumns("common.url")}</TableHead>
+                  <TableHead>{tColumns("common.createdAt")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -16,11 +16,34 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import type { Target } from "@/types/target.types"
 import { toast } from "sonner"
 
-// 列创建函数的参数类型
+// 翻译类型定义
+export interface OrgTargetsTranslations {
+  columns: {
+    targetName: string
+    type: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    viewDetails: string
+    unlinkTarget: string
+    clickToCopy: string
+    copied: string
+  }
+  types: {
+    domain: string
+    ip: string
+    cidr: string
+  }
+}
+
 interface CreateColumnsProps {
   formatDate: (dateString: string) => string
   navigate: (path: string) => void
   handleDelete: (target: Target) => void
+  t: OrgTargetsTranslations
 }
 
 /**
@@ -30,10 +53,12 @@ function TargetRowActions({
   target,
   onView,
   onDelete,
+  t,
 }: {
   target: Target
   onView: () => void
   onDelete: () => void
+  t: OrgTargetsTranslations
 }) {
   return (
     <div className="flex items-center gap-1">
@@ -50,7 +75,7 @@ function TargetRowActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-xs">查看详情</p>
+            <p className="text-xs">{t.tooltips.viewDetails}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -68,7 +93,7 @@ function TargetRowActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-xs">解除关联</p>
+            <p className="text-xs">{t.tooltips.unlinkTarget}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -82,11 +107,13 @@ function TargetRowActions({
 function TargetNameCell({ 
   name, 
   targetId, 
-  navigate 
+  navigate,
+  t,
 }: { 
   name: string
   targetId: number
-  navigate: (path: string) => void 
+  navigate: (path: string) => void
+  t: OrgTargetsTranslations
 }) {
   const [copied, setCopied] = React.useState(false)
   
@@ -95,10 +122,10 @@ function TargetNameCell({
     try {
       await navigator.clipboard.writeText(name)
       setCopied(true)
-      toast.success("已复制目标名称")
+      toast.success(t.tooltips.copied)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('复制失败')
+      // Fallback
     }
   }
   
@@ -110,20 +137,29 @@ function TargetNameCell({
       >
         {name}
       </button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={`h-6 w-6 flex-shrink-0 hover:bg-accent transition-opacity ${
-          copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-        }`}
-        onClick={handleCopy}
-      >
-        {copied ? (
-          <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-        ) : (
-          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-        )}
-      </Button>
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-6 w-6 flex-shrink-0 hover:bg-accent transition-opacity ${
+                copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              }`}
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-xs">{copied ? t.tooltips.copied : t.tooltips.clickToCopy}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   )
 }
@@ -135,8 +171,8 @@ export const createTargetColumns = ({
   formatDate,
   navigate,
   handleDelete,
+  t,
 }: CreateColumnsProps): ColumnDef<Target>[] => [
-  // 选择列
   {
     id: "select",
     size: 40,
@@ -150,46 +186,43 @@ export const createTargetColumns = ({
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={t.actions.selectAll}
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label={t.actions.selectRow}
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
-
-  // 目标名称列
   {
     accessorKey: "name",
     size: 350,
     minSize: 250,
-    meta: { title: "Target Name" },
+    meta: { title: t.columns.targetName },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Target Name" />
+      <DataTableColumnHeader column={column} title={t.columns.targetName} />
     ),
     cell: ({ row }) => (
       <TargetNameCell
         name={row.getValue("name") as string}
         targetId={row.original.id}
         navigate={navigate}
+        t={t}
       />
     ),
   },
-
-  // 类型列
   {
     accessorKey: "type",
     size: 100,
     minSize: 80,
-    meta: { title: "Type" },
+    meta: { title: t.columns.type },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
+      <DataTableColumnHeader column={column} title={t.columns.type} />
     ),
     cell: ({ row }) => {
       const type = row.getValue("type") as string | null
@@ -197,9 +230,9 @@ export const createTargetColumns = ({
         return <span className="text-sm text-muted-foreground">-</span>
       }
       const typeMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-        domain: { label: "域名", variant: "default" },
-        ip: { label: "IP", variant: "secondary" },
-        cidr: { label: "CIDR", variant: "outline" },
+        domain: { label: t.types.domain, variant: "default" },
+        ip: { label: t.types.ip, variant: "secondary" },
+        cidr: { label: t.types.cidr, variant: "outline" },
       }
       const typeInfo = typeMap[type] || { label: type, variant: "secondary" as const }
       return (
@@ -209,8 +242,6 @@ export const createTargetColumns = ({
       )
     },
   },
-
-  // 操作列
   {
     id: "actions",
     size: 80,
@@ -222,10 +253,10 @@ export const createTargetColumns = ({
         target={row.original}
         onView={() => navigate(`/target/${row.original.id}/subdomain/`)}
         onDelete={() => handleDelete(row.original)}
+        t={t}
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
 ]
-

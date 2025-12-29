@@ -27,6 +27,7 @@ import {
   useUpdateEholeFingerprint,
 } from "@/hooks/use-fingerprints"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
+import { useTranslations } from "next-intl"
 
 interface EholeFingerprintDialogProps {
   open: boolean
@@ -64,6 +65,9 @@ export function EholeFingerprintDialog({
   onSuccess,
 }: EholeFingerprintDialogProps) {
   const isEdit = !!fingerprint
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
+  const tColumns = useTranslations("columns.fingerprint")
 
   const createMutation = useCreateEholeFingerprint()
   const updateMutation = useUpdateEholeFingerprint()
@@ -115,7 +119,7 @@ export function EholeFingerprintDialog({
       .filter((k) => k.length > 0)
 
     if (keywordArray.length === 0) {
-      toast.error("关键词不能为空")
+      toast.error(t("form.keywordRequired"))
       return
     }
 
@@ -131,15 +135,15 @@ export function EholeFingerprintDialog({
     try {
       if (isEdit && fingerprint) {
         await updateMutation.mutateAsync({ id: fingerprint.id, data: payload })
-        toast.success("更新成功")
+        toast.success(t("toast.updateSuccess"))
       } else {
         await createMutation.mutateAsync(payload)
-        toast.success("创建成功")
+        toast.success(t("toast.createSuccess"))
       }
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      toast.error(error.message || (isEdit ? "更新失败" : "创建失败"))
+      toast.error(error.message || (isEdit ? t("toast.updateFailed") : t("toast.createFailed")))
     }
   }
 
@@ -151,20 +155,20 @@ export function EholeFingerprintDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "编辑 EHole 指纹" : "添加 EHole 指纹"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("ehole.editTitle") : t("ehole.addTitle")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "修改指纹规则配置" : "添加新的指纹规则"}
+            {isEdit ? t("ehole.editDesc") : t("ehole.addDesc")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* CMS 名称 */}
           <div className="space-y-2">
-            <Label htmlFor="cms">CMS 名称 *</Label>
+            <Label htmlFor="cms">{tColumns("cms")} *</Label>
             <Input
               id="cms"
-              placeholder="如：WordPress、Nginx"
-              {...register("cms", { required: "CMS 名称不能为空" })}
+              placeholder={t("form.cmsPlaceholder")}
+              {...register("cms", { required: t("form.cmsRequired") })}
             />
             {errors.cms && (
               <p className="text-sm text-destructive">{errors.cms.message}</p>
@@ -174,7 +178,7 @@ export function EholeFingerprintDialog({
           {/* 匹配方式 & 匹配位置 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>匹配方式 *</Label>
+              <Label>{tColumns("method")} *</Label>
               <Select value={method} onValueChange={(v) => setValue("method", v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -190,7 +194,7 @@ export function EholeFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>匹配位置 *</Label>
+              <Label>{t("form.location")} *</Label>
               <Select value={location} onValueChange={(v) => setValue("location", v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -208,33 +212,30 @@ export function EholeFingerprintDialog({
 
           {/* 关键词 */}
           <div className="space-y-2">
-            <Label htmlFor="keyword">关键词 *</Label>
+            <Label htmlFor="keyword">{tColumns("keyword")} *</Label>
             <Input
               id="keyword"
-              placeholder="多个关键词用逗号分隔"
-              {...register("keyword", { required: "关键词不能为空" })}
+              placeholder={t("form.keywordPlaceholder")}
+              {...register("keyword", { required: t("form.keywordRequired") })}
             />
             {errors.keyword && (
               <p className="text-sm text-destructive">{errors.keyword.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              多个关键词用逗号分隔，匹配时为 AND 关系
-            </p>
           </div>
 
           {/* 类型 & 重点资产 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="type">类型</Label>
+              <Label htmlFor="type">{tColumns("type") || "Type"}</Label>
               <Input
                 id="type"
-                placeholder="如：CMS、Server"
+                placeholder={t("form.typePlaceholder")}
                 {...register("type")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>标记</Label>
+              <Label>{t("form.mark")}</Label>
               <div className="flex items-center space-x-2 h-9">
                 <Checkbox
                   id="isImportant"
@@ -242,7 +243,7 @@ export function EholeFingerprintDialog({
                   onCheckedChange={(checked) => setValue("isImportant", !!checked)}
                 />
                 <Label htmlFor="isImportant" className="cursor-pointer font-normal">
-                  重点资产
+                  {tColumns("important")}
                 </Label>
               </div>
             </div>
@@ -250,10 +251,10 @@ export function EholeFingerprintDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "保存中..." : isEdit ? "更新" : "创建"}
+              {isSubmitting ? "..." : isEdit ? tCommon("save") : tCommon("create")}
             </Button>
           </DialogFooter>
         </form>

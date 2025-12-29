@@ -38,59 +38,90 @@ import {
   IconBug,
 } from "@tabler/icons-react"
 
-
+// 翻译类型定义
+export interface ScanHistoryTranslations {
+  columns: {
+    target: string
+    summary: string
+    engineName: string
+    createdAt: string
+    status: string
+    progress: string
+  }
+  actions: {
+    snapshot: string
+    stopScan: string
+    delete: string
+    openMenu: string
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    targetDetails: string
+    viewProgress: string
+  }
+  status: {
+    cancelled: string
+    completed: string
+    failed: string
+    initiated: string
+    running: string
+  }
+  summary: {
+    subdomains: string
+    websites: string
+    ipAddresses: string
+    endpoints: string
+    vulnerabilities: string
+  }
+}
 
 /**
  * 状态徽章组件
- * 使用 shadcn Badge 的标准 variant
- * Running/Initiated 状态可点击查看进度详情
  */
 function StatusBadge({ 
   status, 
-  onClick 
+  onClick,
+  labels,
 }: { 
   status: ScanStatus
-  onClick?: () => void 
+  onClick?: () => void
+  labels: Record<ScanStatus, string>
 }) {
   const config: Record<ScanStatus, {
     icon: React.ComponentType<{ className?: string }>
-    label: string
     variant: "secondary" | "default" | "outline" | "destructive"
     className?: string
   }> = {
     cancelled: {
       icon: IconCircleX,
-      label: "Cancelled",
       variant: "outline",
       className: "bg-[#848d97]/10 text-[#848d97] border-[#848d97]/20 hover:bg-[#848d97]/20 transition-colors",
     },
     completed: {
       icon: IconCircleCheck,
-      label: "Completed",
       variant: "outline",
       className: "bg-[#238636]/10 text-[#238636] border-[#238636]/20 hover:bg-[#238636]/20 dark:text-[#3fb950] transition-colors",
     },
     failed: {
       icon: IconCircleX,
-      label: "Failed",
       variant: "outline",
       className: "bg-[#da3633]/10 text-[#da3633] border-[#da3633]/20 hover:bg-[#da3633]/20 dark:text-[#f85149] transition-colors",
     },
     initiated: {
       icon: IconClock,
-      label: "Initiated",
       variant: "outline",
       className: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20 hover:bg-[#d29922]/20 transition-colors",
     },
     running: {
       icon: IconLoader,
-      label: "Running",
       variant: "outline",
       className: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20 hover:bg-[#d29922]/20 transition-colors",
     },
   }
 
-  const { icon: Icon, label, variant, className } = config[status]
+  const { icon: Icon, variant, className } = config[status]
+  const label = labels[status]
 
   const badge = (
     <Badge variant={variant} className={className}>
@@ -112,7 +143,6 @@ function StatusBadge({
       <button 
         onClick={onClick}
         className="cursor-pointer hover:scale-105 transition-transform"
-        title="点击查看进度详情"
       >
         {badge}
       </button>
@@ -129,6 +159,7 @@ interface CreateColumnsProps {
   handleDelete: (scan: ScanRecord) => void
   handleStop: (scan: ScanRecord) => void
   handleViewProgress?: (scan: ScanRecord) => void
+  t: ScanHistoryTranslations
 }
 
 /**
@@ -140,8 +171,8 @@ export const createScanHistoryColumns = ({
   handleDelete,
   handleStop,
   handleViewProgress,
+  t,
 }: CreateColumnsProps): ColumnDef<ScanRecord>[] => [
-  // 选择列
   {
     id: "select",
     size: 40,
@@ -155,28 +186,26 @@ export const createScanHistoryColumns = ({
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={t.actions.selectAll}
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label={t.actions.selectRow}
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
-
-  // Target 列
   {
     accessorKey: "targetName",
     size: 350,
     minSize: 100,
-    meta: { title: "Target" },
+    meta: { title: t.columns.target },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Target" />
+      <DataTableColumnHeader column={column} title={t.columns.target} />
     ),
     cell: ({ row }) => {
       const targetName = row.getValue("targetName") as string
@@ -194,7 +223,7 @@ export const createScanHistoryColumns = ({
                   {targetName}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>目标详情</TooltipContent>
+              <TooltipContent>{t.tooltips.targetDetails}</TooltipContent>
             </Tooltip>
           ) : (
             <span className="text-sm font-medium break-all leading-relaxed whitespace-normal">
@@ -205,13 +234,11 @@ export const createScanHistoryColumns = ({
       )
     },
   },
-
-  // Summary 列
   {
     accessorKey: "summary",
-    meta: { title: "Summary" },
+    meta: { title: t.columns.summary },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Summary" />
+      <DataTableColumnHeader column={column} title={t.columns.summary} />
     ),
     size: 420,
     minSize: 150,
@@ -252,7 +279,7 @@ export const createScanHistoryColumns = ({
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Subdomains</p>
+                <p className="text-xs">{t.summary.subdomains}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -273,7 +300,7 @@ export const createScanHistoryColumns = ({
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Websites</p>
+                <p className="text-xs">{t.summary.websites}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -294,7 +321,7 @@ export const createScanHistoryColumns = ({
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">IP Addresses</p>
+                <p className="text-xs">{t.summary.ipAddresses}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -315,7 +342,7 @@ export const createScanHistoryColumns = ({
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Endpoints</p>
+                <p className="text-xs">{t.summary.endpoints}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -337,7 +364,7 @@ export const createScanHistoryColumns = ({
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-xs font-medium">
-                  {summary?.vulnerabilities?.critical ?? 0} Critical, {summary?.vulnerabilities?.high ?? 0} High, {summary?.vulnerabilities?.medium ?? 0} Medium Vulnerabilities
+                  {summary?.vulnerabilities?.critical ?? 0} Critical, {summary?.vulnerabilities?.high ?? 0} High, {summary?.vulnerabilities?.medium ?? 0} Medium {t.summary.vulnerabilities}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -363,17 +390,15 @@ export const createScanHistoryColumns = ({
     },
     enableSorting: false,
   },
-
-  // Engine Name 列
   {
     accessorKey: "engineName",
     size: 120,
     minSize: 80,
     maxSize: 180,
     enableResizing: false,
-    meta: { title: "Engine Name" },
+    meta: { title: t.columns.engineName },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Engine Name" />
+      <DataTableColumnHeader column={column} title={t.columns.engineName} />
     ),
     cell: ({ row }) => {
       const engineName = row.getValue("engineName") as string
@@ -384,17 +409,15 @@ export const createScanHistoryColumns = ({
       )
     },
   },
-
-  // Created At 列
   {
     accessorKey: "createdAt",
     size: 150,
     minSize: 120,
     maxSize: 200,
     enableResizing: false,
-    meta: { title: "Created At" },
+    meta: { title: t.columns.createdAt },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created At" />
+      <DataTableColumnHeader column={column} title={t.columns.createdAt} />
     ),
     cell: ({ row }) => {
       const createdAt = row.getValue("createdAt") as string
@@ -405,17 +428,15 @@ export const createScanHistoryColumns = ({
       )
     },
   },
-
-  // Status 列
   {
     accessorKey: "status",
     size: 110,
     minSize: 90,
     maxSize: 130,
     enableResizing: false,
-    meta: { title: "Status" },
+    meta: { title: t.columns.status },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={t.columns.status} />
     ),
     cell: ({ row }) => {
       const status = row.getValue("status") as ScanStatus
@@ -423,17 +444,16 @@ export const createScanHistoryColumns = ({
         <StatusBadge 
           status={status} 
           onClick={handleViewProgress ? () => handleViewProgress(row.original) : undefined}
+          labels={t.status}
         />
       )
     },
   },
-
-  // Progress 列
   {
     accessorKey: "progress",
-    meta: { title: "Progress" },
+    meta: { title: t.columns.progress },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Progress" />
+      <DataTableColumnHeader column={column} title={t.columns.progress} />
     ),
     size: 150,
     minSize: 120,
@@ -441,8 +461,6 @@ export const createScanHistoryColumns = ({
     cell: ({ row }) => {
       const progress = row.getValue("progress") as number
       const status = row.original.status
-      
-      // 如果状态是completed，显示100%
       const displayProgress = status === "completed" ? 100 : progress
       
       return (
@@ -468,8 +486,6 @@ export const createScanHistoryColumns = ({
     },
     enableSorting: false,
   },
-
-  // 操作列
   {
     id: "actions",
     size: 120,
@@ -482,7 +498,6 @@ export const createScanHistoryColumns = ({
       
       return (
         <div className="flex items-center gap-1">
-          {/* View Results 按钮 - 直接显示 */}
           <Button
             variant="ghost"
             size="sm"
@@ -490,10 +505,9 @@ export const createScanHistoryColumns = ({
             onClick={() => navigate(`/scan/history/${scan.id}/`)}
           >
             <Eye className="h-3.5 w-3.5 mr-1" />
-            快照
+            {t.actions.snapshot}
           </Button>
           
-          {/* 更多操作菜单 */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -501,7 +515,7 @@ export const createScanHistoryColumns = ({
                 className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
               >
                 <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">打开菜单</span>
+                <span className="sr-only">{t.actions.openMenu}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -512,7 +526,7 @@ export const createScanHistoryColumns = ({
                     className="text-chart-2 focus:text-chart-2"
                   >
                     <StopCircle />
-                    停止扫描
+                    {t.actions.stopScan}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -522,7 +536,7 @@ export const createScanHistoryColumns = ({
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 />
-                删除
+                {t.actions.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

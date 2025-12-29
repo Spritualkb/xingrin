@@ -1,25 +1,25 @@
 /**
- * 扫描引擎类型定义
+ * Scan engine type definitions
  * 
- * 后端实际返回字段: id, name, configuration, created_at, updated_at
+ * Backend actual return fields: id, name, configuration, created_at, updated_at
  */
 
-// 扫描引擎接口
+// Scan engine interface
 export interface ScanEngine {
   id: number
   name: string
-  configuration?: string   // YAML 配置内容
+  configuration?: string   // YAML configuration content
   createdAt: string
   updatedAt: string
 }
 
-// 创建引擎请求
+// Create engine request
 export interface CreateEngineRequest {
   name: string
   configuration: string
 }
 
-// 更新引擎请求
+// Update engine request
 export interface UpdateEngineRequest {
   name?: string
   configuration?: string

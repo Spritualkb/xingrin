@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { deleteScan, stopScan } from "@/services/scan.service"
+import { useTranslations, useLocale } from "next-intl"
+import { getDateLocale } from "@/lib/date-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,8 @@ import type { PaginationInfo } from "@/types/common.types"
 export function DashboardDataTable() {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations()
+  const locale = useLocale()
   const [activeTab, setActiveTab] = React.useState("scans")
   
   // 漏洞详情弹窗
@@ -88,7 +92,7 @@ export function DashboardDataTable() {
 
   // 格式化日期
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -110,8 +114,32 @@ export function DashboardDataTable() {
     () => createVulnerabilityColumns({
       formatDate,
       handleViewDetail: handleVulnRowClick,
+      t: {
+        columns: {
+          severity: t('columns.vulnerability.severity'),
+          source: t('columns.vulnerability.source'),
+          vulnType: t('columns.vulnerability.vulnType'),
+          url: t('columns.common.url'),
+          createdAt: t('columns.common.createdAt'),
+        },
+        actions: {
+          details: t('common.actions.details'),
+          selectAll: t('common.actions.selectAll'),
+          selectRow: t('common.actions.selectRow'),
+        },
+        tooltips: {
+          vulnDetails: t('tooltips.vulnDetails'),
+        },
+        severity: {
+          critical: t('severity.critical'),
+          high: t('severity.high'),
+          medium: t('severity.medium'),
+          low: t('severity.low'),
+          info: t('severity.info'),
+        },
+      },
     }),
-    [handleVulnRowClick]
+    [handleVulnRowClick, t]
   )
 
   // 扫描进度查看
@@ -138,9 +166,9 @@ export function DashboardDataTable() {
     setDeleteDialogOpen(false)
     try {
       await deleteMutation.mutateAsync(scanToDelete.id)
-      toast.success(`已删除扫描记录: ${scanToDelete.targetName}`)
+      toast.success(t('common.status.success'))
     } catch (error) {
-      toast.error("删除失败，请重试")
+      toast.error(t('common.status.error'))
       console.error('删除失败:', error)
     } finally {
       setScanToDelete(null)
@@ -159,9 +187,9 @@ export function DashboardDataTable() {
     setStopDialogOpen(false)
     try {
       await stopMutation.mutateAsync(scanToStop.id)
-      toast.success(`已停止扫描任务: ${scanToStop.targetName}`)
+      toast.success(t('common.status.success'))
     } catch (error) {
-      toast.error("停止失败，请重试")
+      toast.error(t('common.status.error'))
       console.error('停止扫描失败:', error)
     } finally {
       setScanToStop(null)
@@ -176,8 +204,44 @@ export function DashboardDataTable() {
       handleDelete,
       handleStop,
       handleViewProgress,
+      t: {
+        columns: {
+          target: t('columns.scanHistory.target'),
+          summary: t('columns.scanHistory.summary'),
+          engineName: t('columns.scanHistory.engineName'),
+          createdAt: t('columns.common.createdAt'),
+          status: t('columns.common.status'),
+          progress: t('columns.scanHistory.progress'),
+        },
+        actions: {
+          snapshot: t('common.actions.snapshot'),
+          stopScan: t('scan.stopScan'),
+          delete: t('common.actions.delete'),
+          openMenu: t('common.actions.openMenu'),
+          selectAll: t('common.actions.selectAll'),
+          selectRow: t('common.actions.selectRow'),
+        },
+        tooltips: {
+          targetDetails: t('tooltips.targetDetails'),
+          viewProgress: t('tooltips.viewProgress'),
+        },
+        status: {
+          cancelled: t('common.status.cancelled'),
+          completed: t('common.status.completed'),
+          failed: t('common.status.failed'),
+          initiated: t('common.status.pending'),
+          running: t('common.status.running'),
+        },
+        summary: {
+          subdomains: t('columns.scanHistory.subdomains'),
+          websites: t('columns.scanHistory.websites'),
+          ipAddresses: t('columns.scanHistory.ipAddresses'),
+          endpoints: t('columns.scanHistory.endpoints'),
+          vulnerabilities: t('columns.scanHistory.vulnerabilities'),
+        },
+      },
     }),
-    [router, handleViewProgress, handleDelete, handleStop]
+    [router, handleViewProgress, handleDelete, handleStop, t]
   )
 
   // 漏洞分页信息
@@ -215,18 +279,18 @@ export function DashboardDataTable() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{t('common.confirm.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除扫描记录 &quot;{scanToDelete?.targetName}&quot; 及其相关数据。
+              {t('common.confirm.deleteMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除
+              {t('common.actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -236,18 +300,18 @@ export function DashboardDataTable() {
       <AlertDialog open={stopDialogOpen} onOpenChange={setStopDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认停止扫描</AlertDialogTitle>
+            <AlertDialogTitle>{t('common.confirm.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要停止扫描任务 &quot;{scanToStop?.targetName}&quot; 吗？扫描将会中止，已收集的数据将会保留。
+              {t('common.confirm.deleteMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmStop} 
               className="bg-chart-2 text-white hover:bg-chart-2/90"
             >
-              停止扫描
+              {t('scan.stopScan')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -269,16 +333,16 @@ export function DashboardDataTable() {
               pagination={vulnPagination}
               onPaginationChange={setVulnPagination}
               paginationInfo={vulnPaginationInfo}
-              emptyMessage="暂无漏洞数据"
+              emptyMessage={t('common.status.noData')}
               toolbarLeft={
                 <TabsList>
                   <TabsTrigger value="scans" className="gap-1.5">
                     <IconRadar className="h-4 w-4" />
-                    扫描历史
+                    {t('navigation.scanHistory')}
                   </TabsTrigger>
                   <TabsTrigger value="vulnerabilities" className="gap-1.5">
                     <IconBug className="h-4 w-4" />
-                    漏洞
+                    {t('navigation.vulnerabilities')}
                   </TabsTrigger>
                 </TabsList>
               }
@@ -303,16 +367,16 @@ export function DashboardDataTable() {
               pagination={scanPagination}
               onPaginationChange={setScanPagination}
               paginationInfo={scanPaginationInfo}
-              emptyMessage="暂无扫描记录"
+              emptyMessage={t('common.status.noData')}
               toolbarLeft={
                 <TabsList>
                   <TabsTrigger value="scans" className="gap-1.5">
                     <IconRadar className="h-4 w-4" />
-                    扫描历史
+                    {t('navigation.scanHistory')}
                   </TabsTrigger>
                   <TabsTrigger value="vulnerabilities" className="gap-1.5">
                     <IconBug className="h-4 w-4" />
-                    漏洞
+                    {t('navigation.vulnerabilities')}
                   </TabsTrigger>
                 </TabsList>
               }

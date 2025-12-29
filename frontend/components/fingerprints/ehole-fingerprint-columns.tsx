@@ -7,14 +7,34 @@ import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
 
+// 翻译类型定义
+export interface EholeFingerprintTranslations {
+  columns: {
+    cms: string
+    method: string
+    location: string
+    keyword: string
+    type: string
+    important: string
+    created: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+    expand: string
+    collapse: string
+  }
+}
+
 interface ColumnOptions {
   formatDate: (date: string) => string
+  t: EholeFingerprintTranslations
 }
 
 /**
  * 关键词列表单元格 - 默认显示3个，超出可展开
  */
-function KeywordListCell({ keywords }: { keywords: string[] }) {
+function KeywordListCell({ keywords, t }: { keywords: string[]; t: EholeFingerprintTranslations }) {
   const [expanded, setExpanded] = React.useState(false)
   
   if (!keywords || keywords.length === 0) return <span className="text-muted-foreground">-</span>
@@ -36,7 +56,7 @@ function KeywordListCell({ keywords }: { keywords: string[] }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-primary hover:underline self-start"
         >
-          {expanded ? "收起" : "展开"}
+          {expanded ? t.actions.collapse : t.actions.expand}
         </button>
       )}
     </div>
@@ -48,9 +68,9 @@ function KeywordListCell({ keywords }: { keywords: string[] }) {
  */
 export function createEholeFingerprintColumns({
   formatDate,
+  t,
 }: ColumnOptions): ColumnDef<EholeFingerprint>[] {
   return [
-    // 选择列
     {
       id: "select",
       header: ({ table }) => (
@@ -60,14 +80,14 @@ export function createEholeFingerprintColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
@@ -75,12 +95,11 @@ export function createEholeFingerprintColumns({
       enableResizing: false,
       size: 40,
     },
-    // CMS 名称
     {
       accessorKey: "cms",
-      meta: { title: "CMS" },
+      meta: { title: t.columns.cms },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="CMS" />
+        <DataTableColumnHeader column={column} title={t.columns.cms} />
       ),
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("cms")}</div>
@@ -88,12 +107,11 @@ export function createEholeFingerprintColumns({
       enableResizing: true,
       size: 200,
     },
-    // 匹配方式
     {
       accessorKey: "method",
-      meta: { title: "Method" },
+      meta: { title: t.columns.method },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Method" />
+        <DataTableColumnHeader column={column} title={t.columns.method} />
       ),
       cell: ({ row }) => {
         const method = row.getValue("method") as string
@@ -106,12 +124,11 @@ export function createEholeFingerprintColumns({
       enableResizing: false,
       size: 120,
     },
-    // 匹配位置
     {
       accessorKey: "location",
-      meta: { title: "Location" },
+      meta: { title: t.columns.location },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Location" />
+        <DataTableColumnHeader column={column} title={t.columns.location} />
       ),
       cell: ({ row }) => {
         const location = row.getValue("location") as string
@@ -124,23 +141,21 @@ export function createEholeFingerprintColumns({
       enableResizing: false,
       size: 100,
     },
-    // 关键词
     {
       accessorKey: "keyword",
-      meta: { title: "Keyword" },
+      meta: { title: t.columns.keyword },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Keyword" />
+        <DataTableColumnHeader column={column} title={t.columns.keyword} />
       ),
-      cell: ({ row }) => <KeywordListCell keywords={row.getValue("keyword") || []} />,
+      cell: ({ row }) => <KeywordListCell keywords={row.getValue("keyword") || []} t={t} />,
       enableResizing: true,
       size: 300,
     },
-    // 类型
     {
       accessorKey: "type",
-      meta: { title: "Type" },
+      meta: { title: t.columns.type },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Type" />
+        <DataTableColumnHeader column={column} title={t.columns.type} />
       ),
       cell: ({ row }) => {
         const type = row.getValue("type") as string
@@ -150,12 +165,11 @@ export function createEholeFingerprintColumns({
       enableResizing: false,
       size: 100,
     },
-    // 重点资产
     {
       accessorKey: "isImportant",
-      meta: { title: "Important" },
+      meta: { title: t.columns.important },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Important" />
+        <DataTableColumnHeader column={column} title={t.columns.important} />
       ),
       cell: ({ row }) => {
         const isImportant = row.getValue("isImportant")
@@ -164,12 +178,11 @@ export function createEholeFingerprintColumns({
       enableResizing: false,
       size: 100,
     },
-    // 创建时间
     {
       accessorKey: "createdAt",
-      meta: { title: "Created" },
+      meta: { title: t.columns.created },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader column={column} title={t.columns.created} />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

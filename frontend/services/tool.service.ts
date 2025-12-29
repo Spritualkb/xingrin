@@ -3,12 +3,12 @@ import type { Tool, GetToolsResponse, CreateToolRequest, UpdateToolRequest, GetT
 
 export class ToolService {
   /**
-   * 获取工具列表
-   * @param params - 查询参数对象
-   * @param params.page - 当前页码，1-based
-   * @param params.pageSize - 分页大小
+   * Get tool list
+   * @param params - Query parameter object
+   * @param params.page - Current page number, 1-based
+   * @param params.pageSize - Page size
    * @returns Promise<GetToolsResponse>
-   * @description 后端固定按更新时间降序排列，不支持自定义排序
+   * @description Backend is fixed to sort by update time in descending order, does not support custom sorting
    */
   static async getTools(params?: GetToolsParams): Promise<GetToolsResponse> {
     const response = await api.get<GetToolsResponse>(
@@ -19,12 +19,12 @@ export class ToolService {
   }
 
   /**
-   * 创建新工具
-   * @param data - 工具信息对象
-   * @param data.name - 工具名称
-   * @param data.repoUrl - 仓库地址
-   * @param data.version - 版本号
-   * @param data.description - 工具描述
+   * Create new tool
+   * @param data - Tool information object
+   * @param data.name - Tool name
+   * @param data.repoUrl - Repository URL
+   * @param data.version - Version number
+   * @param data.description - Tool description
    * @returns Promise<{ tool: Tool }>
    */
   static async createTool(data: CreateToolRequest): Promise<{ tool: Tool }> {
@@ -33,9 +33,9 @@ export class ToolService {
   }
 
   /**
-   * 更新工具
-   * @param id - 工具ID
-   * @param data - 更新的工具信息（所有字段可选）
+   * Update tool
+   * @param id - Tool ID
+   * @param data - Updated tool information (all fields optional)
    * @returns Promise<{ tool: Tool }>
    */
   static async updateTool(id: number, data: UpdateToolRequest): Promise<{ tool: Tool }> {
@@ -44,8 +44,8 @@ export class ToolService {
   }
 
   /**
-   * 删除工具
-   * @param id - 工具ID
+   * Delete tool
+   * @param id - Tool ID
    * @returns Promise<void>
    */
   static async deleteTool(id: number): Promise<void> {

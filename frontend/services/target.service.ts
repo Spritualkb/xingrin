@@ -1,5 +1,5 @@
 /**
- * Target Service - 目标管理 API
+ * Target Service - Target management API
  */
 import { api } from '@/lib/api-client'
 import type {
@@ -14,7 +14,7 @@ import type {
 } from '@/types/target.types'
 
 /**
- * 获取所有目标列表（分页）
+ * Get all targets list (paginated)
  */
 export async function getTargets(page = 1, pageSize = 10, search?: string): Promise<TargetsResponse> {
   const response = await api.get<TargetsResponse>('/targets/', {
@@ -28,7 +28,7 @@ export async function getTargets(page = 1, pageSize = 10, search?: string): Prom
 }
 
 /**
- * 获取单个目标详情
+ * Get single target details
  */
 export async function getTargetById(id: number): Promise<Target> {
   const response = await api.get<Target>(`/targets/${id}/`)
@@ -36,7 +36,7 @@ export async function getTargetById(id: number): Promise<Target> {
 }
 
 /**
- * 创建目标
+ * Create target
  */
 export async function createTarget(data: CreateTargetRequest): Promise<Target> {
   const response = await api.post<Target>('/targets/', data)
@@ -44,7 +44,7 @@ export async function createTarget(data: CreateTargetRequest): Promise<Target> {
 }
 
 /**
- * 更新目标
+ * Update target
  */
 export async function updateTarget(id: number, data: UpdateTargetRequest): Promise<Target> {
   const response = await api.patch<Target>(`/targets/${id}/`, data)
@@ -52,7 +52,7 @@ export async function updateTarget(id: number, data: UpdateTargetRequest): Promi
 }
 
 /**
- * 删除单个目标（使用单独的 DELETE API）
+ * Delete single target (using separate DELETE API)
  */
 export async function deleteTarget(id: number): Promise<{
   message: string
@@ -80,7 +80,7 @@ export async function deleteTarget(id: number): Promise<{
 }
 
 /**
- * 批量删除目标
+ * Batch delete targets
  */
 export async function batchDeleteTargets(
   data: BatchDeleteTargetsRequest
@@ -90,7 +90,7 @@ export async function batchDeleteTargets(
 }
 
 /**
- * 批量创建目标
+ * Batch create targets
  */
 export async function batchCreateTargets(
   data: BatchCreateTargetsRequest
@@ -100,7 +100,7 @@ export async function batchCreateTargets(
 }
 
 /**
- * 获取目标的组织列表
+ * Get target's organization list
  */
 export async function getTargetOrganizations(id: number, page = 1, pageSize = 10) {
   const response = await api.get(`/targets/${id}/organizations/`, { params: { page, pageSize } })
@@ -108,7 +108,7 @@ export async function getTargetOrganizations(id: number, page = 1, pageSize = 10
 }
 
 /**
- * 为目标关联组织
+ * Link organizations to target
  */
 export async function linkTargetOrganizations(
   id: number,
@@ -119,7 +119,7 @@ export async function linkTargetOrganizations(
 }
 
 /**
- * 取消目标与组织的关联
+ * Unlink target from organizations
  */
 export async function unlinkTargetOrganizations(
   id: number,
@@ -130,7 +130,7 @@ export async function unlinkTargetOrganizations(
 }
 
 /**
- * 获取目标的端点列表
+ * Get target's endpoint list
  */
 export async function getTargetEndpoints(
   id: number,

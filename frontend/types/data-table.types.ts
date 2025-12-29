@@ -2,18 +2,18 @@ import type { ColumnDef, SortingState, VisibilityState, Table, Header, Column, R
 import type { ReactNode } from "react"
 
 /**
- * 扩展 TanStack Table 的 ColumnMeta 类型
- * 用于存储列的元数据，如标题
+ * Extend TanStack Table's ColumnMeta type
+ * Used to store column metadata such as title
  */
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
-    /** 列标题，用于列头和列显示控制 */
+    /** Column title, used for column header and column visibility control */
     title?: string
   }
 }
 
 /**
- * 分页状态
+ * Pagination state
  */
 export interface PaginationState {
   pageIndex: number
@@ -21,7 +21,7 @@ export interface PaginationState {
 }
 
 /**
- * 服务端分页信息
+ * Server-side pagination info
  */
 export interface PaginationInfo {
   total: number
@@ -31,8 +31,8 @@ export interface PaginationInfo {
 }
 
 /**
- * 过滤字段定义
- * 注意：description 是必填的，与 SmartFilterInput 组件保持一致
+ * Filter field definition
+ * Note: description is required, consistent with SmartFilterInput component
  */
 export interface FilterField {
   key: string
@@ -41,7 +41,7 @@ export interface FilterField {
 }
 
 /**
- * 下载选项
+ * Download option
  */
 export interface DownloadOption {
   key: string
@@ -52,7 +52,7 @@ export interface DownloadOption {
 }
 
 /**
- * 删除确认对话框配置
+ * Delete confirmation dialog configuration
  */
 export interface DeleteConfirmationConfig {
   title?: string
@@ -62,15 +62,15 @@ export interface DeleteConfirmationConfig {
 }
 
 /**
- * 统一数据表格组件属性
+ * Unified data table component props
  */
 export interface UnifiedDataTableProps<TData> {
-  // 核心数据
+  // Core data
   data: TData[]
   columns: ColumnDef<TData, any>[]
   getRowId?: (row: TData) => string
   
-  // 分页
+  // Pagination
   pagination?: PaginationState
   setPagination?: React.Dispatch<React.SetStateAction<PaginationState>>
   paginationInfo?: PaginationInfo
@@ -78,12 +78,12 @@ export interface UnifiedDataTableProps<TData> {
   hidePagination?: boolean
   pageSizeOptions?: number[]
   
-  // 工具栏
+  // Toolbar
   hideToolbar?: boolean
   toolbarLeft?: ReactNode
   toolbarRight?: ReactNode
   
-  // 搜索/过滤
+  // Search/Filter
   searchMode?: 'simple' | 'smart'
   searchPlaceholder?: string
   searchValue?: string
@@ -92,57 +92,57 @@ export interface UnifiedDataTableProps<TData> {
   filterFields?: FilterField[]
   filterExamples?: string[]
   
-  // 选择
+  // Selection
   enableRowSelection?: boolean
   rowSelection?: Record<string, boolean>
   onRowSelectionChange?: (selection: Record<string, boolean>) => void
   onSelectionChange?: (selectedRows: TData[]) => void
   
-  // 批量操作
+  // Bulk operations
   onBulkDelete?: () => void
   bulkDeleteLabel?: string
   showBulkDelete?: boolean
   
-  // 添加操作
+  // Add operation
   onAddNew?: () => void
   onAddHover?: () => void
   addButtonLabel?: string
   showAddButton?: boolean
   
-  // 批量添加操作
+  // Bulk add operation
   onBulkAdd?: () => void
   bulkAddLabel?: string
   showBulkAdd?: boolean
   
-  // 下载操作
+  // Download operations
   downloadOptions?: DownloadOption[]
   
-  // 列控制
+  // Column control
   columnVisibility?: VisibilityState
   onColumnVisibilityChange?: (visibility: VisibilityState) => void
   
-  // 排序
+  // Sorting
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
   defaultSorting?: SortingState
   
-  // 空状态
+  // Empty state
   emptyMessage?: string
   emptyComponent?: ReactNode
   
-  // 确认对话框
+  // Confirmation dialog
   deleteConfirmation?: DeleteConfirmationConfig
   
-  // 样式
+  // Styling
   className?: string
   tableClassName?: string
 }
 
 /**
- * 工具栏组件属性
+ * Toolbar component props
  */
 export interface DataTableToolbarProps {
-  // 搜索
+  // Search
   searchMode?: 'simple' | 'smart'
   searchPlaceholder?: string
   searchValue?: string
@@ -151,18 +151,18 @@ export interface DataTableToolbarProps {
   filterFields?: FilterField[]
   filterExamples?: string[]
   
-  // 左侧自定义内容
+  // Left side custom content
   leftContent?: ReactNode
   
-  // 右侧操作
+  // Right side actions
   children?: ReactNode
   
-  // 样式
+  // Styling
   className?: string
 }
 
 /**
- * 分页组件属性
+ * Pagination component props
  */
 export interface DataTablePaginationProps<TData> {
   table: Table<TData>
@@ -173,7 +173,7 @@ export interface DataTablePaginationProps<TData> {
 }
 
 /**
- * 列头组件属性
+ * Column header component props
  */
 export interface DataTableColumnHeaderProps<TData, TValue> {
   column: Column<TData, TValue>
@@ -182,7 +182,7 @@ export interface DataTableColumnHeaderProps<TData, TValue> {
 }
 
 /**
- * 列宽调整组件属性
+ * Column resizer component props
  */
 export interface ColumnResizerProps<TData> {
   header: Header<TData, unknown>

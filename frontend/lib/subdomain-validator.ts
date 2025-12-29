@@ -1,8 +1,8 @@
 /**
- * 子域名验证工具类
+ * Subdomain validation utility class
  * 
- * 提供子域名的解析和验证功能，用于批量添加子域名时的前端验证。
- * 注意：子域名是否匹配 Target name 由后端验证。
+ * Provides subdomain parsing and validation functionality for frontend validation during bulk subdomain addition.
+ * Note: Whether subdomains match Target name is validated by backend.
  */
 
 export interface SubdomainValidationResult {
@@ -20,12 +20,12 @@ export interface ParseResult {
   invalidItems: SubdomainValidationResult[]
 }
 
-// 子域名格式正则：允许字母、数字、连字符，点号分隔
+// Subdomain format regex: allows letters, numbers, hyphens, separated by dots
 const SUBDOMAIN_REGEX = /^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.[a-zA-Z0-9-]{1,63})*$/
 
 export class SubdomainValidator {
   /**
-   * 解析输入文本，仅支持换行分隔（每行一个子域名）
+   * Parse input text, only supports newline separation (one subdomain per line)
    */
   static parse(input: string): string[] {
     if (!input || typeof input !== 'string') {
@@ -39,37 +39,37 @@ export class SubdomainValidator {
   }
 
   /**
-   * 验证单个子域名格式（不验证是否匹配 Target）
+   * Validate single subdomain format (does not validate if it matches Target)
    */
   static validate(subdomain: string, index: number = 0): SubdomainValidationResult {
     const trimmed = subdomain.trim().toLowerCase()
     
-    // 空值检查
+    // Empty value check
     if (!trimmed) {
       return {
         isValid: false,
         subdomain: subdomain,
-        error: '子域名不能为空',
+        error: 'Subdomain cannot be empty',
         index,
       }
     }
     
-    // 长度检查（DNS 标准限制）
+    // Length check (DNS standard limit)
     if (trimmed.length > 253) {
       return {
         isValid: false,
         subdomain: trimmed,
-        error: '子域名长度不能超过 253 个字符',
+        error: 'Subdomain length cannot exceed 253 characters',
         index,
       }
     }
     
-    // 格式检查
+    // Format check
     if (!SUBDOMAIN_REGEX.test(trimmed)) {
       return {
         isValid: false,
         subdomain: trimmed,
-        error: '子域名格式无效',
+        error: 'Invalid subdomain format',
         index,
       }
     }
@@ -82,7 +82,7 @@ export class SubdomainValidator {
   }
 
   /**
-   * 批量验证并去重
+   * Batch validate and deduplicate
    */
   static validateBatch(subdomains: string[]): ParseResult {
     const seen = new Set<string>()
@@ -98,7 +98,7 @@ export class SubdomainValidator {
         return
       }
       
-      // 去重检查
+      // Duplicate check
       if (seen.has(result.subdomain)) {
         duplicateCount++
         return

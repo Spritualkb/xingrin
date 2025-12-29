@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
 import { Bell, AlertTriangle, Activity, Info, Server, BellOff, Wifi, WifiOff, CheckCheck, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,25 +23,9 @@ import type { Notification, NotificationType, NotificationSeverity } from "@/typ
  * 通知抽屉组件
  * 从右侧滑出的侧边面板，显示详细的通知信息
  */
-// 筛选标签配置
-const filterTabs: { value: NotificationType | 'all'; label: string; icon?: React.ReactNode }[] = [
-  { value: 'all', label: '全部' },
-  { value: 'scan', label: '扫描', icon: <Activity className="h-3 w-3" /> },
-  { value: 'vulnerability', label: '漏洞', icon: <AlertTriangle className="h-3 w-3" /> },
-  { value: 'asset', label: '资产', icon: <Server className="h-3 w-3" /> },
-  { value: 'system', label: '系统', icon: <Info className="h-3 w-3" /> },
-]
-
-// 分类标题映射
-const categoryTitleMap: Record<NotificationType, string> = {
-  scan: '扫描任务',
-  vulnerability: '漏洞发现',
-  asset: '资产发现',
-  system: '系统消息',
-}
 
 /** 连接状态指示器 */
-function ConnectionStatus({ isConnected }: { isConnected: boolean }) {
+function ConnectionStatus({ isConnected, t }: { isConnected: boolean, t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="relative flex h-2 w-2">
@@ -53,7 +38,7 @@ function ConnectionStatus({ isConnected }: { isConnected: boolean }) {
         )} />
       </span>
       <span className="text-xs text-muted-foreground">
-        {isConnected ? "实时" : "离线"}
+        {isConnected ? t("status.realtime") : t("status.offline")}
       </span>
     </div>
   )
@@ -92,18 +77,37 @@ function getTimeGroup(dateStr?: string): 'today' | 'yesterday' | 'earlier' {
   return 'earlier'
 }
 
-const timeGroupLabels = {
-  today: '今天',
-  yesterday: '昨天',
-  earlier: '更早',
-}
-
 export function NotificationDrawer() {
+  const t = useTranslations("notificationDrawer")
   const [open, setOpen] = React.useState(false)
   const [activeFilter, setActiveFilter] = React.useState<NotificationType | 'all'>('all')
   const queryParams = React.useMemo(() => ({ pageSize: 100 }), [])
   const { data: notificationResponse, isLoading: isHistoryLoading } = useNotifications(queryParams)
   const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()
+
+  // 筛选标签配置
+  const filterTabs: { value: NotificationType | 'all'; label: string; icon?: React.ReactNode }[] = [
+    { value: 'all', label: t("filters.all") },
+    { value: 'scan', label: t("filters.scan"), icon: <Activity className="h-3 w-3" /> },
+    { value: 'vulnerability', label: t("filters.vulnerability"), icon: <AlertTriangle className="h-3 w-3" /> },
+    { value: 'asset', label: t("filters.asset"), icon: <Server className="h-3 w-3" /> },
+    { value: 'system', label: t("filters.system"), icon: <Info className="h-3 w-3" /> },
+  ]
+
+  // 分类标题映射
+  const categoryTitleMap: Record<NotificationType, string> = {
+    scan: t("categories.scan"),
+    vulnerability: t("categories.vulnerability"),
+    asset: t("categories.asset"),
+    system: t("categories.system"),
+  }
+
+  // 时间分组标签
+  const timeGroupLabels = {
+    today: t("timeGroups.today"),
+    yesterday: t("timeGroups.yesterday"),
+    earlier: t("timeGroups.earlier"),
+  }
 
   // SSE 实时通知
   const { notifications: sseNotifications, isConnected, markNotificationsAsRead } = useNotificationSSE()
@@ -290,7 +294,7 @@ export function NotificationDrawer() {
       return (
         <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
           <BellOff className="h-10 w-10 mb-2 opacity-50" />
-          <p className="text-sm">暂无通知</p>
+          <p className="text-sm">{t("empty")}</p>
         </div>
       )
     }
@@ -332,21 +336,21 @@ export function NotificationDrawer() {
               </Badge>
             </>
           )}
-          <span className="sr-only">通知</span>
+          <span className="sr-only">{t("title")}</span>
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-[440px] p-0 flex flex-col gap-0">
         <SheetHeader className="border-b px-4 py-1.5">
           <div className="flex items-center justify-between gap-2">
-            <SheetTitle className="text-sm font-semibold">通知</SheetTitle>
+            <SheetTitle className="text-sm font-semibold">{t("title")}</SheetTitle>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleMarkAll}
                 disabled={isMarkingAll || allNotifications.length === 0}
                 className="text-xs text-primary hover:text-primary/80 hover:underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline transition-colors"
-                title="全部标记为已读"
+                title={t("markAllAsRead")}
               >
-                {isMarkingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "全部已读"}
+                {isMarkingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("markAllRead")}
               </button>
             </div>
           </div>

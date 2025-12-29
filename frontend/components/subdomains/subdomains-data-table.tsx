@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { Subdomain } from "@/types/subdomain.types"
@@ -67,6 +68,10 @@ export function SubdomainsDataTable({
   paginationInfo,
   onPaginationChange,
 }: SubdomainsDataTableProps) {
+  const t = useTranslations("common.status")
+  const tActions = useTranslations("common.actions")
+  const tDownload = useTranslations("common.download")
+  
   // 处理智能过滤搜索
   const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
@@ -79,14 +84,14 @@ export function SubdomainsDataTable({
   if (onDownloadAll) {
     downloadOptions.push({
       key: "all",
-      label: "Download All Subdomains",
+      label: tDownload("allSubdomains"),
       onClick: onDownloadAll,
     })
   }
   if (onDownloadSelected) {
     downloadOptions.push({
       key: "selected",
-      label: "Download Selected Subdomains",
+      label: tDownload("selectedSubdomains"),
       onClick: onDownloadSelected,
       disabled: (count) => count === 0,
     })
@@ -94,7 +99,7 @@ export function SubdomainsDataTable({
   if (onDownloadImportant) {
     downloadOptions.push({
       key: "important",
-      label: "Download Important Subdomains",
+      label: tDownload("importantSubdomains"),
       onClick: onDownloadImportant,
     })
   }
@@ -126,11 +131,11 @@ export function SubdomainsDataTable({
       addButtonLabel={addButtonText}
       // 批量添加按钮
       onBulkAdd={onBulkAdd}
-      bulkAddLabel="批量添加"
+      bulkAddLabel={tActions("add")}
       // 下载
       downloadOptions={downloadOptions.length > 0 ? downloadOptions : undefined}
       // 空状态
-      emptyMessage="No results"
+      emptyMessage={t("noData")}
     />
   )
 }

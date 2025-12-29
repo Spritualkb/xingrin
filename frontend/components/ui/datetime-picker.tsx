@@ -24,8 +24,8 @@ interface DateTimePickerProps {
 export function DateTimePicker({
   value,
   onChange,
-  label = "执行时间",
-  placeholder = "选择日期时间",
+  label = "Execution Time",
+  placeholder = "Select date and time",
   minDate,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false)
@@ -34,7 +34,7 @@ export function DateTimePicker({
     value ? `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}` : "02:00"
   )
 
-  // 合并日期和时间
+  // Merge date and time
   const updateDateTime = React.useCallback((newDate: Date | undefined, newTime: string) => {
     if (!newDate) {
       onChange?.(undefined)
@@ -58,7 +58,7 @@ export function DateTimePicker({
     updateDateTime(date, e.target.value)
   }
 
-  // 格式化显示
+  // Format display
   const displayDate = date
     ? date.toLocaleDateString("zh-CN", {
         year: "numeric",
@@ -73,7 +73,7 @@ export function DateTimePicker({
         <Label className="px-1">{label}</Label>
       )}
       <div className="flex gap-3">
-        {/* 日期选择 */}
+        {/* Date selection */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -95,7 +95,7 @@ export function DateTimePicker({
           </PopoverContent>
         </Popover>
 
-        {/* 时间选择 */}
+        {/* Time selection */}
         <Input
           type="time"
           value={time}

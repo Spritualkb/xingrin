@@ -3,18 +3,35 @@
 import React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import type { GobyFingerprint } from "@/types/fingerprint.types"
 
+// 翻译类型定义
+export interface GobyFingerprintTranslations {
+  columns: {
+    name: string
+    logic: string
+    rules: string
+    ruleDetails: string
+    created: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+    expand: string
+    collapse: string
+  }
+}
+
 interface ColumnOptions {
   formatDate: (date: string) => string
+  t: GobyFingerprintTranslations
 }
 
 /**
  * 规则详情单元格组件 - 显示原始 JSON 数据
  */
-function RuleDetailsCell({ rules }: { rules: any[] }) {
+function RuleDetailsCell({ rules, t }: { rules: any[]; t: GobyFingerprintTranslations }) {
   const [expanded, setExpanded] = React.useState(false)
   
   if (!rules || rules.length === 0) return <span className="text-muted-foreground">-</span>
@@ -36,7 +53,7 @@ function RuleDetailsCell({ rules }: { rules: any[] }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-primary hover:underline self-start"
         >
-          {expanded ? "收起" : "展开"}
+          {expanded ? t.actions.collapse : t.actions.expand}
         </button>
       )}
     </div>
@@ -48,9 +65,9 @@ function RuleDetailsCell({ rules }: { rules: any[] }) {
  */
 export function createGobyFingerprintColumns({
   formatDate,
+  t,
 }: ColumnOptions): ColumnDef<GobyFingerprint>[] {
   return [
-    // 选择列
     {
       id: "select",
       header: ({ table }) => (
@@ -60,14 +77,14 @@ export function createGobyFingerprintColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
@@ -75,12 +92,11 @@ export function createGobyFingerprintColumns({
       enableResizing: false,
       size: 40,
     },
-    // 产品名称
     {
       accessorKey: "name",
-      meta: { title: "Name" },
+      meta: { title: t.columns.name },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={t.columns.name} />
       ),
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("name")}</div>
@@ -88,12 +104,11 @@ export function createGobyFingerprintColumns({
       enableResizing: true,
       size: 200,
     },
-    // 逻辑表达式
     {
       accessorKey: "logic",
-      meta: { title: "Logic" },
+      meta: { title: t.columns.logic },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Logic" />
+        <DataTableColumnHeader column={column} title={t.columns.logic} />
       ),
       cell: ({ row }) => {
         const logic = row.getValue("logic") as string
@@ -102,12 +117,11 @@ export function createGobyFingerprintColumns({
       enableResizing: false,
       size: 100,
     },
-    // 规则数量
     {
       accessorKey: "rule",
-      meta: { title: "Rules" },
+      meta: { title: t.columns.rules },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rules" />
+        <DataTableColumnHeader column={column} title={t.columns.rules} />
       ),
       cell: ({ row }) => {
         const rules = row.getValue("rule") as any[]
@@ -116,23 +130,21 @@ export function createGobyFingerprintColumns({
       enableResizing: false,
       size: 80,
     },
-    // 规则详情
     {
       id: "ruleDetails",
-      meta: { title: "Rule Details" },
+      meta: { title: t.columns.ruleDetails },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rule Details" />
+        <DataTableColumnHeader column={column} title={t.columns.ruleDetails} />
       ),
-      cell: ({ row }) => <RuleDetailsCell rules={row.original.rule || []} />,
+      cell: ({ row }) => <RuleDetailsCell rules={row.original.rule || []} t={t} />,
       enableResizing: true,
       size: 300,
     },
-    // 创建时间
     {
       accessorKey: "createdAt",
-      meta: { title: "Created" },
+      meta: { title: t.columns.created },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader column={column} title={t.columns.created} />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

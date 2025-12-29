@@ -12,12 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import {
   MoreHorizontal,
   Trash2,
@@ -26,15 +20,53 @@ import {
   Target,
 } from "lucide-react"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
-
-
 import type { ScheduledScan } from "@/types/scheduled-scan.types"
-import { CopyablePopoverContent } from "@/components/ui/copyable-popover-content"
+
+// 翻译类型定义
+export interface ScheduledScanTranslations {
+  columns: {
+    taskName: string
+    scanEngine: string
+    cronExpression: string
+    scope: string
+    status: string
+    nextRun: string
+    runCount: string
+    lastRun: string
+  }
+  actions: {
+    editTask: string
+    delete: string
+    openMenu: string
+  }
+  status: {
+    enabled: string
+    disabled: string
+  }
+  cron: {
+    everyMinute: string
+    everyNMinutes: string
+    everyHour: string
+    everyNHours: string
+    everyDay: string
+    everyWeek: string
+    everyMonth: string
+    weekdays: string[]
+  }
+}
+
+interface CreateColumnsProps {
+  formatDate: (dateString: string) => string
+  handleEdit: (scan: ScheduledScan) => void
+  handleDelete: (scan: ScheduledScan) => void
+  handleToggleStatus: (scan: ScheduledScan, enabled: boolean) => void
+  t: ScheduledScanTranslations
+}
 
 /**
  * 解析 Cron 表达式为人类可读格式
  */
-function parseCronExpression(cron: string): string {
+function parseCronExpression(cron: string, t: ScheduledScanTranslations): string {
   if (!cron) return '-'
   
   const parts = cron.split(' ')
@@ -42,52 +74,36 @@ function parseCronExpression(cron: string): string {
   
   const [minute, hour, day, month, weekday] = parts
   
-  // 每分钟
   if (minute === '*' && hour === '*' && day === '*' && month === '*' && weekday === '*') {
-    return '每分钟'
+    return t.cron.everyMinute
   }
   
-  // 每N分钟
   if (minute.startsWith('*/') && hour === '*') {
-    return `每 ${minute.slice(2)} 分钟`
+    return t.cron.everyNMinutes.replace('{n}', minute.slice(2))
   }
   
-  // 每小时
   if (minute !== '*' && hour === '*' && day === '*') {
-    return `每小时 ${minute}分`
+    return t.cron.everyHour.replace('{minute}', minute)
   }
   
-  // 每N小时
   if (hour.startsWith('*/')) {
-    return `每 ${hour.slice(2)} 小时 ${minute}分`
+    return t.cron.everyNHours.replace('{n}', hour.slice(2)).replace('{minute}', minute)
   }
   
-  // 每天
   if (day === '*' && month === '*' && weekday === '*') {
-    return `每天 ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+    return t.cron.everyDay.replace('{time}', `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`)
   }
   
-  // 每周
-  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
   if (day === '*' && month === '*' && weekday !== '*') {
-    const dayName = weekdays[parseInt(weekday)] || weekday
-    return `每${dayName} ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+    const dayName = t.cron.weekdays[parseInt(weekday)] || weekday
+    return t.cron.everyWeek.replace('{day}', dayName).replace('{time}', `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`)
   }
   
-  // 每月
   if (day !== '*' && month === '*' && weekday === '*') {
-    return `每月${day}号 ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+    return t.cron.everyMonth.replace('{day}', day).replace('{time}', `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`)
   }
   
   return cron
-}
-
-// 列创建函数的参数类型
-interface CreateColumnsProps {
-  formatDate: (dateString: string) => string
-  handleEdit: (scan: ScheduledScan) => void
-  handleDelete: (scan: ScheduledScan) => void
-  handleToggleStatus: (scan: ScheduledScan, enabled: boolean) => void
 }
 
 /**
@@ -96,9 +112,11 @@ interface CreateColumnsProps {
 function ScheduledScanRowActions({
   onEdit,
   onDelete,
+  t,
 }: {
   onEdit: () => void
   onDelete: () => void
+  t: ScheduledScanTranslations
 }) {
   return (
     <DropdownMenu>
@@ -108,13 +126,13 @@ function ScheduledScanRowActions({
           className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
         >
           <MoreHorizontal />
-          <span className="sr-only">打开菜单</span>
+          <span className="sr-only">{t.actions.openMenu}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onEdit}>
           <Edit />
-          编辑任务
+          {t.actions.editTask}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -122,7 +140,7 @@ function ScheduledScanRowActions({
           className="text-destructive focus:text-destructive"
         >
           <Trash2 />
-          删除
+          {t.actions.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -137,15 +155,15 @@ export const createScheduledScanColumns = ({
   handleEdit,
   handleDelete,
   handleToggleStatus,
+  t,
 }: CreateColumnsProps): ColumnDef<ScheduledScan>[] => [
-  // 任务名称列
   {
     accessorKey: "name",
     size: 350,
     minSize: 250,
-    meta: { title: "Task Name" },
+    meta: { title: t.columns.taskName },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Task Name" />
+      <DataTableColumnHeader column={column} title={t.columns.taskName} />
     ),
     cell: ({ row }) => {
       const name = row.getValue("name") as string
@@ -160,15 +178,13 @@ export const createScheduledScanColumns = ({
       )
     },
   },
-
-  // 扫描引擎列
   {
     accessorKey: "engineName",
     size: 120,
     minSize: 80,
-    meta: { title: "Scan Engine" },
+    meta: { title: t.columns.scanEngine },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Scan Engine" />
+      <DataTableColumnHeader column={column} title={t.columns.scanEngine} />
     ),
     cell: ({ row }) => {
       const engineName = row.getValue("engineName") as string
@@ -179,13 +195,11 @@ export const createScheduledScanColumns = ({
       )
     },
   },
-
-  // Cron 表达式列
   {
     accessorKey: "cronExpression",
-    meta: { title: "Cron Expression" },
+    meta: { title: t.columns.cronExpression },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Cron Expression" />
+      <DataTableColumnHeader column={column} title={t.columns.cronExpression} />
     ),
     size: 150,
     minSize: 100,
@@ -194,7 +208,7 @@ export const createScheduledScanColumns = ({
       return (
         <div className="flex flex-col gap-1">
           <span className="text-sm">
-            {parseCronExpression(cron)}
+            {parseCronExpression(cron, t)}
           </span>
           <code className="text-xs text-muted-foreground font-mono">
             {cron}
@@ -204,13 +218,11 @@ export const createScheduledScanColumns = ({
     },
     enableSorting: false,
   },
-
-  // 扫描范围列（用图标区分组织/目标）
   {
     accessorKey: "scanMode",
-    meta: { title: "Scope" },
+    meta: { title: t.columns.scope },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Scope" />
+      <DataTableColumnHeader column={column} title={t.columns.scope} />
     ),
     size: 200,
     minSize: 150,
@@ -219,7 +231,6 @@ export const createScheduledScanColumns = ({
       const organizationName = row.original.organizationName
       const targetName = row.original.targetName
       
-      // 组织扫描模式
       if (scanMode === 'organization' && organizationName) {
         return (
           <div className="flex items-center gap-2">
@@ -229,7 +240,6 @@ export const createScheduledScanColumns = ({
         )
       }
       
-      // 目标扫描模式
       if (targetName) {
         return (
           <div className="flex items-center gap-2">
@@ -243,15 +253,13 @@ export const createScheduledScanColumns = ({
     },
     enableSorting: false,
   },
-
-  // 启用状态列
   {
     accessorKey: "isEnabled",
     size: 100,
     minSize: 80,
-    meta: { title: "Status" },
+    meta: { title: t.columns.status },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={t.columns.status} />
     ),
     cell: ({ row }) => {
       const isEnabled = row.getValue("isEnabled") as boolean
@@ -265,21 +273,19 @@ export const createScheduledScanColumns = ({
             }
           />
           <span className="text-sm text-muted-foreground">
-            {isEnabled ? "启用" : "禁用"}
+            {isEnabled ? t.status.enabled : t.status.disabled}
           </span>
         </div>
       )
     },
   },
-
-  // 下次执行时间列
   {
     accessorKey: "nextRunTime",
     size: 150,
     minSize: 120,
-    meta: { title: "Next Run" },
+    meta: { title: t.columns.nextRun },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Next Run" />
+      <DataTableColumnHeader column={column} title={t.columns.nextRun} />
     ),
     cell: ({ row }) => {
       const nextRunTime = row.getValue("nextRunTime") as string | undefined
@@ -290,15 +296,13 @@ export const createScheduledScanColumns = ({
       )
     },
   },
-
-  // 执行次数列
   {
     accessorKey: "runCount",
     size: 80,
     minSize: 60,
-    meta: { title: "Run Count" },
+    meta: { title: t.columns.runCount },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Run Count" />
+      <DataTableColumnHeader column={column} title={t.columns.runCount} />
     ),
     cell: ({ row }) => {
       const count = row.getValue("runCount") as number
@@ -307,15 +311,13 @@ export const createScheduledScanColumns = ({
       )
     },
   },
-
-  // 上次执行时间列
   {
     accessorKey: "lastRunTime",
     size: 150,
     minSize: 120,
-    meta: { title: "Last Run" },
+    meta: { title: t.columns.lastRun },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Run" />
+      <DataTableColumnHeader column={column} title={t.columns.lastRun} />
     ),
     cell: ({ row }) => {
       const lastRunTime = row.getValue("lastRunTime") as string | undefined
@@ -326,8 +328,6 @@ export const createScheduledScanColumns = ({
       )
     },
   },
-
-  // 操作列
   {
     id: "actions",
     size: 60,
@@ -338,6 +338,7 @@ export const createScheduledScanColumns = ({
       <ScheduledScanRowActions
         onEdit={() => handleEdit(row.original)}
         onDelete={() => handleDelete(row.original)}
+        t={t}
       />
     ),
     enableSorting: false,

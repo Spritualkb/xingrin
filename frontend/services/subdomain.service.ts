@@ -1,7 +1,7 @@
 import { api } from "@/lib/api-client"
 import type { Subdomain, GetSubdomainsParams, GetSubdomainsResponse, GetAllSubdomainsParams, GetAllSubdomainsResponse, GetSubdomainByIDResponse, BatchCreateSubdomainsResponse } from "@/types/subdomain.types"
 
-// 批量创建子域名响应类型
+// Bulk create subdomains response type
 export interface BulkCreateSubdomainsResponse {
   message: string
   createdCount: number
@@ -13,7 +13,7 @@ export interface BulkCreateSubdomainsResponse {
 
 export class SubdomainService {
   /**
-   * 批量创建子域名（绑定到目标）
+   * Bulk create subdomains (bind to target)
    * POST /api/targets/{target_id}/subdomains/bulk-create/
    */
   static async bulkCreateSubdomains(
@@ -26,10 +26,10 @@ export class SubdomainService {
     )
     return response.data
   }
-  // ========== 子域名基础操作 ==========
+  // ========== Subdomain basic operations ==========
 
   /**
-   * 批量创建子域名（绑定到资产）
+   * Bulk create subdomains (bind to assets)
    */
   static async createSubdomains(data: {
     domains: Array<{
@@ -39,13 +39,13 @@ export class SubdomainService {
   }): Promise<BatchCreateSubdomainsResponse> {
     const response = await api.post<BatchCreateSubdomainsResponse>('/domains/create/', {
       domains: data.domains,
-      assetId: data.assetId  // [OK] 驼峰，拦截器转换为 asset_id
+      assetId: data.assetId  // [OK] CamelCase, interceptor converts to asset_id
     })
     return response.data
   }
 
   /**
-   * 获取单个子域名详情
+   * Get single subdomain details
    */
   static async getSubdomainById(id: string | number): Promise<GetSubdomainByIDResponse> {
     const response = await api.get<GetSubdomainByIDResponse>(`/domains/${id}/`)
@@ -53,7 +53,7 @@ export class SubdomainService {
   }
 
   /**
-   * 更新子域名信息（PATCH）
+   * Update subdomain information (PATCH)
    */
   static async updateSubdomain(data: {
     id: number
@@ -67,7 +67,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 批量删除子域名（支持单个或多个，使用统一接口） */
+  /** Bulk delete subdomains (supports single or multiple, using unified interface) */
   static async bulkDeleteSubdomains(
     ids: number[]
   ): Promise<{
@@ -88,7 +88,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 删除单个子域名（使用单独的 DELETE API） */
+  /** Delete single subdomain (using separate DELETE API) */
   static async deleteSubdomain(id: number): Promise<{
     message: string
     subdomainId: number
@@ -114,7 +114,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 批量删除子域名（别名，兼容旧代码） */
+  /** Bulk delete subdomains (alias, compatible with old code) */
   static async batchDeleteSubdomains(ids: number[]): Promise<{
     message: string
     deletedCount: number
@@ -124,7 +124,7 @@ export class SubdomainService {
     return this.bulkDeleteSubdomains(ids)
   }
 
-  /** 批量从组织中移除子域名 */
+  /** Batch remove subdomains from organization */
   static async batchDeleteSubdomainsFromOrganization(data: {
     organizationId: number
     domainIds: number[]
@@ -136,13 +136,13 @@ export class SubdomainService {
     const response = await api.post<any>(
       `/organizations/${data.organizationId}/domains/batch-remove/`,
       {
-        domainIds: data.domainIds, // 拦截器转换为 domain_ids
+        domainIds: data.domainIds, // Interceptor converts to domain_ids
       }
     )
     return response.data
   }
 
-  /** 获取组织的子域名列表（服务端分页） */
+  /** Get organization's subdomain list (server-side pagination) */
   static async getSubdomainsByOrgId(
     organizationId: number,
     params?: {
@@ -162,7 +162,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 获取所有子域名列表（服务端分页） */
+  /** Get all subdomains list (server-side pagination) */
   static async getAllSubdomains(params?: GetAllSubdomainsParams): Promise<GetAllSubdomainsResponse> {
     const response = await api.get<GetAllSubdomainsResponse>('/domains/', {
       params: {
@@ -173,7 +173,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 获取目标的子域名列表（支持分页和过滤） */
+  /** Get target's subdomain list (supports pagination and filtering) */
   static async getSubdomainsByTargetId(
     targetId: number,
     params?: {
@@ -192,7 +192,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 获取扫描的子域名列表（支持分页和过滤） */
+  /** Get scan's subdomain list (supports pagination and filtering) */
   static async getSubdomainsByScanId(
     scanId: number,
     params?: {
@@ -204,22 +204,22 @@ export class SubdomainService {
     results: Array<{
       id: number
       name: string
-      createdAt: string  // 后端自动转换为 camelCase
+      createdAt: string  // Backend automatically converts to camelCase
       cname: string[]
-      isCdn: boolean     // 后端自动转换为 camelCase
-      cdnName: string    // 后端自动转换为 camelCase
+      isCdn: boolean     // Backend automatically converts to camelCase
+      cdnName: string    // Backend automatically converts to camelCase
       ports: Array<{
         number: number
         serviceName: string
         description: string
         isUncommon: boolean
       }>
-      ipAddresses: string[]  // IP地址列表
+      ipAddresses: string[]  // IP address list
     }>
     total: number
     page: number
-    pageSize: number     // 后端自动转换为 camelCase
-    totalPages: number   // 后端自动转换为 camelCase
+    pageSize: number     // Backend automatically converts to camelCase
+    totalPages: number   // Backend automatically converts to camelCase
   }> {
     const response = await api.get(`/scans/${scanId}/subdomains/`, {
       params: {
@@ -231,7 +231,7 @@ export class SubdomainService {
     return response.data as any
   }
 
-  /** 按目标导出所有子域名名称（文本文件，一行一个） */
+  /** Export all subdomain names by target (text file, one per line) */
   static async exportSubdomainsByTargetId(targetId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/targets/${targetId}/subdomains/export/`, {
       responseType: 'blob',
@@ -239,7 +239,7 @@ export class SubdomainService {
     return response.data
   }
 
-  /** 按扫描任务导出所有子域名名称（文本文件，一行一个） */
+  /** Export all subdomain names by scan task (text file, one per line) */
   static async exportSubdomainsByScanId(scanId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/scans/${scanId}/subdomains/export/`, {
       responseType: 'blob',

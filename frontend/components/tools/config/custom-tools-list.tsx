@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +21,7 @@ import { LoadingSpinner } from "@/components/loading-spinner"
 import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton"
 import { CategoryNameMap, type Tool } from "@/types/tool.types"
 import { useTools, useDeleteTool } from "@/hooks/use-tools"
+import { getDateLocale } from "@/lib/date-utils"
 
 /**
  * 自定义工具列表组件
@@ -29,6 +31,13 @@ export function CustomToolsList() {
   const [editingTool, setEditingTool] = useState<Tool | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [toolToDelete, setToolToDelete] = useState<Tool | null>(null)
+  
+  // 国际化
+  const tCommon = useTranslations("common")
+  const tConfirm = useTranslations("common.confirm")
+  const tConfig = useTranslations("tools.config")
+  const tColumns = useTranslations("columns")
+  const locale = useLocale()
   
   // 获取工具列表（只获取自定义工具）
   const { data, isLoading, error } = useTools({
@@ -82,7 +91,7 @@ export function CustomToolsList() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <p className="text-destructive">加载失败: {error.message}</p>
+          <p className="text-destructive">{tCommon("status.error")}: {error.message}</p>
         </div>
       </div>
     )
@@ -96,8 +105,8 @@ export function CustomToolsList() {
           <Card key={tool.id} className="flex flex-col h-full hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="text-lg truncate" title={tool.name}>{tool.name}</CardTitle>
-              <CardDescription className="line-clamp-2" title={tool.description || '暂无描述'}>
-                {tool.description || '暂无描述'}
+              <CardDescription className="line-clamp-2" title={tool.description || tCommon("status.noData")}>
+                {tool.description || tCommon("status.noData")}
               </CardDescription>
               
               {/* 分类标签 */}
@@ -120,7 +129,7 @@ export function CustomToolsList() {
                   </div>
                 ) : (
                   <Badge variant="outline" className="text-xs text-muted-foreground">
-                    未分类
+                    {tConfig("uncategorized")}
                   </Badge>
                 )}
               </div>
@@ -131,7 +140,7 @@ export function CustomToolsList() {
                 <div className="bg-muted rounded-md p-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <IconFolder className="h-4 w-4" />
-                    <span>目录</span>
+                    <span>{tConfig("directory")}</span>
                   </div>
                   <code 
                     className="text-sm font-mono break-all line-clamp-2" 
@@ -143,7 +152,7 @@ export function CustomToolsList() {
 
                 {/* 最后更新时间 */}
                 <div className="text-sm text-muted-foreground">
-                  最后更新：{new Date(tool.updatedAt).toLocaleDateString('zh-CN')}
+                  {tColumns("common.updatedAt")}: {new Date(tool.updatedAt).toLocaleDateString(getDateLocale(locale))}
                 </div>
               </div>
             </CardContent>
@@ -154,7 +163,7 @@ export function CustomToolsList() {
                 onClick={() => handleEditTool(tool)}
               >
                 <IconEdit className="h-4 w-4" />
-                编辑
+                {tCommon("actions.edit")}
               </Button>
               <Button
                 variant="outline"
@@ -162,7 +171,7 @@ export function CustomToolsList() {
                 onClick={() => handleDeleteTool(tool.id)}
               >
                 <IconTrash className="h-4 w-4" />
-                删除
+                {tCommon("actions.delete")}
               </Button>
             </CardFooter>
           </Card>
@@ -172,7 +181,7 @@ export function CustomToolsList() {
       {/* 空状态 */}
       {customTools.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">暂无自定义工具</p>
+          <p className="text-muted-foreground">{tConfig("noCustomTools")}</p>
         </div>
       )}
 
@@ -189,13 +198,13 @@ export function CustomToolsList() {
       <AlertDialog open={!!toolToDelete} onOpenChange={(open) => !open && setToolToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除自定义工具 &quot;{toolToDelete?.name}&quot; 及其相关配置。
+              {tConfirm("deleteCustomToolMessage", { name: toolToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteTool.isPending}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteTool.isPending}>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -204,10 +213,10 @@ export function CustomToolsList() {
               {deleteTool.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                "删除"
+                tCommon("actions.delete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

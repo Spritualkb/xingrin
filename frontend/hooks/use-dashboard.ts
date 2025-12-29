@@ -9,7 +9,7 @@ export function useDashboardStats() {
 }
 
 /**
- * 获取资产统计数据（预聚合）
+ * Get asset statistics data (pre-aggregated)
  */
 export function useAssetStatistics() {
   return useQuery({
@@ -19,7 +19,7 @@ export function useAssetStatistics() {
 }
 
 /**
- * 获取统计历史数据（用于折线图）
+ * Get statistics history data (for line charts)
  */
 export function useStatisticsHistory(days: number = 7) {
   return useQuery({

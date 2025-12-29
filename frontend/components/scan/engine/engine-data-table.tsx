@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { ScanEngine } from "@/types/engine.types"
@@ -24,9 +25,12 @@ export function EngineDataTable({
   data = [],
   columns,
   onAddNew,
-  searchPlaceholder = "搜索引擎名称...",
-  addButtonText = "新建引擎",
+  searchPlaceholder,
+  addButtonText,
 }: EngineDataTableProps) {
+  const t = useTranslations("common.status")
+  const tEngine = useTranslations("scan.engine")
+  
   // 本地搜索状态
   const [searchValue, setSearchValue] = React.useState("")
 
@@ -46,12 +50,12 @@ export function EngineDataTable({
       getRowId={(row) => String(row.id)}
       enableRowSelection={false}
       onAddNew={onAddNew}
-      addButtonLabel={addButtonText}
+      addButtonLabel={addButtonText || tEngine("createEngine")}
       showBulkDelete={false}
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
       toolbarLeft={
         <Input
-          placeholder={searchPlaceholder}
+          placeholder={searchPlaceholder || tEngine("searchPlaceholder")}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           className="max-w-sm h-8"

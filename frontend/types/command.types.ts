@@ -1,7 +1,7 @@
 import { Tool } from "./tool.types"
 
 /**
- * 命令模型
+ * Command model
  */
 export interface Command {
   id: number
@@ -16,7 +16,7 @@ export interface Command {
 }
 
 /**
- * 获取命令列表请求参数
+ * Get commands list request parameters
  */
 export interface GetCommandsRequest {
   page?: number
@@ -25,22 +25,22 @@ export interface GetCommandsRequest {
 }
 
 /**
- * 获取命令列表响应
+ * Get commands list response
  */
 export interface GetCommandsResponse {
   commands: Command[]
   page: number
-  pageSize: number      // 后端返回 camelCase 格式
-  total: number         // 统一使用 total 字段
-  totalPages: number    // 后端返回 camelCase 格式
-  // 兼容字段（向后兼容）
+  pageSize: number      // Backend returns camelCase format
+  total: number         // Unified total field
+  totalPages: number    // Backend returns camelCase format
+  // Compatibility fields (backward compatible)
   page_size?: number
   total_count?: number
   total_pages?: number
 }
 
 /**
- * 创建命令请求
+ * Create command request
  */
 export interface CreateCommandRequest {
   toolId: number
@@ -51,7 +51,7 @@ export interface CreateCommandRequest {
 }
 
 /**
- * 更新命令请求
+ * Update command request
  */
 export interface UpdateCommandRequest {
   name?: string
@@ -61,14 +61,14 @@ export interface UpdateCommandRequest {
 }
 
 /**
- * 命令响应数据
+ * Command response data
  */
 export interface CommandResponseData {
   command: Command
 }
 
 /**
- * 批量删除命令响应数据
+ * Batch delete commands response data
  */
 export interface BatchDeleteCommandsResponseData {
   deletedCount: number

@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
 import { useAssetStatistics } from "@/hooks/use-dashboard"
 import {
@@ -16,6 +17,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useTranslations } from "next-intl"
 
 // 使用 CSS 变量，跟随主题变化
 const COLORS = {
@@ -25,45 +27,46 @@ const COLORS = {
   website: "var(--chart-4)",
 }
 
-const chartConfig = {
-  count: {
-    label: "数量",
-  },
-  subdomain: {
-    label: "子域名",
-    color: COLORS.subdomain,
-  },
-  ip: {
-    label: "IP地址",
-    color: COLORS.ip,
-  },
-  endpoint: {
-    label: "端点",
-    color: COLORS.endpoint,
-  },
-  website: {
-    label: "网站",
-    color: COLORS.website,
-  },
-} satisfies ChartConfig
-
 export function AssetDistributionChart() {
   const { data, isLoading } = useAssetStatistics()
+  const t = useTranslations("dashboard.assetDistribution")
 
-  const chartData = [
-    { name: "子域名", count: data?.totalSubdomains ?? 0, fill: COLORS.subdomain },
-    { name: "IP地址", count: data?.totalIps ?? 0, fill: COLORS.ip },
-    { name: "端点", count: data?.totalEndpoints ?? 0, fill: COLORS.endpoint },
-    { name: "网站", count: data?.totalWebsites ?? 0, fill: COLORS.website },
-  ]
+  const chartConfig = useMemo(() => ({
+    count: {
+      label: t("count"),
+    },
+    subdomain: {
+      label: t("subdomains"),
+      color: COLORS.subdomain,
+    },
+    ip: {
+      label: t("ipAddresses"),
+      color: COLORS.ip,
+    },
+    endpoint: {
+      label: t("endpoints"),
+      color: COLORS.endpoint,
+    },
+    website: {
+      label: t("websites"),
+      color: COLORS.website,
+    },
+  } satisfies ChartConfig), [t])
+
+  const chartData = useMemo(() => [
+    { name: t("subdomains"), count: data?.totalSubdomains ?? 0, fill: COLORS.subdomain },
+    { name: t("ipAddresses"), count: data?.totalIps ?? 0, fill: COLORS.ip },
+    { name: t("endpoints"), count: data?.totalEndpoints ?? 0, fill: COLORS.endpoint },
+    { name: t("websites"), count: data?.totalWebsites ?? 0, fill: COLORS.website },
+  ], [data, t])
 
   const total = chartData.reduce((sum, item) => sum + item.count, 0)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>资产分布</CardTitle>
-        <CardDescription>各类资产数量统计</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -114,7 +117,7 @@ export function AssetDistributionChart() {
             </BarChart>
           </ChartContainer>
           <div className="mt-3 pt-3 border-t flex items-center justify-end gap-1.5 text-sm">
-            <span className="text-muted-foreground">资产总计：</span>
+            <span className="text-muted-foreground">{t("totalAssets")}:</span>
             <span className="font-semibold">{total}</span>
           </div>
           </>

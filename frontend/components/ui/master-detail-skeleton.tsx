@@ -2,17 +2,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 
 interface MasterDetailSkeletonProps {
-  /** 左侧列表项数量 */
+  /** Number of items in the left list */
   listItemCount?: number
-  /** 是否显示搜索框 */
+  /** Whether to show search box */
   withSearch?: boolean
-  /** 页面标题 */
+  /** Page title */
   title?: string
 }
 
 /**
- * 主从布局骨架屏
- * 适用于扫描引擎、字典管理、Nuclei 模板等页面
+ * Master-detail layout skeleton screen
+ * Suitable for scan engines, dictionary management, Nuclei templates and other pages
  */
 export function MasterDetailSkeleton({
   listItemCount = 5,
@@ -21,7 +21,7 @@ export function MasterDetailSkeleton({
 }: MasterDetailSkeletonProps) {
   return (
     <div className="flex flex-col h-full">
-      {/* 顶部 */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-4 px-4 py-4 lg:px-6">
         {title ? (
           <h1 className="text-2xl font-bold shrink-0">{title}</h1>
@@ -38,9 +38,9 @@ export function MasterDetailSkeleton({
 
       <Separator />
 
-      {/* 主体 */}
+      {/* Main content */}
       <div className="flex flex-1 min-h-0">
-        {/* 左侧列表 */}
+        {/* Left list */}
         <div className="w-72 lg:w-80 border-r flex flex-col">
           <div className="px-4 py-3 border-b">
             <Skeleton className="h-4 w-24" />
@@ -55,7 +55,7 @@ export function MasterDetailSkeleton({
           </div>
         </div>
 
-        {/* 右侧详情 */}
+        {/* Right details */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="px-6 py-4 border-b">
             <div className="flex items-start gap-3">

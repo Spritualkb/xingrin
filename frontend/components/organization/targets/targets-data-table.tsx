@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UnifiedDataTable } from "@/components/ui/data-table"
@@ -38,16 +39,19 @@ export function TargetsDataTable({
   onAddHover,
   onBulkDelete,
   onSelectionChange,
-  searchPlaceholder = "搜索目标名称...",
+  searchPlaceholder,
   searchValue,
   onSearch,
   isSearching = false,
-  addButtonText = "添加目标",
+  addButtonText,
   pagination: externalPagination,
   setPagination: setExternalPagination,
   paginationInfo,
   onPaginationChange,
 }: TargetsDataTableProps) {
+  const t = useTranslations("common.status")
+  const tTarget = useTranslations("target")
+  
   // 本地搜索输入状态
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue || "")
 
@@ -70,7 +74,7 @@ export function TargetsDataTable({
   // 自定义添加按钮（支持 onAddHover）
   const addButton = onAddNew ? (
     <Button onClick={onAddNew} onMouseEnter={onAddHover} size="sm">
-      {addButtonText}
+      {addButtonText || tTarget("createTarget")}
     </Button>
   ) : undefined
 
@@ -90,12 +94,12 @@ export function TargetsDataTable({
       showBulkDelete={false}
       showAddButton={false}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
       // 自定义工具栏
       toolbarLeft={
         <div className="flex items-center space-x-2">
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || tTarget("title")}
             value={localSearchValue}
             onChange={(e) => setLocalSearchValue(e.target.value)}
             onKeyDown={handleKeyDown}

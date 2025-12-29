@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { OrganizationService } from '@/services/organization.service'
 import type { Organization, CreateOrganizationRequest, UpdateOrganizationRequest } from '@/types/organization.types'
 
-// Query Keys - 统一管理查询键
+// Query Keys - Unified query key management
 export const organizationKeys = {
   all: ['organizations'] as const,
   lists: () => [...organizationKeys.all, 'list'] as const,
@@ -13,16 +13,16 @@ export const organizationKeys = {
 }
 
 /**
- * 获取组织列表的 Hook
+ * Hook for getting organization list
  * 
- * 功能：
- * - 自动管理加载状态
- * - 自动错误处理
- * - 支持分页
- * - 自动缓存和重新验证
- * - 支持条件查询（enabled 选项）
+ * Features:
+ * - Automatic loading state management
+ * - Automatic error handling
+ * - Pagination support
+ * - Automatic caching and revalidation
+ * - Conditional query support (enabled option)
  */
-// 后端固定按更新时间降序排列，不支持自定义排序
+// Backend is fixed to sort by update time in descending order, does not support custom sorting
 export function useOrganizations(
   params: {
     page?: number
@@ -41,7 +41,7 @@ export function useOrganizations(
     }],
     queryFn: () => OrganizationService.getOrganizations(params || {}),
     select: (response) => {
-      // 处理 DRF 分页响应格式
+      // Handle DRF pagination response format
       const page = params.page || 1
       const pageSize = params.pageSize || 10
       const total = response.total || response.count || 0
@@ -63,18 +63,18 @@ export function useOrganizations(
 }
 
 /**
- * 获取单个组织详情的 Hook
+ * Get single organization details Hook
  */
 export function useOrganization(id: number) {
   return useQuery({
     queryKey: organizationKeys.detail(id),
     queryFn: () => OrganizationService.getOrganizationById(id),
-    enabled: !!id, // 只有当 id 存在时才执行查询
+    enabled: !!id, // Only execute query when id exists
   })
 }
 
 /**
- * 获取组织的目标列表 Hook
+ * Get organization's target list Hook
  */
 export function useOrganizationTargets(
   id: number,
@@ -98,12 +98,12 @@ export function useOrganizationTargets(
 }
 
 /**
- * 创建组织的 Mutation Hook
+ * Create organization Mutation Hook
  * 
- * 功能：
- * - 自动管理提交状态
- * - 成功后自动刷新列表
- * - 自动显示成功/失败提示
+ * Features:
+ * - Automatic submission state management
+ * - Automatic list refresh after success
+ * - Automatic success/failure notifications
  */
 export function useCreateOrganization() {
   const queryClient = useQueryClient()
@@ -112,34 +112,34 @@ export function useCreateOrganization() {
     mutationFn: (data: CreateOrganizationRequest) => 
       OrganizationService.createOrganization(data),
     onMutate: () => {
-      // 显示创建开始的提示
-      toast.loading('正在创建组织...', { id: 'create-organization' })
+      // Show creation start notification
+      toast.loading('Creating organization...', { id: 'create-organization' })
     },
     onSuccess: () => {
-      // 关闭加载提示
+      // Close loading notification
       toast.dismiss('create-organization')
       
-      // 刷新所有组织相关查询（通配符匹配）
+      // Refresh all organization-related queries (wildcard matching)
       queryClient.invalidateQueries({ queryKey: ['organizations'] })
       
-      // 显示成功提示
-      toast.success('创建成功')
+      // Show success notification
+      toast.success('Created successfully')
     },
     onError: (error: any) => {
-      // 关闭加载提示
+      // Close loading notification
       toast.dismiss('create-organization')
       
-      console.error('创建组织失败:', error)
-      console.error('后端响应:', error?.response?.data || error)
+      console.error('Failed to create organization:', error)
+      console.error('Backend response:', error?.response?.data || error)
       
-      // 前端自己构造错误提示
-      toast.error('创建组织失败，请查看控制台日志')
+      // Frontend constructs error message
+      toast.error('Failed to create organization, please check console logs')
     },
   })
 }
 
 /**
- * 更新组织的 Mutation Hook
+ * Update organization Mutation Hook
  */
 export function useUpdateOrganization() {
   const queryClient = useQueryClient()

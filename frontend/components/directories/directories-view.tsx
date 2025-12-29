@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { AlertTriangle } from "lucide-react"
+import { useTranslations, useLocale } from "next-intl"
 import { DirectoriesDataTable } from "./directories-data-table"
 import { createDirectoryColumns } from "./directories-columns"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
@@ -10,6 +11,7 @@ import { useTargetDirectories, useScanDirectories } from "@/hooks/use-directorie
 import { useTarget } from "@/hooks/use-targets"
 import { DirectoryService } from "@/services/directory.service"
 import { BulkAddUrlsDialog } from "@/components/common/bulk-add-urls-dialog"
+import { getDateLocale } from "@/lib/date-utils"
 import type { TargetType } from "@/lib/url-validator"
 import type { Directory } from "@/types/directory.types"
 import { toast } from "sonner"
@@ -30,6 +32,31 @@ export function DirectoriesView({
 
   const [filterQuery, setFilterQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tToast = useTranslations("toast")
+  const tStatus = useTranslations("common.status")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      url: tColumns("common.url"),
+      status: tColumns("common.status"),
+      length: tColumns("directory.length"),
+      words: tColumns("directory.words"),
+      lines: tColumns("directory.lines"),
+      contentType: tColumns("endpoint.contentType"),
+      duration: tColumns("directory.duration"),
+      createdAt: tColumns("common.createdAt"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+  }), [tColumns, tCommon])
 
   // 获取目标信息（用于 URL 匹配校验）
   const { data: target } = useTarget(targetId || 0, { enabled: !!targetId })
@@ -70,7 +97,7 @@ export function DirectoriesView({
   }, [isFetching, isSearching])
 
   const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -79,14 +106,15 @@ export function DirectoriesView({
       second: "2-digit",
       hour12: false,
     })
-  }, [])
+  }, [locale])
 
   const columns = useMemo(
     () =>
       createDirectoryColumns({
         formatDate,
+        t: translations,
       }),
-    [formatDate]
+    [formatDate, translations]
   )
 
   const directories: Directory[] = useMemo(() => {
@@ -190,7 +218,7 @@ export function DirectoriesView({
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error("下载目录列表失败", error)
-      toast.error("下载目录列表失败，请稍后重试")
+      toast.error(tToast("downloadFailed"))
     }
   }
 
@@ -218,11 +246,11 @@ export function DirectoriesView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tStatus("error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          加载目录数据时出现错误，请重试
+          {tStatus("error")}
         </p>
-        <Button onClick={() => refetch()}>重新加载</Button>
+        <Button onClick={() => refetch()}>{tCommon("actions.retry")}</Button>
       </div>
     )
   }

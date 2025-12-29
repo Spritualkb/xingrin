@@ -1,5 +1,5 @@
 /**
- * Nuclei 模板仓库 API
+ * Nuclei template repository API
  */
 
 import { api } from "@/lib/api-client"
@@ -46,7 +46,7 @@ export interface TemplateContentResponse {
   content: string
 }
 
-/** 分页响应格式 */
+/** Paginated response format */
 interface PaginatedResponse<T> {
   results: T[]
   total: number
@@ -56,40 +56,40 @@ interface PaginatedResponse<T> {
 }
 
 export const nucleiRepoApi = {
-  /** 获取仓库列表 */
+  /** Get repository list */
   listRepos: async (): Promise<NucleiRepoResponse[]> => {
-    // 仓库数量通常不多，获取全部
+    // Repositories are usually not many, get all
     const response = await api.get<PaginatedResponse<NucleiRepoResponse>>(BASE_URL, {
       params: { pageSize: 1000 }
     })
-    // 后端返回分页格式，取 results 数组
+    // Backend returns paginated format, take results array
     return response.data.results
   },
 
-  /** 获取单个仓库 */
+  /** Get single repository */
   getRepo: async (repoId: number): Promise<NucleiRepoResponse> => {
     const response = await api.get<NucleiRepoResponse>(`${BASE_URL}${repoId}/`)
     return response.data
   },
 
-  /** 创建仓库 */
+  /** Create repository */
   createRepo: async (payload: CreateRepoPayload): Promise<NucleiRepoResponse> => {
     const response = await api.post<NucleiRepoResponse>(BASE_URL, payload)
     return response.data
   },
 
-  /** 更新仓库（部分更新） */
+  /** Update repository (partial update) */
   updateRepo: async (repoId: number, payload: UpdateRepoPayload): Promise<NucleiRepoResponse> => {
     const response = await api.patch<NucleiRepoResponse>(`${BASE_URL}${repoId}/`, payload)
     return response.data
   },
 
-  /** 删除仓库 */
+  /** Delete repository */
   deleteRepo: async (repoId: number): Promise<void> => {
     await api.delete(`${BASE_URL}${repoId}/`)
   },
 
-  /** 刷新仓库（Git clone/pull） */
+  /** Refresh repository (Git clone/pull) */
   refreshRepo: async (repoId: number): Promise<{ message: string; result: unknown }> => {
     const response = await api.post<{ message: string; result: unknown }>(
       `${BASE_URL}${repoId}/refresh/`
@@ -97,7 +97,7 @@ export const nucleiRepoApi = {
     return response.data
   },
 
-  /** 获取模板目录树 */
+  /** Get template directory tree */
   getTemplateTree: async (repoId: number): Promise<TemplateTreeResponse> => {
     const response = await api.get<TemplateTreeResponse>(
       `${BASE_URL}${repoId}/templates/tree/`
@@ -105,7 +105,7 @@ export const nucleiRepoApi = {
     return response.data
   },
 
-  /** 获取模板内容 */
+  /** Get template content */
   getTemplateContent: async (repoId: number, path: string): Promise<TemplateContentResponse> => {
     const response = await api.get<TemplateContentResponse>(
       `${BASE_URL}${repoId}/templates/content/`,

@@ -13,13 +13,34 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import type { IPAddress } from "@/types/ip-address.types"
 import { ExpandableCell } from "@/components/ui/data-table/expandable-cell"
 
-export function createIPAddressColumns(params: {
-  formatDate: (value: string) => string
-}) {
-  const { formatDate } = params
+// 翻译类型定义
+export interface IPAddressTranslations {
+  columns: {
+    ipAddress: string
+    hosts: string
+    createdAt: string
+    openPorts: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    allHosts: string
+    allOpenPorts: string
+  }
+}
 
-  const columns: ColumnDef<IPAddress>[] = [
-    // 选择列
+interface CreateColumnsProps {
+  formatDate: (value: string) => string
+  t: IPAddressTranslations
+}
+
+export function createIPAddressColumns({
+  formatDate,
+  t,
+}: CreateColumnsProps): ColumnDef<IPAddress>[] {
+  return [
     {
       id: "select",
       size: 40,
@@ -33,42 +54,40 @@ export function createIPAddressColumns(params: {
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
       enableHiding: false,
     },
-    // IP 列
     {
       accessorKey: "ip",
       size: 150,
       minSize: 100,
       maxSize: 200,
-      meta: { title: "IP Address" },
+      meta: { title: t.columns.ipAddress },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="IP Address" />
+        <DataTableColumnHeader column={column} title={t.columns.ipAddress} />
       ),
       cell: ({ row }) => (
         <ExpandableCell value={row.original.ip} />
       ),
     },
-    // host 列
     {
       accessorKey: "hosts",
       size: 200,
       minSize: 150,
       maxSize: 350,
-      meta: { title: "Hosts" },
+      meta: { title: t.columns.hosts },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Hosts" />
+        <DataTableColumnHeader column={column} title={t.columns.hosts} />
       ),
       cell: ({ getValue }) => {
         const hosts = getValue<string[]>()
@@ -76,7 +95,6 @@ export function createIPAddressColumns(params: {
           return <span className="text-muted-foreground">-</span>
         }
         
-        // 显示前3个主机名
         const displayHosts = hosts.slice(0, 3)
         const hasMore = hosts.length > 3
         
@@ -94,7 +112,7 @@ export function createIPAddressColumns(params: {
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-3">
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm">All Hosts ({hosts.length})</h4>
+                    <h4 className="font-medium text-sm">{t.tooltips.allHosts} ({hosts.length})</h4>
                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
                       {hosts.map((host, index) => (
                         <span key={index} className="text-sm break-all">
@@ -110,30 +128,28 @@ export function createIPAddressColumns(params: {
         )
       },
     },
-    // createdAt 列
     {
       accessorKey: "createdAt",
       size: 150,
       minSize: 120,
       maxSize: 200,
       enableResizing: false,
-      meta: { title: "Created At" },
+      meta: { title: t.columns.createdAt },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created At" />
+        <DataTableColumnHeader column={column} title={t.columns.createdAt} />
       ),
       cell: ({ getValue }) => {
         const value = getValue<string | undefined>()
         return value ? formatDate(value) : "-"
       },
     },
-    // 开放端口列
     {
       accessorKey: "ports",
       size: 250,
       minSize: 150,
-      meta: { title: "Open Ports" },
+      meta: { title: t.columns.openPorts },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Open Ports" />
+        <DataTableColumnHeader column={column} title={t.columns.openPorts} />
       ),
       cell: ({ getValue }) => {
         const ports = getValue<number[]>()
@@ -142,10 +158,7 @@ export function createIPAddressColumns(params: {
           return <span className="text-muted-foreground">-</span>
         }
 
-        // 按端口号排序
         const sortedPorts = [...ports].sort((a, b) => a - b)
-        
-        // 显示前8个端口
         const displayPorts = sortedPorts.slice(0, 8)
         const hasMore = sortedPorts.length > 8
 
@@ -169,7 +182,7 @@ export function createIPAddressColumns(params: {
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-3">
                   <div className="space-y-2">
-                    <h4 className="font-medium text-sm">All Open Ports ({sortedPorts.length})</h4>
+                    <h4 className="font-medium text-sm">{t.tooltips.allOpenPorts} ({sortedPorts.length})</h4>
                     <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                       {sortedPorts.map((port, index) => (
                         <Badge 
@@ -190,6 +203,4 @@ export function createIPAddressColumns(params: {
       },
     },
   ]
-
-  return columns
 }

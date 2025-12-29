@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
+import { useTranslations } from "next-intl"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import {
@@ -26,20 +27,6 @@ import { Button } from "@/components/ui/button"
 import { useCreateWorker, useUpdateWorker } from "@/hooks/use-workers"
 import type { WorkerNode } from "@/types/worker.types"
 
-// 表单验证 Schema
-const formSchema = z.object({
-  name: z.string().min(1, "请输入节点名称").max(100, "名称不能超过100个字符"),
-  ipAddress: z.string()
-    .min(1, "请输入 IP 地址")
-    .regex(
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-      "请输入有效的 IP 地址"
-    ),
-  sshPort: z.coerce.number().int().min(1).max(65535),
-  username: z.string().min(1, "请输入用户名"),
-  password: z.string().optional(),
-})
-
 // 显式定义表单类型以解决类型推断问题
 type FormValues = {
   name: string
@@ -56,9 +43,25 @@ interface WorkerDialogProps {
 }
 
 export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) {
+  const t = useTranslations("settings.workers")
+  const tCommon = useTranslations("common.actions")
   const createWorker = useCreateWorker()
   const updateWorker = useUpdateWorker()
   const isEditing = !!worker
+
+  // 表单验证 Schema - 使用翻译
+  const formSchema = z.object({
+    name: z.string().min(1, t("form.nameRequired")).max(100, t("form.nameTooLong")),
+    ipAddress: z.string()
+      .min(1, t("form.ipRequired"))
+      .regex(
+        /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+        t("form.ipInvalid")
+      ),
+    sshPort: z.coerce.number().int().min(1).max(65535),
+    username: z.string().min(1, t("form.usernameRequired")),
+    password: z.string().optional(),
+  })
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as any, // 绕过类型检查问题
@@ -106,7 +109,7 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
         })
       } else {
         if (!values.password) {
-          form.setError("password", { message: "请输入 SSH 密码" })
+          form.setError("password", { message: t("form.passwordRequired") })
           return
         }
         await createWorker.mutateAsync({
@@ -130,11 +133,11 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "编辑扫描节点" : "添加扫描节点"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("editWorker") : t("addWorkerTitle")}</DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? "修改节点的 SSH 连接信息" 
-              : "输入远程 VPS 的 SSH 连接信息，添加后可通过「管理部署」一键部署扫描环境"}
+              ? t("editWorkerDesc") 
+              : t("addWorkerDesc")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -144,12 +147,12 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>节点名称</FormLabel>
+                  <FormLabel>{t("form.workerName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="例如: VPS-US-1" {...field} />
+                    <Input placeholder={t("form.workerNamePlaceholder")} {...field} />
                   </FormControl>
                   <FormDescription>
-                    用于识别节点的名称
+                    {t("form.workerNameDesc")}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -160,16 +163,16 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
               name="ipAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>IP 地址</FormLabel>
+                  <FormLabel>{t("form.hostIp")}</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="例如: 192.168.1.100" 
+                      placeholder={t("form.hostIpPlaceholder")} 
                       {...field} 
                       disabled={isEditing} // 编辑时 IP 禁用
                     />
                   </FormControl>
                   {isEditing && (
-                    <FormDescription>IP 地址不可修改</FormDescription>
+                    <FormDescription>{t("form.ipNotEditable")}</FormDescription>
                   )}
                   <FormMessage />
                 </FormItem>
@@ -181,7 +184,7 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
                 name="sshPort"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SSH 端口</FormLabel>
+                    <FormLabel>{t("form.sshPort")}</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -194,9 +197,9 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>用户名</FormLabel>
+                    <FormLabel>{t("form.username")}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder={t("form.usernamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,12 +211,12 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>SSH 密码</FormLabel>
+                  <FormLabel>{t("form.password")}</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder={isEditing ? "留空保持不变" : "输入 SSH 密码"} {...field} />
+                    <Input type="password" placeholder={isEditing ? t("form.passwordKeepEmpty") : t("form.passwordPlaceholder")} {...field} />
                   </FormControl>
                   <FormDescription>
-                    {isEditing ? "如需修改密码请输入新密码" : "密码仅用于部署，不会明文存储"}
+                    {isEditing ? t("form.passwordEditHint") : t("form.passwordHint")}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -225,12 +228,12 @@ export function WorkerDialog({ open, onOpenChange, worker }: WorkerDialogProps) 
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                取消
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending 
-                  ? (isEditing ? "保存中..." : "创建中...") 
-                  : (isEditing ? "保存修改" : "创建节点")}
+                  ? (isEditing ? t("form.saving") : t("form.creating")) 
+                  : (isEditing ? t("form.saveChanges") : t("form.createWorker"))}
               </Button>
             </DialogFooter>
           </form>

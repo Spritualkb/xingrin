@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { useStatisticsHistory } from "@/hooks/use-dashboard"
 import type { StatisticsHistoryItem } from "@/types/dashboard.types"
+import { useTranslations } from "next-intl"
 
 /**
  * 填充缺失的日期数据，确保始终返回完整的 days 天
@@ -61,25 +62,6 @@ import {
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const chartConfig = {
-  totalSubdomains: {
-    label: "子域名",
-    color: "#3b82f6", // 蓝色
-  },
-  totalIps: {
-    label: "IP",
-    color: "#f97316", // 橙色
-  },
-  totalEndpoints: {
-    label: "端点",
-    color: "#eab308", // 黄色
-  },
-  totalWebsites: {
-    label: "网站",
-    color: "#22c55e", // 绿色
-  },
-} satisfies ChartConfig
-
 // 数据系列的 key 类型
 type SeriesKey = 'totalSubdomains' | 'totalIps' | 'totalEndpoints' | 'totalWebsites'
 
@@ -89,6 +71,27 @@ const ALL_SERIES: SeriesKey[] = ['totalSubdomains', 'totalIps', 'totalEndpoints'
 export function AssetTrendChart() {
   const { data: rawData, isLoading } = useStatisticsHistory(7)
   const [activeData, setActiveData] = useState<StatisticsHistoryItem | null>(null)
+  const t = useTranslations("dashboard.assetTrend")
+  
+  // 动态配置 chartConfig 使用翻译
+  const chartConfig = useMemo(() => ({
+    totalSubdomains: {
+      label: t("subdomains"),
+      color: "#3b82f6", // 蓝色
+    },
+    totalIps: {
+      label: t("ips"),
+      color: "#f97316", // 橙色
+    },
+    totalEndpoints: {
+      label: t("endpoints"),
+      color: "#eab308", // 黄色
+    },
+    totalWebsites: {
+      label: t("websites"),
+      color: "#22c55e", // 绿色
+    },
+  } satisfies ChartConfig), [t])
   
   // 可见系列状态（默认全部显示）
   const [visibleSeries, setVisibleSeries] = useState<Set<SeriesKey>>(new Set(ALL_SERIES))
@@ -121,6 +124,17 @@ export function AssetTrendChart() {
     return `${date.getMonth() + 1}/${date.getDate()}`
   }
 
+  // 格式化大数字（1K, 1M 等）
+  const formatNumber = (value: number) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`
+    }
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`
+    }
+    return value.toString()
+  }
+
   // 获取最新数据（使用原始数据中的最新值）
   const latest = rawData && rawData.length > 0 ? rawData[rawData.length - 1] : null
   
@@ -130,8 +144,8 @@ export function AssetTrendChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>资产趋势</CardTitle>
-        <CardDescription>每小时更新 · 点击折线或图例可隐藏/显示</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -140,7 +154,7 @@ export function AssetTrendChart() {
           </div>
         ) : !rawData || rawData.length === 0 ? (
           <div className="flex items-center justify-center h-[180px] text-muted-foreground">
-            暂无历史数据
+            {t("noData")}
           </div>
         ) : (
           <>
@@ -169,8 +183,9 @@ export function AssetTrendChart() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  width={40}
+                  width={45}
                   fontSize={12}
+                  tickFormatter={formatNumber}
                 />
                 {visibleSeries.has('totalSubdomains') && (
                   <Line
@@ -228,7 +243,7 @@ export function AssetTrendChart() {
             </ChartContainer>
             <div className="mt-3 pt-3 border-t flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-sm">
               <span className="text-muted-foreground text-xs">
-                {activeData ? formatDate(activeData.date) : "当前"}
+                {activeData ? formatDate(activeData.date) : t("current")}
               </span>
               <div className="flex items-center gap-3">
                 <button
@@ -242,7 +257,7 @@ export function AssetTrendChart() {
                     className={`h-2.5 w-2.5 rounded-full ${!visibleSeries.has('totalSubdomains') ? 'bg-muted-foreground' : ''}`} 
                     style={{ backgroundColor: visibleSeries.has('totalSubdomains') ? "#3b82f6" : undefined }} 
                   />
-                  <span className={`text-muted-foreground ${!visibleSeries.has('totalSubdomains') ? 'line-through' : ''}`}>子域名</span>
+                  <span className={`text-muted-foreground ${!visibleSeries.has('totalSubdomains') ? 'line-through' : ''}`}>{t("subdomains")}</span>
                   <span className="font-medium">{displayData?.totalSubdomains ?? 0}</span>
                 </button>
                 <button
@@ -256,7 +271,7 @@ export function AssetTrendChart() {
                     className={`h-2.5 w-2.5 rounded-full ${!visibleSeries.has('totalIps') ? 'bg-muted-foreground' : ''}`} 
                     style={{ backgroundColor: visibleSeries.has('totalIps') ? "#f97316" : undefined }} 
                   />
-                  <span className={`text-muted-foreground ${!visibleSeries.has('totalIps') ? 'line-through' : ''}`}>IP</span>
+                  <span className={`text-muted-foreground ${!visibleSeries.has('totalIps') ? 'line-through' : ''}`}>{t("ips")}</span>
                   <span className="font-medium">{displayData?.totalIps ?? 0}</span>
                 </button>
                 <button
@@ -270,7 +285,7 @@ export function AssetTrendChart() {
                     className={`h-2.5 w-2.5 rounded-full ${!visibleSeries.has('totalEndpoints') ? 'bg-muted-foreground' : ''}`} 
                     style={{ backgroundColor: visibleSeries.has('totalEndpoints') ? "#eab308" : undefined }} 
                   />
-                  <span className={`text-muted-foreground ${!visibleSeries.has('totalEndpoints') ? 'line-through' : ''}`}>端点</span>
+                  <span className={`text-muted-foreground ${!visibleSeries.has('totalEndpoints') ? 'line-through' : ''}`}>{t("endpoints")}</span>
                   <span className="font-medium">{displayData?.totalEndpoints ?? 0}</span>
                 </button>
                 <button
@@ -284,7 +299,7 @@ export function AssetTrendChart() {
                     className={`h-2.5 w-2.5 rounded-full ${!visibleSeries.has('totalWebsites') ? 'bg-muted-foreground' : ''}`} 
                     style={{ backgroundColor: visibleSeries.has('totalWebsites') ? "#22c55e" : undefined }} 
                   />
-                  <span className={`text-muted-foreground ${!visibleSeries.has('totalWebsites') ? 'line-through' : ''}`}>网站</span>
+                  <span className={`text-muted-foreground ${!visibleSeries.has('totalWebsites') ? 'line-through' : ''}`}>{t("websites")}</span>
                   <span className="font-medium">{displayData?.totalWebsites ?? 0}</span>
                 </button>
               </div>

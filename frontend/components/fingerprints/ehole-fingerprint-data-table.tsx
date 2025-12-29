@@ -32,15 +32,7 @@ import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
 import type { PaginationInfo } from "@/types/common.types"
-
-// EHole 过滤字段配置
-const EHOLE_FILTER_FIELDS: FilterField[] = [
-  { key: "cms", label: "CMS", description: "产品/CMS名称" },
-  { key: "method", label: "Method", description: "匹配方式 (keyword, faviconhash...)" },
-  { key: "location", label: "Location", description: "匹配位置 (body, header, title)" },
-  { key: "type", label: "Type", description: "分类" },
-  { key: "isImportant", label: "Important", description: "是否重点资产 (true/false)" },
-]
+import { useTranslations } from "next-intl"
 
 const EHOLE_FILTER_EXAMPLES = [
   'cms="WordPress"',
@@ -88,6 +80,17 @@ export function EholeFingerprintDataTable({
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = React.useState(false)
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = React.useState(false)
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
+
+  // EHole 过滤字段配置（使用翻译）
+  const eholeFilterFields: FilterField[] = React.useMemo(() => [
+    { key: "cms", label: "CMS", description: t("filter.ehole.cms") },
+    { key: "method", label: "Method", description: t("filter.ehole.method") },
+    { key: "location", label: "Location", description: t("filter.ehole.location") },
+    { key: "type", label: "Type", description: t("filter.ehole.type") },
+    { key: "isImportant", label: "Important", description: t("filter.ehole.isImportant") },
+  ], [t])
 
   const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
@@ -108,7 +111,7 @@ export function EholeFingerprintDataTable({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm">
             <IconSettings className="h-4 w-4" />
-            操作
+            {t("actions.operations")}
             <IconChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -116,7 +119,7 @@ export function EholeFingerprintDataTable({
           {onExport && (
             <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
               <IconDownload className="h-4 w-4" />
-              导出所有指纹
+              {t("actions.exportAll")}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
@@ -127,7 +130,7 @@ export function EholeFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除选中 ({selectedCount})
+              {t("actions.deleteSelected")} ({selectedCount})
             </DropdownMenuItem>
           )}
           {onDeleteAll && (
@@ -136,7 +139,7 @@ export function EholeFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除所有
+              {t("actions.deleteAll")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -148,7 +151,7 @@ export function EholeFingerprintDataTable({
           <DropdownMenuTrigger asChild>
             <Button size="sm">
               <IconPlus className="h-4 w-4" />
-              添加指纹
+              {t("actions.addFingerprint")}
               <IconChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -156,13 +159,13 @@ export function EholeFingerprintDataTable({
             {onAddSingle && (
               <DropdownMenuItem onClick={onAddSingle}>
                 <IconPlus className="h-4 w-4" />
-                单条添加
+                {t("actions.addSingle")}
               </DropdownMenuItem>
             )}
             {onAddImport && (
               <DropdownMenuItem onClick={onAddImport}>
                 <IconUpload className="h-4 w-4" />
-                文件导入
+                {t("actions.importFile")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -186,7 +189,7 @@ export function EholeFingerprintDataTable({
         searchValue={filterValue}
         onSearch={handleSmartSearch}
         isSearching={isSearching}
-        filterFields={EHOLE_FILTER_FIELDS}
+        filterFields={eholeFilterFields}
         filterExamples={EHOLE_FILTER_EXAMPLES}
         // 选择
         onSelectionChange={handleSelectionChange}
@@ -203,15 +206,15 @@ export function EholeFingerprintDataTable({
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导出所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.exportTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              将导出所有 {totalCount} 条 EHole 指纹数据为 JSON 文件。
+              {t("dialogs.exportDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { onExport?.(); setExportDialogOpen(false); }}>
-              确认导出
+              {t("dialogs.confirmExport")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -221,18 +224,18 @@ export function EholeFingerprintDataTable({
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除选中指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteSelectedTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除选中的 {selectedCount} 条指纹吗？此操作不可撤销。
+              {t("dialogs.deleteSelectedDesc", { count: selectedCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onBulkDelete?.(); setBulkDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -242,18 +245,18 @@ export function EholeFingerprintDataTable({
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除所有 {totalCount} 条 EHole 指纹吗？此操作不可撤销。
+              {t("dialogs.deleteAllDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onDeleteAll?.(); setDeleteAllDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

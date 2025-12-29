@@ -2,8 +2,10 @@
 
 import React, { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { ScanHistoryDataTable } from "./scan-history-data-table"
 import { createScanHistoryColumns } from "./scan-history-columns"
+import { getDateLocale } from "@/lib/date-utils"
 import type { ScanRecord } from "@/types/scan.types"
 import type { ColumnDef } from "@tanstack/react-table"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
@@ -39,6 +41,53 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [stopDialogOpen, setStopDialogOpen] = useState(false)
   const [scanToStop, setScanToStop] = useState<ScanRecord | null>(null)
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tScan = useTranslations("scan")
+  const tToast = useTranslations("toast")
+  const tConfirm = useTranslations("common.confirm")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      target: tColumns("scanHistory.target"),
+      summary: tColumns("scanHistory.summary"),
+      engineName: tColumns("scanHistory.engineName"),
+      createdAt: tColumns("common.createdAt"),
+      status: tColumns("common.status"),
+      progress: tColumns("scanHistory.progress"),
+    },
+    actions: {
+      snapshot: tCommon("actions.snapshot"),
+      stopScan: tScan("stopScan"),
+      delete: tCommon("actions.delete"),
+      openMenu: tCommon("actions.openMenu"),
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      targetDetails: tTooltips("targetDetails"),
+      viewProgress: tTooltips("viewProgress"),
+    },
+    status: {
+      cancelled: tCommon("status.cancelled"),
+      completed: tCommon("status.completed"),
+      failed: tCommon("status.failed"),
+      initiated: tCommon("status.pending"),
+      running: tCommon("status.running"),
+    },
+    summary: {
+      subdomains: tColumns("scanHistory.subdomains"),
+      websites: tColumns("scanHistory.websites"),
+      ipAddresses: tColumns("scanHistory.ipAddresses"),
+      endpoints: tColumns("scanHistory.endpoints"),
+      vulnerabilities: tColumns("scanHistory.vulnerabilities"),
+    },
+  }), [tColumns, tCommon, tTooltips, tScan])
   
   // 进度弹窗状态
   const [progressDialogOpen, setProgressDialogOpen] = useState(false)
@@ -108,7 +157,7 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
 
   // 辅助函数 - 格式化日期
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -139,9 +188,9 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
     
     try {
       await deleteMutation.mutateAsync(scanToDelete.id)
-      toast.success(`已删除扫描记录: ${scanToDelete.targetName}`)
+      toast.success(tToast("deletedScanRecord", { name: scanToDelete.targetName }))
     } catch (error) {
-      toast.error("删除失败，请重试")
+      toast.error(tToast("deleteFailed"))
       console.error('删除失败:', error)
     } finally {
       setScanToDelete(null)
@@ -170,9 +219,9 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
     
     try {
       await stopMutation.mutateAsync(scanToStop.id)
-      toast.success(`已停止扫描任务: ${scanToStop.targetName}`)
+      toast.success(tToast("stoppedScan", { name: scanToStop.targetName }))
     } catch (error) {
-      toast.error("停止失败，请重试")
+      toast.error(tToast("stopFailed"))
       console.error('停止扫描失败:', error)
     } finally {
       setScanToStop(null)
@@ -205,9 +254,9 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
     
     try {
       const result = await bulkDeleteMutation.mutateAsync(deletedIds)
-      toast.success(result.message || `已删除 ${result.deletedCount} 个扫描记录`)
+      toast.success(result.message || tToast("bulkDeleteSuccess", { count: result.deletedCount }))
     } catch (error) {
-      toast.error("批量删除失败，请重试")
+      toast.error(tToast("bulkDeleteFailed"))
       console.error('批量删除失败:', error)
     }
   }
@@ -227,20 +276,21 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
         handleDelete: handleDeleteScan,
         handleStop: handleStopScan,
         handleViewProgress,
+        t: translations,
       }),
-    [navigate]
+    [navigate, translations]
   )
 
   // 错误处理
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-destructive mb-4">加载扫描历史失败</p>
+        <p className="text-destructive mb-4">{tScan("history.loadFailed")}</p>
         <button 
           onClick={() => queryClient.invalidateQueries({ queryKey: ['scans'] })}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
-          重试
+          {tScan("history.retry")}
         </button>
       </div>
     )
@@ -265,7 +315,7 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
         columns={scanColumns as ColumnDef<ScanRecord>[]}
         onBulkDelete={hideToolbar ? undefined : handleBulkDelete}
         onSelectionChange={setSelectedScans}
-        searchPlaceholder="搜索目标名称..."
+        searchPlaceholder={tScan("history.searchPlaceholder")}
         searchValue={searchQuery}
         onSearch={handleSearchChange}
         isSearching={isSearching}
@@ -285,18 +335,18 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除扫描记录 &quot;{scanToDelete?.targetName}&quot; 及其相关数据。
+              {tConfirm("deleteScanMessage", { name: scanToDelete?.targetName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除
+              {tCommon("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -306,9 +356,9 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("bulkDeleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除以下 {selectedScans.length} 个扫描记录及其相关数据。
+              {tConfirm("bulkDeleteScanMessage", { count: selectedScans.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {/* 扫描记录列表容器 */}
@@ -323,12 +373,12 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
             </ul>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmBulkDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除 {selectedScans.length} 个记录
+              {tConfirm("deleteScanCount", { count: selectedScans.length })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -338,18 +388,18 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
       <AlertDialog open={stopDialogOpen} onOpenChange={setStopDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认停止扫描</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("stopScanTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要停止扫描任务 &quot;{scanToStop?.targetName}&quot; 吗？扫描将会中止，已收集的数据将会保留。
+              {tConfirm("stopScanMessage", { name: scanToStop?.targetName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmStop} 
               className="bg-chart-2 text-white hover:bg-chart-2/90"
             >
-              停止扫描
+              {tConfirm("stopScanAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

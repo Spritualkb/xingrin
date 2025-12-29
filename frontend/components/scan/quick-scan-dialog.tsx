@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -21,13 +22,14 @@ import { CAPABILITY_CONFIG, getEngineIcon, parseEngineCapabilities } from "@/lib
 import { TargetValidator } from "@/lib/target-validator"
 import type { ScanEngine } from "@/types/engine.types"
 
-const STEP_TITLES = ["输入目标", "选择引擎", "确认扫描"]
+const STEP_TITLES_KEYS = ["steps.enterTargets", "steps.selectEngine", "steps.confirmScan"]
 
 interface QuickScanDialogProps {
   trigger?: React.ReactNode
 }
 
 export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
+  const t = useTranslations("quickScan")
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState(1)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -59,10 +61,10 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
       setIsLoading(true)
       getEngines()
         .then(setEngines)
-        .catch(() => toast.error("获取引擎列表失败"))
+        .catch(() => toast.error(t("toast.getEnginesFailed")))
         .finally(() => setIsLoading(false))
     }
-  }, [open, step, engines.length])
+  }, [open, step, engines.length, t])
   
   const resetForm = () => {
     setStep(1)
@@ -78,16 +80,16 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
   const handleNext = () => {
     if (step === 1) {
       if (validInputs.length === 0) {
-        toast.error("请输入至少一个有效目标")
+        toast.error(t("toast.noValidTarget"))
         return
       }
       if (hasErrors) {
-        toast.error(`存在 ${invalidInputs.length} 个无效输入，请修正后继续`)
+        toast.error(t("toast.hasInvalidInputs", { count: invalidInputs.length }))
         return
       }
     }
     if (step === 2 && !selectedEngineId) {
-      toast.error("请选择扫描引擎")
+      toast.error(t("toast.selectEngine"))
       return
     }
     setStep(step + 1)
@@ -109,19 +111,19 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
       const { targetStats, scans } = response
       
       if (scans.length > 0) {
-        toast.success(response.message || `已创建 ${scans.length} 个扫描任务`, {
+        toast.success(response.message || t("toast.createSuccess", { count: scans.length }), {
           description: targetStats.failed > 0 
-            ? `${targetStats.created} 个目标成功，${targetStats.failed} 个失败`
+            ? t("toast.createSuccessDesc", { created: targetStats.created, failed: targetStats.failed })
             : undefined
         })
         handleClose(false)
       } else {
-        toast.error("创建扫描任务失败", {
-          description: targetStats.failed > 0 ? `${targetStats.failed} 个目标处理失败` : undefined
+        toast.error(t("toast.createFailed"), {
+          description: targetStats.failed > 0 ? t("toast.targetsFailed", { count: targetStats.failed }) : undefined
         })
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || error?.response?.data?.error || "创建扫描任务失败")
+      toast.error(error?.response?.data?.detail || error?.response?.data?.error || t("toast.createFailed"))
     } finally {
       setIsSubmitting(false)
     }
@@ -144,7 +146,7 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
               className="gap-1.5 relative bg-background border-primary/20"
             >
               <Zap className="h-4 w-4 text-primary" />
-              快速扫描
+              {t("title")}
             </Button>
           </div>
         )}
@@ -153,9 +155,9 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
-            快速扫描
+            {t("title")}
             <span className="text-muted-foreground font-normal text-sm ml-2">
-              步骤 {step}/3 · {STEP_TITLES[step - 1]}
+              {t("step", { current: step, total: 3, title: t(STEP_TITLES_KEYS[step - 1]) })}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -180,12 +182,7 @@ export function QuickScanDialog({ trigger }: QuickScanDialogProps) {
                     value={targetInput}
                     onChange={(e) => setTargetInput(e.target.value)}
                     onScroll={handleTextareaScroll}
-                    placeholder={`每行输入一个目标，支持以下格式：
-
-域名: example.com, sub.example.com
-IP地址: 192.168.1.1, 10.0.0.1
-CIDR网段: 192.168.0.0/24, 10.0.0.0/8
-URL: https://example.com/api/v1`}
+                    placeholder={t("targetPlaceholder")}
                     className="font-mono h-full overflow-y-auto resize-none border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm py-3 px-4"
                     style={{ lineHeight: '21px' }}
                     autoFocus
@@ -197,11 +194,11 @@ URL: https://example.com/api/v1`}
                   {invalidInputs.slice(0, 3).map((r) => (
                     <div key={r.lineNumber} className="flex items-center gap-1 text-xs text-destructive">
                       <AlertCircle className="h-3 w-3 shrink-0" />
-                      <span>行 {r.lineNumber}: {r.error}</span>
+                      <span>{t("lineError", { lineNumber: r.lineNumber, error: r.error || "" })}</span>
                     </div>
                   ))}
                   {invalidInputs.length > 3 && (
-                    <div className="text-xs text-muted-foreground">还有 {invalidInputs.length - 3} 个错误...</div>
+                    <div className="text-xs text-muted-foreground">{t("moreErrors", { count: invalidInputs.length - 3 })}</div>
                   )}
                 </div>
               )}
@@ -213,7 +210,7 @@ URL: https://example.com/api/v1`}
             <div className="flex h-full">
               <div className="w-[260px] border-r flex flex-col shrink-0">
                 <div className="px-4 py-3 border-b bg-muted/30 shrink-0">
-                  <h3 className="text-sm font-medium">选择引擎</h3>
+                  <h3 className="text-sm font-medium">{t("selectEngine")}</h3>
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {isLoading ? (
@@ -221,7 +218,7 @@ URL: https://example.com/api/v1`}
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
                   ) : engines.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">暂无可用引擎</div>
+                    <div className="py-8 text-center text-sm text-muted-foreground">{t("noEngines")}</div>
                   ) : (
                     <RadioGroup
                       value={selectedEngineId}
@@ -253,7 +250,7 @@ URL: https://example.com/api/v1`}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm truncate">{engine.name}</div>
-                              <div className="text-xs text-muted-foreground">{capabilities.length > 0 ? `${capabilities.length} 项能力` : "无配置"}</div>
+                              <div className="text-xs text-muted-foreground">{capabilities.length > 0 ? t("capabilities", { count: capabilities.length }) : t("noConfig")}</div>
                             </div>
                             {isSelected && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                           </label>
@@ -288,7 +285,7 @@ URL: https://example.com/api/v1`}
                       })()}
                       <div className="flex-1 bg-muted/50 rounded-lg border overflow-hidden min-h-0">
                         <pre className="h-full p-3 text-xs font-mono overflow-auto whitespace-pre-wrap break-all">
-                          {selectedEngine.configuration || "# 无配置"}
+                          {selectedEngine.configuration || `# ${t("noConfig")}`}
                         </pre>
                       </div>
                     </div>
@@ -297,7 +294,7 @@ URL: https://example.com/api/v1`}
                   <div className="flex-1 flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <Settings className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm">选择左侧引擎查看配置详情</p>
+                      <p className="text-sm">{t("selectEngineHint")}</p>
                     </div>
                   </div>
                 )}
@@ -310,7 +307,7 @@ URL: https://example.com/api/v1`}
             <div className="flex h-full">
               <div className="w-[260px] border-r flex flex-col shrink-0">
                 <div className="px-4 py-3 border-b bg-muted/30 shrink-0">
-                  <h3 className="text-sm font-medium">扫描目标</h3>
+                  <h3 className="text-sm font-medium">{t("scanTargets")}</h3>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-1">
@@ -320,7 +317,7 @@ URL: https://example.com/api/v1`}
                   </div>
                 </div>
                 <div className="px-4 py-3 border-t bg-muted/30 text-xs text-muted-foreground">
-                  共 {validInputs.length} 个目标
+                  {t("totalTargets", { count: validInputs.length })}
                 </div>
               </div>
               <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -346,7 +343,7 @@ URL: https://example.com/api/v1`}
                   })()}
                   <div className="flex-1 bg-muted/50 rounded-lg border overflow-hidden min-h-0">
                     <pre className="h-full p-3 text-xs font-mono overflow-auto whitespace-pre-wrap break-all">
-                      {selectedEngine?.configuration || "# 无配置"}
+                      {selectedEngine?.configuration || `# ${t("noConfig")}`}
                     </pre>
                   </div>
                 </div>
@@ -359,12 +356,12 @@ URL: https://example.com/api/v1`}
           <span className="text-xs text-muted-foreground">
             {step === 1 && (
               <>
-                支持: 域名、IP、CIDR、URL
+                {t("supportedFormats")}
                 {validInputs.length > 0 && (
-                  <span className="text-primary font-medium ml-2">{validInputs.length} 个有效目标</span>
+                  <span className="text-primary font-medium ml-2">{t("validTargets", { count: validInputs.length })}</span>
                 )}
                 {hasErrors && (
-                  <span className="text-destructive ml-2">{invalidInputs.length} 个无效</span>
+                  <span className="text-destructive ml-2">{t("invalidTargets", { count: invalidInputs.length })}</span>
                 )}
               </>
             )}
@@ -372,11 +369,11 @@ URL: https://example.com/api/v1`}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handlePrev} disabled={step === 1} className={cn(step === 1 && "invisible")}>
               <ChevronLeft className="h-4 w-4" />
-              上一步
+              {t("previous")}
             </Button>
             {step < 3 ? (
               <Button size="sm" onClick={handleNext}>
-                下一步
+                {t("next")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
@@ -384,12 +381,12 @@ URL: https://example.com/api/v1`}
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    创建中...
+                    {t("creating")}
                   </>
                 ) : (
                   <>
                     <Zap className="h-4 w-4" />
-                    开始扫描
+                    {t("startScan")}
                   </>
                 )}
               </Button>

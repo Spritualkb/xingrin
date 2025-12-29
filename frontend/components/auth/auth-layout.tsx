@@ -2,6 +2,7 @@
 
 import React from "react"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -26,6 +27,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { data: auth, isLoading } = useAuth()
+  const tCommon = useTranslations("common")
 
   // 检查是否是公开路由（登录页）
   const isPublicRoute = PUBLIC_ROUTES.some((route) => 
@@ -69,7 +71,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <SiteHeader />
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
           <div className="@container/main flex-1 min-h-0 flex flex-col gap-2">
-            <Suspense fallback={<LoadingState message="页面加载中..." />}>
+            <Suspense fallback={<LoadingState message={tCommon("status.pageLoading")} />}>
               {children}
             </Suspense>
             <Toaster />

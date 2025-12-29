@@ -1,43 +1,43 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { PaginationInfo } from "./common.types"
 
-// 组织统计数据
+// Organization statistics data
 export interface OrganizationStats {
-  totalDomains?: number    // 域名总数
-  totalEndpoints?: number  // 端点总数
-  totalTargets?: number    // 目标总数
+  totalDomains?: number    // Total domains count
+  totalEndpoints?: number  // Total endpoints count
+  totalTargets?: number    // Total targets count
 }
 
-// 组织相关类型定义（匹配后端 Organization 模型）
+// Organization related type definitions (matches backend Organization model)
 export interface Organization {
   id: number
   name: string
   description: string
-  createdAt: string      // 后端 created_at 由 Django 自动转换为 camelCase
-  updatedAt: string      // 后端 updated_at
-  // 关联数据（通过 serializer 添加）
+  createdAt: string      // Backend created_at auto-converted to camelCase by Django
+  updatedAt: string      // Backend updated_at
+  // Associated data (added via serializer)
   targets?: Array<{
     id: number
     name: string
   }>
-  // 统计数据（可选，通过聚合查询获取）
+  // Statistics data (optional, obtained via aggregate query)
   stats?: OrganizationStats
-  targetCount?: number   // 目标数量（用于列表展示）
-  domainCount?: number   // 域名数量（用于列表展示）
-  endpointCount?: number // 端点数量（用于列表展示）
+  targetCount?: number   // Target count (for list display)
+  domainCount?: number   // Domain count (for list display)
+  endpointCount?: number // Endpoint count (for list display)
 }
 
-// 组织列表响应类型（匹配后端实际响应格式）
+// Organization list response type (matches backend actual response format)
 export interface OrganizationsResponse<T = Organization> {
-  results: T[]          // 组织数据列表
-  total: number         // 总记录数（后端实际字段）
-  page: number          // 当前页码
-  pageSize: number      // 每页大小
-  totalPages: number    // 总页数
-  // 兼容字段
-  count?: number        // DRF 标准字段（向后兼容）
-  next?: string | null   // 下一页链接（DRF 标准字段）
-  previous?: string | null // 上一页链接（DRF 标准字段）
+  results: T[]          // Organization data list
+  total: number         // Total record count (backend actual field)
+  page: number          // Current page number
+  pageSize: number      // Page size
+  totalPages: number    // Total pages
+  // Compatibility fields
+  count?: number        // DRF standard field (backward compatible)
+  next?: string | null   // Next page link (DRF standard field)
+  previous?: string | null // Previous page link (DRF standard field)
   organizations?: T[]
   pagination?: {
     total: number
@@ -48,31 +48,31 @@ export interface OrganizationsResponse<T = Organization> {
 }
 
 
-// 创建组织请求类型
+// Create organization request type
 export interface CreateOrganizationRequest {
   name: string
   description: string
 }
 
-// 更新组织请求类型
+// Update organization request type
 export interface UpdateOrganizationRequest {
   name: string
   description: string
 }
 
-// 组织数据表格组件属性类型定义
+// Organization data table component props type definition
 export interface OrganizationDataTableProps {
-  data: Organization[]                           // 组织数据数组
-  columns: ColumnDef<Organization>[]             // 列定义数组
-  onAddNew?: () => void                          // 添加新组织的回调函数
-  onBulkDelete?: () => void                      // 批量删除回调函数
-  onSelectionChange?: (selectedRows: Organization[]) => void  // 选中行变化回调
-  searchPlaceholder?: string                     // 搜索框占位符
-  searchColumn?: string                          // 搜索的列名
-  searchValue?: string                           // 受控：搜索框当前值（服务端搜索）
-  onSearch?: (value: string) => void             // 受控：搜索框变更回调（服务端搜索）
-  isSearching?: boolean                          // 搜索中状态（显示加载动画）
-  // 添加分页相关属性
+  data: Organization[]                           // Organization data array
+  columns: ColumnDef<Organization>[]             // Column definitions array
+  onAddNew?: () => void                          // Add new organization callback
+  onBulkDelete?: () => void                      // Bulk delete callback
+  onSelectionChange?: (selectedRows: Organization[]) => void  // Selected rows change callback
+  searchPlaceholder?: string                     // Search input placeholder
+  searchColumn?: string                          // Column name to search
+  searchValue?: string                           // Controlled: search input current value (server-side search)
+  onSearch?: (value: string) => void             // Controlled: search input change callback (server-side search)
+  isSearching?: boolean                          // Searching state (show loading animation)
+  // Pagination related props
   pagination?: {
     pageIndex: number
     pageSize: number

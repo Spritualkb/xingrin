@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { ToolCard } from "@/components/tools/config/tool-card"
 import { AddToolDialog } from "@/components/tools/config/add-tool-dialog"
 import { useTools, useDeleteTool } from "@/hooks/use-tools"
@@ -27,6 +28,11 @@ export function OpensourceToolsList() {
   const [editingTool, setEditingTool] = useState<Tool | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [toolToDelete, setToolToDelete] = useState<Tool | null>(null)
+  
+  // 国际化
+  const tCommon = useTranslations("common")
+  const tConfirm = useTranslations("common.confirm")
+  const tConfig = useTranslations("tools.config")
   
   // 获取工具列表（只获取开源工具）
   const { data, isLoading, error } = useTools({
@@ -102,7 +108,7 @@ export function OpensourceToolsList() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <p className="text-destructive">加载失败: {error.message}</p>
+          <p className="text-destructive">{tCommon("status.error")}: {error.message}</p>
         </div>
       </div>
     )
@@ -127,7 +133,7 @@ export function OpensourceToolsList() {
       {/* 空状态 */}
       {tools.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">暂无工具</p>
+          <p className="text-muted-foreground">{tConfig("noTools")}</p>
         </div>
       )}
 
@@ -142,13 +148,13 @@ export function OpensourceToolsList() {
       <AlertDialog open={!!toolToDelete} onOpenChange={(open) => !open && setToolToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除开源工具 &quot;{toolToDelete?.name}&quot; 及其相关配置。
+              {tConfirm("deleteToolMessage", { name: toolToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteTool.isPending}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteTool.isPending}>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -157,10 +163,10 @@ export function OpensourceToolsList() {
               {deleteTool.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                "删除"
+                tCommon("actions.delete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

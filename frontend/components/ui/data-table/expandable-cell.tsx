@@ -37,8 +37,8 @@ export function ExpandableCell({
   maxLines = 3,
   className,
   placeholder = "-",
-  expandLabel = "展开",
-  collapseLabel = "收起",
+  expandLabel = "Expand",
+  collapseLabel = "Collapse",
 }: ExpandableCellProps) {
   const [expanded, setExpanded] = React.useState(false)
   const [isOverflowing, setIsOverflowing] = React.useState(false)
@@ -192,11 +192,11 @@ export function ExpandableBadgeList({
           {expanded ? (
             <>
               <ChevronUp className="h-3 w-3" />
-              <span>收起</span>
+              <span>Collapse</span>
             </>
           ) : (
             <>
-              <span>展开</span>
+              <span>Expand</span>
               <ChevronDown className="h-3 w-3" />
             </>
           )}
@@ -265,11 +265,11 @@ export function ExpandableTagList({
           {expanded ? (
             <>
               <ChevronUp className="h-3 w-3" />
-              <span>收起</span>
+              <span>Collapse</span>
             </>
           ) : (
             <>
-              <span>展开</span>
+              <span>Expand</span>
               <ChevronDown className="h-3 w-3" />
             </>
           )}

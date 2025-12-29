@@ -17,31 +17,8 @@ import {
   IconPlayerStop,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
+import { useTranslations, useLocale } from "next-intl"
 import type { ScanStage, ScanRecord, StageProgress, StageStatus } from "@/types/scan.types"
-
-/** 阶段名称中文映射（支持驼峰和下划线两种格式） */
-const STAGE_LABELS: Record<string, string> = {
-  // 驼峰命名（后端返回格式）
-  subdomainDiscovery: "子域名发现",
-  portScan: "端口扫描",
-  siteScan: "站点扫描",
-  directoryScan: "目录扫描",
-  urlFetch: "URL 抓取",
-  vulnScan: "漏洞扫描",
-  // 下划线命名（engine_config 格式）
-  subdomain_discovery: "子域名发现",
-  port_scan: "端口扫描",
-  site_scan: "站点扫描",
-  fingerprint_detect: "指纹识别",
-  directory_scan: "目录扫描",
-  url_fetch: "URL 抓取",
-  vuln_scan: "漏洞扫描",
-}
-
-/** 获取阶段中文名称 */
-function getStageName(stage: string): string {
-  return STAGE_LABELS[stage] || stage
-}
 
 /**
  * 扫描阶段详情
@@ -75,13 +52,13 @@ interface ScanProgressDialogProps {
   data: ScanProgressData | null
 }
 
-/** 扫描状态配置（与 scan-history 状态颜色一致） */
-const SCAN_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  running: { label: "扫描中", className: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20" },
-  cancelled: { label: "已取消", className: "bg-[#848d97]/10 text-[#848d97] border-[#848d97]/20" },
-  completed: { label: "已完成", className: "bg-[#238636]/10 text-[#238636] border-[#238636]/20 dark:text-[#3fb950]" },
-  failed: { label: "失败", className: "bg-[#da3633]/10 text-[#da3633] border-[#da3633]/20 dark:text-[#f85149]" },
-  initiated: { label: "等待中", className: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20" },
+/** 扫描状态样式配置 */
+const SCAN_STATUS_STYLES: Record<string, string> = {
+  running: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20",
+  cancelled: "bg-[#848d97]/10 text-[#848d97] border-[#848d97]/20",
+  completed: "bg-[#238636]/10 text-[#238636] border-[#238636]/20 dark:text-[#3fb950]",
+  failed: "bg-[#da3633]/10 text-[#da3633] border-[#da3633]/20 dark:text-[#f85149]",
+  initiated: "bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20",
 }
 
 /**
@@ -119,11 +96,12 @@ function ScanStatusIcon({ status }: { status: string }) {
 /**
  * 扫描状态徽章
  */
-function ScanStatusBadge({ status }: { status: string }) {
-  const config = SCAN_STATUS_CONFIG[status] || { label: status, className: "bg-muted text-muted-foreground" }
+function ScanStatusBadge({ status, t }: { status: string; t: (key: string) => string }) {
+  const className = SCAN_STATUS_STYLES[status] || "bg-muted text-muted-foreground"
+  const label = t(`status_${status}`)
   return (
-    <Badge variant="outline" className={config.className}>
-      {config.label}
+    <Badge variant="outline" className={className}>
+      {label}
     </Badge>
   )
 }
@@ -149,7 +127,7 @@ function StageStatusIcon({ status }: { status: StageStatus }) {
 /**
  * 单个阶段行
  */
-function StageRow({ stage }: { stage: StageDetail }) {
+function StageRow({ stage, t }: { stage: StageDetail; t: (key: string) => string }) {
   return (
     <div
       className={cn(
@@ -163,7 +141,7 @@ function StageRow({ stage }: { stage: StageDetail }) {
       <div className="flex items-center gap-3">
         <StageStatusIcon status={stage.status} />
         <div>
-          <span className="font-medium">{getStageName(stage.stage)}</span>
+          <span className="font-medium">{t(`stages.${stage.stage}`)}</span>
           {stage.detail && (
             <p className="text-xs text-muted-foreground mt-0.5">
               {stage.detail}
@@ -176,7 +154,7 @@ function StageRow({ stage }: { stage: StageDetail }) {
         {/* 状态/耗时 */}
         {stage.status === "running" && (
           <Badge variant="outline" className="bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20">
-            进行中
+            {t("stage_running")}
           </Badge>
         )}
         {stage.status === "completed" && stage.duration && (
@@ -185,16 +163,16 @@ function StageRow({ stage }: { stage: StageDetail }) {
           </span>
         )}
         {stage.status === "pending" && (
-          <span className="text-sm text-muted-foreground">等待中</span>
+          <span className="text-sm text-muted-foreground">{t("stage_pending")}</span>
         )}
         {stage.status === "failed" && (
           <Badge variant="outline" className="bg-[#da3633]/10 text-[#da3633] border-[#da3633]/20 dark:text-[#f85149]">
-            失败
+            {t("stage_failed")}
           </Badge>
         )}
         {stage.status === "cancelled" && (
           <Badge variant="outline" className="bg-[#d29922]/10 text-[#d29922] border-[#d29922]/20">
-            已取消
+            {t("stage_cancelled")}
           </Badge>
         )}
       </div>
@@ -210,6 +188,9 @@ export function ScanProgressDialog({
   onOpenChange,
   data,
 }: ScanProgressDialogProps) {
+  const t = useTranslations("scan.progress")
+  const locale = useLocale()
+  
   if (!data) return null
 
   return (
@@ -218,34 +199,34 @@ export function ScanProgressDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScanStatusIcon status={data.status} />
-            扫描进度
+            {t("title")}
           </DialogTitle>
         </DialogHeader>
 
         {/* 基本信息 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">目标</span>
+            <span className="text-muted-foreground">{t("target")}</span>
             <span className="font-medium">{data.targetName}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">引擎</span>
+            <span className="text-muted-foreground">{t("engine")}</span>
             <Badge variant="secondary">{data.engineName}</Badge>
           </div>
           {data.startedAt && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">开始时间</span>
-              <span className="font-mono text-xs">{formatDateTime(data.startedAt)}</span>
+              <span className="text-muted-foreground">{t("startTime")}</span>
+              <span className="font-mono text-xs">{formatDateTime(data.startedAt, locale)}</span>
             </div>
           )}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">状态</span>
-            <ScanStatusBadge status={data.status} />
+            <span className="text-muted-foreground">{t("status")}</span>
+            <ScanStatusBadge status={data.status} t={t} />
           </div>
           {/* 错误信息（失败时显示） */}
           {data.errorMessage && (
             <div className="mt-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-              <p className="text-sm text-destructive font-medium">错误原因</p>
+              <p className="text-sm text-destructive font-medium">{t("errorReason")}</p>
               <p className="text-sm text-destructive/80 mt-1 break-words">{data.errorMessage}</p>
             </div>
           )}
@@ -256,7 +237,7 @@ export function ScanProgressDialog({
         {/* 总进度 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">总进度</span>
+            <span className="font-medium">{t("totalProgress")}</span>
             <span className="font-mono text-muted-foreground">{data.progress}%</span>
           </div>
 
@@ -281,7 +262,7 @@ export function ScanProgressDialog({
         {/* 阶段列表 */}
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
           {data.stages.map((stage) => (
-            <StageRow key={stage.stage} stage={stage} />
+            <StageRow key={stage.stage} stage={stage} t={t} />
           ))}
         </div>
       </DialogContent>
@@ -304,11 +285,11 @@ function formatDuration(seconds?: number): string | undefined {
 /**
  * 格式化日期时间（ISO 字符串 -> 可读格式）
  */
-function formatDateTime(isoString?: string): string {
+function formatDateTime(isoString?: string, locale: string = "zh"): string {
   if (!isoString) return ""
   try {
     const date = new Date(isoString)
-    return date.toLocaleString("zh-CN", {
+    return date.toLocaleString(locale === "zh" ? "zh-CN" : "en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",

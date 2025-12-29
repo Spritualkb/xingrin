@@ -1,71 +1,71 @@
 /**
- * API 客户端配置文件
+ * API client configuration file
  * 
- * 核心功能：
- * 1. 统一的 HTTP 请求封装
- * 2. 统一错误处理
- * 3. 请求/响应日志记录
+ * Core functionality:
+ * 1. Unified HTTP request wrapper
+ * 2. Unified error handling
+ * 3. Request/response logging
  * 
- * 命名规范说明：
- * - 前端（TypeScript/React）：驼峰命名 camelCase
- *   例如：pageSize, createdAt, organizationId
+ * Naming convention explanation:
+ * - Frontend (TypeScript/React): camelCase
+ *   Example: pageSize, createdAt, organizationId
  * 
- * - 后端（Django/Python）：下划线命名 snake_case（模型字段）
- *   例如：page_size, created_at, organization_id
+ * - Backend (Django/Python): snake_case (model fields)
+ *   Example: page_size, created_at, organization_id
  * 
- * - API JSON 格式：驼峰命名 camelCase（已由后端自动转换）
- *   例如：pageSize, createdAt, organizationId
+ * - API JSON format: camelCase (automatically converted by backend)
+ *   Example: pageSize, createdAt, organizationId
  * 
- * 命名转换机制：
+ * Naming conversion mechanism:
  * ══════════════════════════════════════════════════════════════════════
- * 【后端处理】Django REST Framework + djangorestframework-camel-case
+ * 【Backend Processing】Django REST Framework + djangorestframework-camel-case
  * ══════════════════════════════════════════════════════════════════════
  * 
- * 1. 前端发送请求（camelCase）：
+ * 1. Frontend sends request (camelCase):
  *    { pageSize: 10, sortBy: "name" }
  *    
- * 2. Django 接收并自动转换为 snake_case：
+ * 2. Django receives and automatically converts to snake_case:
  *    { page_size: 10, sort_by: "name" }
  *    
- * 3. Django 处理后端逻辑（使用 snake_case 模型字段）
+ * 3. Django processes backend logic (using snake_case model fields)
  * 
- * 4. Django 返回数据时自动转换为 camelCase：
+ * 4. Django returns data automatically converted to camelCase:
  *    { pageSize: 10, createdAt: "2024-01-01" }
  *    
- * 5. 前端直接使用（camelCase）：
- *    response.data.pageSize  // [OK] 直接使用
+ * 5. Frontend uses directly (camelCase):
+ *    response.data.pageSize  // [OK] Use directly
  * 
- * [NOTE] 关键点：命名转换由后端统一处理，前端无需转换
+ * [NOTE] Key point: Naming conversion is handled uniformly by backend, frontend needs no conversion
  */
 
 import axios, { AxiosRequestConfig } from 'axios';
 
 /**
- * 创建 axios 实例
- * 配置基础 URL、超时时间和默认请求头
+ * Create axios instance
+ * Configure base URL, timeout and default headers
  */
 const apiClient = axios.create({
-  baseURL: '/api',  // API 基础路径
-  timeout: 30000,      // 30秒超时
+  baseURL: '/api',  // API base path
+  timeout: 30000,      // 30 second timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 /**
- * 请求拦截器：处理请求前的准备工作
+ * Request interceptor: Handle preparation work before request
  * 
- * 工作流程：
- * 1. 确保 URL 格式正确（Django 要求末尾斜杠）
- * 2. 记录请求日志（开发调试用）
+ * Workflow:
+ * 1. Ensure URL format is correct (Django requires trailing slash)
+ * 2. Log request (for development debugging)
  * 
- * 注意事项：
- * - 命名转换由后端处理，前端无需转换
- * - 前端直接使用 camelCase 命名即可
+ * Notes:
+ * - Naming conversion is handled by backend, frontend needs no conversion
+ * - Frontend can directly use camelCase naming
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // 只在开发环境输出调试日志
+    // Only output debug logs in development environment
     if (process.env.NODE_ENV === 'development') {
       console.log('[REQUEST] API Request:', {
         method: config.method?.toUpperCase(),
@@ -88,19 +88,19 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * 响应拦截器：处理响应数据
+ * Response interceptor: Handle response data
  * 
- * 工作流程：
- * 1. 记录响应日志（开发调试用）
- * 2. 返回响应数据（后端已转换为 camelCase）
+ * Workflow:
+ * 1. Log response (for development debugging)
+ * 2. Return response data (backend already converted to camelCase)
  * 
- * 注意事项：
- * - 后端已自动将 snake_case 转换为 camelCase
- * - 前端直接使用即可，无需额外转换
+ * Notes:
+ * - Backend has automatically converted snake_case to camelCase
+ * - Frontend can use directly, no additional conversion needed
  */
 apiClient.interceptors.response.use(
   (response) => {
-    // 只在开发环境输出调试日志
+    // Only output debug logs in development environment
     if (process.env.NODE_ENV === 'development') {
       console.log('[RESPONSE] API Response:', {
         status: response.status,
@@ -113,9 +113,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // 只在开发环境输出错误日志
+    // Only output error logs in development environment
     if (process.env.NODE_ENV === 'development') {
-      // 检查是否是 Axios 错误
+      // Check if it's an Axios error
       if (axios.isAxiosError(error)) {
         console.error('[ERROR] API Error:', {
           status: error.response?.status,
@@ -127,10 +127,10 @@ apiClient.interceptors.response.use(
           code: error.code
         });
       } else if (error instanceof Error) {
-        // 普通 Error 对象
+        // Regular Error object
         console.error('[ERROR] API Error:', error.message, error.stack);
       } else {
-        // 未知错误类型
+        // Unknown error type
         console.error('[ERROR] API Error: Unknown error', String(error));
       }
     }
@@ -139,94 +139,94 @@ apiClient.interceptors.response.use(
   }
 );
 
-// 导出默认的 axios 实例（一般不直接使用）
+// Export default axios instance (generally not used directly)
 export default apiClient;
 
 /**
- * 导出常用的 HTTP 方法
+ * Export common HTTP methods
  * 
- * 使用示例：
+ * Usage examples:
  * 
- * 1. GET 请求：
+ * 1. GET request:
  *    api.get('/organizations', { 
- *      params: { pageSize: 10, sortBy: 'name' }  // 使用 camelCase
+ *      params: { pageSize: 10, sortBy: 'name' }  // Use camelCase
  *    })
- *    后端接收：page_size=10&sort_by=name（自动转换）
+ *    Backend receives: page_size=10&sort_by=name (automatically converted)
  * 
- * 2. POST 请求：
+ * 2. POST request:
  *    api.post('/organizations/create', {
- *      organizationName: 'test',  // 使用 camelCase
+ *      organizationName: 'test',  // Use camelCase
  *      createdAt: '2024-01-01'
  *    })
- *    后端接收：organization_name, created_at（自动转换）
+ *    Backend receives: organization_name, created_at (automatically converted)
  * 
- * 3. 响应数据（已经是 camelCase）：
+ * 3. Response data (already camelCase):
  *    const response = await api.get('/organizations')
- *    response.data.pageSize  // [OK] 直接使用 camelCase
- *    response.data.createdAt // [OK] 直接使用 camelCase
+ *    response.data.pageSize  // [OK] Use camelCase directly
+ *    response.data.createdAt // [OK] Use camelCase directly
  * 
- * 类型参数：
- * - T: 响应数据的类型（可选）
- * - config: axios 配置对象（可选）
+ * Type parameters:
+ * - T: Response data type (optional)
+ * - config: axios configuration object (optional)
  */
 export const api = {
   /**
-   * GET 请求
-   * @param url - 请求路径（相对于 baseURL）
-   * @param config - axios 配置，建议使用 params 传递查询参数
+   * GET request
+   * @param url - Request path (relative to baseURL)
+   * @param config - axios config, recommend using params for query parameters
    * @returns Promise<AxiosResponse<T>>
    */
   get: <T = unknown>(url: string, config?: AxiosRequestConfig) => apiClient.get<T>(url, config),
 
   /**
-   * POST 请求
-   * @param url - 请求路径（相对于 baseURL）
-   * @param data - 请求体数据（会自动转换为 snake_case）
-   * @param config - axios 配置（可选）
+   * POST request
+   * @param url - Request path (relative to baseURL)
+   * @param data - Request body data (will be automatically converted to snake_case)
+   * @param config - axios config (optional)
    * @returns Promise<AxiosResponse<T>>
    */
   post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => apiClient.post<T>(url, data, config),
 
   /**
-   * PUT 请求
-   * @param url - 请求路径（相对于 baseURL）
-   * @param data - 请求体数据（会自动转换为 snake_case）
-   * @param config - axios 配置（可选）
+   * PUT request
+   * @param url - Request path (relative to baseURL)
+   * @param data - Request body data (will be automatically converted to snake_case)
+   * @param config - axios config (optional)
    * @returns Promise<AxiosResponse<T>>
    */
   put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => apiClient.put<T>(url, data, config),
 
   /**
-   * PATCH 请求（部分更新）
-   * @param url - 请求路径（相对于 baseURL）
-   * @param data - 请求体数据（会自动转换为 snake_case）
-   * @param config - axios 配置（可选）
+   * PATCH request (partial update)
+   * @param url - Request path (relative to baseURL)
+   * @param data - Request body data (will be automatically converted to snake_case)
+   * @param config - axios config (optional)
    * @returns Promise<AxiosResponse<T>>
    */
   patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) => apiClient.patch<T>(url, data, config),
 
   /**
-   * DELETE 请求
-   * @param url - 请求路径（相对于 baseURL）
-   * @param config - axios 配置（可选）
+   * DELETE request
+   * @param url - Request path (relative to baseURL)
+   * @param config - axios config (optional)
    * @returns Promise<AxiosResponse<T>>
    */
   delete: <T = unknown>(url: string, config?: AxiosRequestConfig) => apiClient.delete<T>(url, config),
 };
 
 /**
- * 错误处理工具函数
+ * Error handling utility function
  * 
- * 功能：从错误对象中提取用户友好的错误消息
+ * Function: Extract user-friendly error messages from error objects
  * 
- * 错误优先级：
- * 1. 请求取消
- * 2. 请求超时
- * 3. 后端返回的错误消息
- * 4. axios 错误消息
- * 5. 未知错误
+ * Error priority:
+ * 1. Request cancelled
+ * 2. Request timeout
+ * 3. Backend returned error message
+ * 4. axios error message
+ * 5. Unknown error
  * 
- * 使用示例：
+ * Usage example:
  * try {
  *   await api.get('/organizations')
  * } catch (error) {
@@ -234,28 +234,28 @@ export const api = {
  *   toast.error(message)
  * }
  * 
- * @param error - 错误对象（可以是任意类型）
- * @returns 用户友好的错误消息字符串
+ * @param error - Error object (can be any type)
+ * @returns User-friendly error message string
  */
 export const getErrorMessage = (error: unknown): string => {
-  // 请求被取消（用户主动取消或组件卸载）
+  // Request was cancelled (user actively cancelled or component unmounted)
   if (axios.isCancel(error)) {
-    return '请求已被取消';
+    return 'Request has been cancelled';
   }
 
-  // 类型守卫：检查是否为错误对象
+  // Type guard: Check if it's an error object
   const err = error as {
     code?: string;
     response?: { data?: { message?: string; error?: string; detail?: string } };
     message?: string
   }
 
-  // 请求超时（超过 30 秒）
+  // Request timeout (over 30 seconds)
   if (err.code === 'ECONNABORTED') {
-    return '请求超时，请稍后重试';
+    return 'Request timeout, please try again later';
   }
 
-  // 后端返回的错误消息（支持多种格式）
+  // Backend returned error message (supports multiple formats)
   if (err.response?.data?.error) {
     return err.response.data.error;
   }
@@ -266,11 +266,11 @@ export const getErrorMessage = (error: unknown): string => {
     return err.response.data.detail;
   }
 
-  // axios 自身的错误消息
+  // axios own error message
   if (err.message) {
     return err.message;
   }
 
-  // 兜底错误消息
-  return '发生未知错误';
+  // Fallback error message
+  return 'Unknown error occurred';
 };

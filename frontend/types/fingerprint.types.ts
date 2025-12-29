@@ -1,8 +1,8 @@
 /**
- * 指纹相关类型定义
+ * Fingerprint related type definitions
  */
 
-// EHole 指纹类型
+// EHole fingerprint type
 export interface EholeFingerprint {
   id: number
   cms: string
@@ -14,14 +14,14 @@ export interface EholeFingerprint {
   createdAt: string
 }
 
-// Goby 规则类型
+// Goby rule type
 export interface GobyRule {
   label: string
   feature: string
   is_equal: boolean
 }
 
-// Goby 指纹类型
+// Goby fingerprint type
 export interface GobyFingerprint {
   id: number
   name: string
@@ -30,7 +30,7 @@ export interface GobyFingerprint {
   createdAt: string
 }
 
-// Wappalyzer 指纹类型
+// Wappalyzer fingerprint type
 export interface WappalyzerFingerprint {
   id: number
   name: string
@@ -48,18 +48,18 @@ export interface WappalyzerFingerprint {
   createdAt: string
 }
 
-// 批量创建响应
+// Batch create response
 export interface BatchCreateResponse {
   created: number
   failed: number
 }
 
-// 批量删除响应
+// Bulk delete response
 export interface BulkDeleteResponse {
   deleted: number
 }
 
-// 指纹统计信息
+// Fingerprint statistics
 export interface FingerprintStats {
   ehole: number
   goby: number

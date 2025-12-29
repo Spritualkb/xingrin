@@ -137,11 +137,11 @@ export const DropzoneContent = ({
       </div>
       <p className="my-2 w-full truncate font-medium text-sm">
         {src.length > maxLabelItems
-          ? `${src.slice(0, maxLabelItems).map((file) => file.name).join(', ')} 等 ${src.length - maxLabelItems} 个文件`
+          ? `${src.slice(0, maxLabelItems).map((file) => file.name).join(', ')} and ${src.length - maxLabelItems} more files`
           : src.map((file) => file.name).join(', ')}
       </p>
       <p className="w-full text-wrap text-muted-foreground text-xs">
-        拖拽或点击替换文件
+        Drag or click to replace files
       </p>
     </div>
   )
@@ -169,16 +169,16 @@ export const DropzoneEmptyState = ({
   let caption = ''
 
   if (accept) {
-    caption += '支持 '
+    caption += 'Supports '
     caption += Object.keys(accept).join(', ')
   }
 
   if (minSize && maxSize) {
-    caption += ` 大小在 ${renderBytes(minSize)} 到 ${renderBytes(maxSize)} 之间`
+    caption += ` size between ${renderBytes(minSize)} and ${renderBytes(maxSize)}`
   } else if (minSize) {
-    caption += ` 最小 ${renderBytes(minSize)}`
+    caption += ` minimum ${renderBytes(minSize)}`
   } else if (maxSize) {
-    caption += ` 最大 ${renderBytes(maxSize)}`
+    caption += ` maximum ${renderBytes(maxSize)}`
   }
 
   return (
@@ -187,10 +187,10 @@ export const DropzoneEmptyState = ({
         <UploadIcon size={16} />
       </div>
       <p className="my-2 w-full truncate text-wrap font-medium text-sm">
-        上传{maxFiles === 1 ? '文件' : '文件'}
+        Upload {maxFiles === 1 ? 'file' : 'files'}
       </p>
       <p className="w-full truncate text-wrap text-muted-foreground text-xs">
-        拖拽文件到此处，或点击选择
+        Drag files here or click to select
       </p>
       {caption && (
         <p className="text-wrap text-muted-foreground text-xs mt-1">{caption}</p>

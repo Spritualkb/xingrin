@@ -2,23 +2,23 @@ import apiClient from '@/lib/api-client'
 import type { ScanEngine } from '@/types/engine.types'
 
 /**
- * 引擎 API 服务
+ * Engine API service
  */
 
 /**
- * 获取引擎列表
+ * Get engine list
  */
 export async function getEngines(): Promise<ScanEngine[]> {
-  // 引擎数量通常不多，获取全部
+  // Engines are usually not many, get all
   const response = await apiClient.get('/engines/', {
     params: { pageSize: 1000 }
   })
-  // 后端返回分页数据: { results: [...], total, page, pageSize, totalPages }
+  // Backend returns paginated data: { results: [...], total, page, pageSize, totalPages }
   return response.data.results || response.data
 }
 
 /**
- * 获取引擎详情
+ * Get engine details
  */
 export async function getEngine(id: number): Promise<ScanEngine> {
   const response = await apiClient.get(`/engines/${id}/`)
@@ -26,7 +26,7 @@ export async function getEngine(id: number): Promise<ScanEngine> {
 }
 
 /**
- * 创建引擎
+ * Create engine
  */
 export async function createEngine(data: {
   name: string
@@ -37,7 +37,7 @@ export async function createEngine(data: {
 }
 
 /**
- * 更新引擎
+ * Update engine
  */
 export async function updateEngine(
   id: number,
@@ -51,7 +51,7 @@ export async function updateEngine(
 }
 
 /**
- * 删除引擎
+ * Delete engine
  */
 export async function deleteEngine(id: number): Promise<void> {
   await apiClient.delete(`/engines/${id}/`)

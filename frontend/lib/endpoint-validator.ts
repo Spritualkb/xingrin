@@ -2,9 +2,9 @@ import validator from 'validator'
 import { isIP } from 'is-ip'
 
 /**
- * Endpoint 验证工具类
- * 提供严格的 URL 格式验证
- * 使用 validator.js 进行可靠的 URL 验证
+ * Endpoint validation utility class
+ * Provides strict URL format validation
+ * Uses validator.js for reliable URL validation
  */
 
 export interface EndpointValidationResult {
@@ -15,30 +15,30 @@ export interface EndpointValidationResult {
 
 export class EndpointValidator {
   /**
-   * 验证 Endpoint 是否为有效的 HTTP/HTTPS URL
-   * @param urlString - 要验证的 URL 字符串
-   * @returns 验证结果
+   * Validate if Endpoint is a valid HTTP/HTTPS URL
+   * @param urlString - URL string to validate
+   * @returns Validation result
    */
   static validate(urlString: string): EndpointValidationResult {
-    // 1. 检查是否为空
+    // 1. Check if empty
     if (!urlString || urlString.trim().length === 0) {
       return {
         isValid: false,
-        error: 'Endpoint 不能为空'
+        error: 'Endpoint cannot be empty'
       }
     }
 
     const trimmedUrl = urlString.trim()
 
-    // 2. 检查是否包含空格
+    // 2. Check if contains spaces
     if (trimmedUrl.includes(' ')) {
       return {
         isValid: false,
-        error: 'Endpoint 不能包含空格'
+        error: 'Endpoint cannot contain spaces'
       }
     }
 
-    // 3. 使用 validator.js 进行严格验证
+    // 3. Use validator.js for strict validation
     if (!validator.isURL(trimmedUrl, {
       protocols: ['http', 'https'],
       require_protocol: true,
@@ -50,66 +50,66 @@ export class EndpointValidator {
     })) {
       return {
         isValid: false,
-        error: 'Endpoint 格式无效，必须是有效的 HTTP/HTTPS URL'
+        error: 'Invalid Endpoint format, must be a valid HTTP/HTTPS URL'
       }
     }
 
-    // 4. 尝试解析 URL（双重验证）
+    // 4. Try to parse URL (double validation)
     let parsedUrl: URL
     try {
       parsedUrl = new URL(trimmedUrl)
     } catch (error) {
       return {
         isValid: false,
-        error: 'Endpoint 格式无效，无法解析'
+        error: 'Invalid Endpoint format, cannot parse'
       }
     }
 
-    // 5. 验证协议
+    // 5. Validate protocol
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
       return {
         isValid: false,
-        error: '只支持 HTTP 和 HTTPS 协议'
+        error: 'Only HTTP and HTTPS protocols are supported'
       }
     }
 
-    // 6. 验证主机名
+    // 6. Validate hostname
     if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
       return {
         isValid: false,
-        error: 'Endpoint 必须包含有效的主机名'
+        error: 'Endpoint must contain a valid hostname'
       }
     }
 
-    // 7. 检查主机名格式（域名或 IP）
+    // 7. Check hostname format (domain or IP)
     if (!this.isValidHostname(parsedUrl.hostname)) {
       return {
         isValid: false,
-        error: '主机名格式无效'
+        error: 'Invalid hostname format'
       }
     }
 
-    // 8. 检查端口号（如果有）
+    // 8. Check port number (if any)
     if (parsedUrl.port && !this.isValidPort(parsedUrl.port)) {
       return {
         isValid: false,
-        error: '端口号无效（必须是 1-65535）'
+        error: 'Invalid port number (must be 1-65535)'
       }
     }
 
-    // 9. 检查路径（可选，但如果有必须有效）
+    // 9. Check path (optional, but must be valid if present)
     if (parsedUrl.pathname && parsedUrl.pathname.includes('..')) {
       return {
         isValid: false,
-        error: 'Endpoint 路径不能包含 ".."'
+        error: 'Endpoint path cannot contain ".."'
       }
     }
 
-    // 10. 检查是否包含危险字符
+    // 10. Check for dangerous characters
     if (this.containsDangerousCharacters(trimmedUrl)) {
       return {
         isValid: false,
-        error: 'Endpoint 包含不安全的字符'
+        error: 'Endpoint contains unsafe characters'
       }
     }
 
@@ -120,9 +120,9 @@ export class EndpointValidator {
   }
 
   /**
-   * 批量验证 Endpoint 列表
-   * @param urls - URL 字符串数组
-   * @returns 验证结果数组
+   * Batch validate Endpoint list
+   * @param urls - Array of URL strings
+   * @returns Array of validation results
    */
   static validateBatch(urls: string[]): Array<EndpointValidationResult & { index: number; originalUrl: string }> {
     return urls.map((url, index) => ({
@@ -133,15 +133,15 @@ export class EndpointValidator {
   }
 
   /**
-   * 验证主机名是否有效（域名或 IP 地址）
+   * Validate if hostname is valid (domain or IP address)
    */
   private static isValidHostname(hostname: string): boolean {
-    // 1) IP 校验（支持 IPv4/IPv6）
+    // 1) IP validation (supports IPv4/IPv6)
     if (isIP(hostname)) {
       return true
     }
 
-    // 2) 域名校验（使用 validator 的 FQDN 校验）
+    // 2) Domain validation (using validator's FQDN validation)
     return validator.isFQDN(hostname, {
       require_tld: true,
       allow_underscores: false,
@@ -152,7 +152,7 @@ export class EndpointValidator {
   }
 
   /**
-   * 验证端口号是否有效
+   * Validate if port number is valid
    */
   private static isValidPort(port: string): boolean {
     const portNum = parseInt(port, 10)
@@ -160,21 +160,21 @@ export class EndpointValidator {
   }
 
   /**
-   * 检查 URL 是否包含危险字符
+   * Check if URL contains dangerous characters
    */
   private static containsDangerousCharacters(url: string): boolean {
-    // 检查是否包含控制字符
+    // Check for control characters
     const controlCharRegex = /[\x00-\x1F\x7F]/
     if (controlCharRegex.test(url)) {
       return true
     }
 
-    // 检查是否包含 JavaScript 协议
+    // Check for JavaScript protocol
     if (url.toLowerCase().includes('javascript:')) {
       return true
     }
 
-    // 检查是否包含 data 协议
+    // Check for data protocol
     if (url.toLowerCase().includes('data:')) {
       return true
     }
@@ -183,7 +183,7 @@ export class EndpointValidator {
   }
 
   /**
-   * 格式化 Endpoint（规范化）
+   * Format Endpoint (normalize)
    */
   static normalize(urlString: string): string | null {
     const result = this.validate(urlString)
@@ -191,12 +191,12 @@ export class EndpointValidator {
       return null
     }
 
-    // 返回规范化的 URL
+    // Return normalized URL
     return result.url.href
   }
 
   /**
-   * 提取 Endpoint 的各个部分
+   * Extract parts of Endpoint
    */
   static parse(urlString: string): {
     protocol: string

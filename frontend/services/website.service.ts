@@ -1,18 +1,18 @@
 import { api } from "@/lib/api-client"
 
-// 批量创建网站响应类型
+// Bulk create websites response type
 export interface BulkCreateWebsitesResponse {
   message: string
   createdCount: number
 }
 
 /**
- * 网站相关 API 服务
- * 所有前端调用的网站接口都应该集中在这里
+ * Website related API service
+ * All frontend website interface calls should be centralized here
  */
 export class WebsiteService {
   /**
-   * 批量创建网站（绑定到目标）
+   * Bulk create websites (bind to target)
    * POST /api/targets/{target_id}/websites/bulk-create/
    */
   static async bulkCreateWebsites(
@@ -26,7 +26,7 @@ export class WebsiteService {
     return response.data
   }
 
-  /** 按目标导出所有网站 URL（文本文件，一行一个） */
+  /** Export all website URLs by target (text file, one per line) */
   static async exportWebsitesByTargetId(targetId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/targets/${targetId}/websites/export/`, {
       responseType: "blob",
@@ -34,7 +34,7 @@ export class WebsiteService {
     return response.data
   }
 
-  /** 按扫描任务导出所有网站 URL（文本文件，一行一个） */
+  /** Export all website URLs by scan task (text file, one per line) */
   static async exportWebsitesByScanId(scanId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/scans/${scanId}/websites/export/`, {
       responseType: "blob",

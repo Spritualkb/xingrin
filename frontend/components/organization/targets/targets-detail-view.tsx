@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react"
 import { AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { toast } from "sonner"
 import { TargetsDataTable } from "./targets-data-table"
 import { createTargetColumns } from "./targets-columns"
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useOrganization, useUnlinkTargetsFromOrganization } from "@/hooks/use-organizations"
 import { useTargets } from "@/hooks/use-targets"
+import { getDateLocale } from "@/lib/date-utils"
 import type { Target } from "@/types/target.types"
 
 /**
@@ -38,6 +40,38 @@ export function OrganizationTargetsDetailView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [targetToDelete, setTargetToDelete] = useState<Target | null>(null)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tTarget = useTranslations("target")
+  const tConfirm = useTranslations("common.confirm")
+  const tOrg = useTranslations("organization")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      targetName: tColumns("target.target"),
+      type: tColumns("common.type"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      viewDetails: tTooltips("viewDetails"),
+      unlinkTarget: tTooltips("unlinkTarget"),
+      clickToCopy: tTooltips("clickToCopy"),
+      copied: tTooltips("copied"),
+    },
+    types: {
+      domain: tTarget("types.domain"),
+      ip: tTarget("types.ip"),
+      cidr: tTarget("types.cidr"),
+    },
+  }), [tColumns, tCommon, tTooltips, tTarget])
 
   // 使用解除关联 mutation
   const unlinkTargets = useUnlinkTargetsFromOrganization()
@@ -72,7 +106,7 @@ export function OrganizationTargetsDetailView({
 
   // 辅助函数 - 格式化日期
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -160,8 +194,9 @@ export function OrganizationTargetsDetailView({
         formatDate,
         navigate,
         handleDelete: handleDeleteTarget,
+        t: translations,
       }),
-    [formatDate, navigate, handleDeleteTarget]
+    [formatDate, navigate, handleDeleteTarget, translations]
   )
 
   // 错误状态
@@ -171,15 +206,15 @@ export function OrganizationTargetsDetailView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tCommon("status.error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载目标数据时出现错误，请重试"}
+          {error.message}
         </p>
         <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
-          重新加载
+          {tCommon("actions.retry")}
         </button>
       </div>
     )
@@ -199,7 +234,7 @@ export function OrganizationTargetsDetailView({
   if (!organization) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">组织不存在</p>
+        <p className="text-muted-foreground">{tOrg("notFound")}</p>
       </div>
     )
   }
@@ -212,8 +247,8 @@ export function OrganizationTargetsDetailView({
         onAddNew={handleAddTarget}
         onBulkDelete={handleBulkDelete}
         onSelectionChange={setSelectedTargets}
-        searchPlaceholder="搜索目标名称..."
-        addButtonText="关联目标"
+        searchPlaceholder={tColumns("target.target")}
+        addButtonText={tCommon("actions.add")}
         pagination={pagination}
         setPagination={setPagination}
         paginationInfo={targetsData ? {
@@ -238,18 +273,18 @@ export function OrganizationTargetsDetailView({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认解除关联</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("unlinkTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要解除目标 &quot;{targetToDelete?.name}&quot; 与此组织的关联吗？此操作只会解除关联关系，目标本身不会被删除。
+              {tConfirm("unlinkTargetMessage", { name: targetToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认解除
+              {tConfirm("confirmUnlink")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -259,9 +294,9 @@ export function OrganizationTargetsDetailView({
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量解除关联</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("bulkUnlinkTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作将解除以下 {selectedTargets.length} 个目标与此组织的关联。目标本身不会被删除，仍可正常使用。
+              {tConfirm("bulkUnlinkTargetMessage", { count: selectedTargets.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {/* 目标列表容器 - 固定最大高度并支持滚动 */}
@@ -278,12 +313,12 @@ export function OrganizationTargetsDetailView({
             </ul>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认解除 {selectedTargets.length} 个关联
+              {tConfirm("confirmUnlinkCount", { count: selectedTargets.length })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

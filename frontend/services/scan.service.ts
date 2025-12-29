@@ -10,7 +10,7 @@ import type {
 } from '@/types/scan.types'
 
 /**
- * 获取扫描列表
+ * Get scan list
  */
 export async function getScans(params?: GetScansParams): Promise<GetScansResponse> {
   const res = await api.get<GetScansResponse>('/scans/', { params })
@@ -18,9 +18,9 @@ export async function getScans(params?: GetScansParams): Promise<GetScansRespons
 }
 
 /**
- * 获取单个扫描详情
- * @param id - 扫描ID
- * @returns 扫描详情
+ * Get single scan details
+ * @param id - Scan ID
+ * @returns Scan details
  */
 export async function getScan(id: number): Promise<ScanRecord> {
   const res = await api.get<ScanRecord>(`/scans/${id}/`)
@@ -28,9 +28,9 @@ export async function getScan(id: number): Promise<ScanRecord> {
 }
 
 /**
- * 发起扫描任务（针对已存在的目标/组织）
- * @param data - 扫描请求参数
- * @returns 扫描任务信息
+ * Initiate scan task (for existing targets/organizations)
+ * @param data - Scan request parameters
+ * @returns Scan task information
  */
 export async function initiateScan(data: InitiateScanRequest): Promise<InitiateScanResponse> {
   const res = await api.post<InitiateScanResponse>('/scans/initiate/', data)
@@ -38,9 +38,9 @@ export async function initiateScan(data: InitiateScanRequest): Promise<InitiateS
 }
 
 /**
- * 快速扫描（自动创建目标并立即扫描）
- * @param data - 快速扫描请求参数
- * @returns 扫描任务信息
+ * Quick scan (automatically create target and scan immediately)
+ * @param data - Quick scan request parameters
+ * @returns Scan task information
  */
 export async function quickScan(data: QuickScanRequest): Promise<QuickScanResponse> {
   const res = await api.post<QuickScanResponse>('/scans/quick/', data)
@@ -48,17 +48,17 @@ export async function quickScan(data: QuickScanRequest): Promise<QuickScanRespon
 }
 
 /**
- * 删除单个扫描记录
- * @param id - 扫描ID
+ * Delete single scan record
+ * @param id - Scan ID
  */
 export async function deleteScan(id: number): Promise<void> {
   await api.delete(`/scans/${id}/`)
 }
 
 /**
- * 批量删除扫描记录
- * @param ids - 扫描ID数组
- * @returns 删除结果
+ * Bulk delete scan records
+ * @param ids - Array of scan IDs
+ * @returns Deletion result
  */
 export async function bulkDeleteScans(ids: number[]): Promise<{ message: string; deletedCount: number }> {
   const res = await api.post<{ message: string; deletedCount: number }>('/scans/bulk-delete/', { ids })
@@ -66,9 +66,9 @@ export async function bulkDeleteScans(ids: number[]): Promise<{ message: string;
 }
 
 /**
- * 停止扫描任务
- * @param id - 扫描ID
- * @returns 操作结果
+ * Stop scan task
+ * @param id - Scan ID
+ * @returns Operation result
  */
 export async function stopScan(id: number): Promise<{ message: string; revokedTaskCount: number }> {
   const res = await api.post<{ message: string; revokedTaskCount: number }>(`/scans/${id}/stop/`)
@@ -76,7 +76,7 @@ export async function stopScan(id: number): Promise<{ message: string; revokedTa
 }
 
 /**
- * 扫描统计数据类型
+ * Scan statistics data type
  */
 export interface ScanStatistics {
   total: number
@@ -91,8 +91,8 @@ export interface ScanStatistics {
 }
 
 /**
- * 获取扫描统计数据
- * @returns 统计数据
+ * Get scan statistics data
+ * @returns Statistics data
  */
 export async function getScanStatistics(): Promise<ScanStatistics> {
   const res = await api.get<ScanStatistics>('/scans/statistics/')

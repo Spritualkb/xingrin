@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,9 @@ export function DeployTerminalDialog({
   worker,
   onDeployComplete,
 }: DeployTerminalDialogProps) {
+  const t = useTranslations("settings.workers")
+  const tCommon = useTranslations("common.actions")
+  const tTerminal = useTranslations("settings.workers.terminal")
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // 本地 worker 状态，用于实时更新按钮显示
@@ -98,7 +102,7 @@ export function DeployTerminalDialog({
     fitAddonRef.current = fitAddon
     
     // 显示连接提示
-    terminal.writeln('\x1b[90m正在建立 SSH 连接...\x1b[0m')
+    terminal.writeln(`\x1b[90m${tTerminal("connecting")}\x1b[0m`)
     
     // 监听窗口大小变化
     const handleResize = () => fitAddon.fit()
@@ -127,7 +131,7 @@ export function DeployTerminalDialog({
     wsRef.current = ws
     
     ws.onopen = () => {
-      terminal.writeln('\x1b[32m✓ WebSocket 已连接\x1b[0m')
+      terminal.writeln(`\x1b[32m✓ ${tTerminal("wsConnected")}\x1b[0m`)
       // 后端会自动开始 SSH 连接
     }
     
@@ -172,13 +176,13 @@ export function DeployTerminalDialog({
     
     ws.onclose = () => {
       terminal.writeln('')
-      terminal.writeln('\x1b[33m连接已关闭\x1b[0m')
+      terminal.writeln(`\x1b[33m${tTerminal("connectionClosed")}\x1b[0m`)
       setIsConnected(false)
     }
     
     ws.onerror = () => {
-      terminal.writeln('\x1b[31m✗ WebSocket 连接失败\x1b[0m')
-      setError('连接失败')
+      terminal.writeln(`\x1b[31m✗ ${tTerminal("wsConnectionFailed")}\x1b[0m`)
+      setError(tTerminal("connectionFailed"))
     }
   }, [worker, onDeployComplete])
 
@@ -266,7 +270,7 @@ export function DeployTerminalDialog({
               <button 
                 onClick={handleClose}
                 className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 transition-colors"
-                title="关闭"
+                title={tCommon("close")}
               />
               <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
               <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
@@ -278,7 +282,7 @@ export function DeployTerminalDialog({
           </div>
           <div className="flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-[#9ece6a]' : 'bg-[#f7768e]'}`} />
-            <span className="text-xs text-[#a9b1d6]">{isConnected ? '已连接' : '未连接'}</span>
+            <span className="text-xs text-[#a9b1d6]">{isConnected ? t("terminal.connected") : t("terminal.disconnected")}</span>
           </div>
         </div>
 
@@ -292,13 +296,13 @@ export function DeployTerminalDialog({
         <div className="flex items-center justify-between px-4 py-3 bg-[#1a1b26] border-t border-[#32344a]">
           {/* 左侧：状态提示 */}
           <div className="text-xs text-[#565f89]">
-            {!isConnected && '等待连接...'}
-            {isConnected && currentStatus === 'pending' && '节点未部署，点击右侧按钮开始部署扫描环境'}
-            {isConnected && currentStatus === 'deploying' && '正在部署中，点击查看进度'}
-            {isConnected && currentStatus === 'online' && '节点运行正常'}
-            {isConnected && currentStatus === 'offline' && '节点离线，可尝试重新部署'}
-            {isConnected && currentStatus === 'updating' && '正在自动更新 Agent...'}
-            {isConnected && currentStatus === 'outdated' && '版本过低，需要更新'}
+            {!isConnected && tTerminal("waitingConnection")}
+            {isConnected && currentStatus === 'pending' && tTerminal("pendingHint")}
+            {isConnected && currentStatus === 'deploying' && tTerminal("deployingHint")}
+            {isConnected && currentStatus === 'online' && tTerminal("onlineHint")}
+            {isConnected && currentStatus === 'offline' && tTerminal("offlineHint")}
+            {isConnected && currentStatus === 'updating' && tTerminal("updatingHint")}
+            {isConnected && currentStatus === 'outdated' && tTerminal("outdatedHint")}
           </div>
           
           {/* 右侧：操作按钮 */}
@@ -309,7 +313,7 @@ export function DeployTerminalDialog({
                 className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#32344a] text-[#a9b1d6] hover:bg-[#414868] transition-colors"
               >
                 <IconRefresh className="mr-1.5 h-4 w-4" />
-                重新连接
+                {tTerminal("reconnect")}
               </button>
             )}
             {isConnected && worker && (
@@ -321,7 +325,7 @@ export function DeployTerminalDialog({
                     className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#7aa2f7] text-[#1a1b26] hover:bg-[#7aa2f7]/80 transition-colors"
                   >
                     <IconRocket className="mr-1.5 h-4 w-4" />
-                    开始部署
+                    {tTerminal("startDeploy")}
                   </button>
                 )}
                 
@@ -332,7 +336,7 @@ export function DeployTerminalDialog({
                     className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#7aa2f7] text-[#1a1b26] hover:bg-[#7aa2f7]/80 transition-colors"
                   >
                     <IconEye className="mr-1.5 h-4 w-4" />
-                    查看进度
+                    {tTerminal("viewProgress")}
                   </button>
                 )}
                 
@@ -343,7 +347,7 @@ export function DeployTerminalDialog({
                     className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#e0af68] text-[#1a1b26] hover:bg-[#e0af68]/80 transition-colors"
                   >
                     <IconEye className="mr-1.5 h-4 w-4" />
-                    查看进度
+                    {tTerminal("viewProgress")}
                   </button>
                 )}
                 
@@ -354,7 +358,7 @@ export function DeployTerminalDialog({
                     className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#f7768e] text-[#1a1b26] hover:bg-[#f7768e]/80 transition-colors"
                   >
                     <IconRocket className="mr-1.5 h-4 w-4" />
-                    重新部署
+                    {tTerminal("redeploy")}
                   </button>
                 )}
                 
@@ -366,14 +370,14 @@ export function DeployTerminalDialog({
                       className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#32344a] text-[#a9b1d6] hover:bg-[#414868] transition-colors"
                     >
                       <IconRocket className="mr-1.5 h-4 w-4" />
-                      重新部署
+                      {tTerminal("redeploy")}
                     </button>
                     <button 
                       onClick={handleUninstallClick}
                       className="inline-flex items-center px-3 py-1.5 text-sm rounded-md bg-[#32344a] text-[#f7768e] hover:bg-[#414868] transition-colors"
                     >
                       <IconTrash className="mr-1.5 h-4 w-4" />
-                      卸载
+                      {tTerminal("uninstall")}
                     </button>
                   </>
                 )}
@@ -387,18 +391,18 @@ export function DeployTerminalDialog({
       <AlertDialog open={uninstallDialogOpen} onOpenChange={setUninstallDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认卸载</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmUninstall")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要在远程主机上卸载 Agent 并删除相关容器吗？此操作不会卸载 Docker。
+              {t("confirmUninstallDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleUninstallConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              卸载
+              {tCommon("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

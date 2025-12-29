@@ -62,23 +62,23 @@ import type {
 } from "@/types/data-table.types"
 
 /**
- * 统一数据表格组件
+ * Unified data table component
  * 
- * 特性：
- * - 泛型支持，类型安全
- * - 行选择、排序、列可见性、列宽调整
- * - 客户端/服务端分页
- * - 简单搜索/智能过滤
- * - 批量操作、下载功能
- * - 确认对话框
+ * Features:
+ * - Generic support, type safety
+ * - Row selection, sorting, column visibility, column resizing
+ * - Client/server-side pagination
+ * - Simple search/smart filtering
+ * - Bulk operations, download functionality
+ * - Confirmation dialogs
  */
 export function UnifiedDataTable<TData>({
-  // 核心数据
+  // Core data
   data,
   columns,
   getRowId = (row) => String((row as { id?: string | number }).id ?? ''),
   
-  // 分页
+  // Pagination
   pagination: externalPagination,
   setPagination: setExternalPagination,
   paginationInfo,
@@ -86,12 +86,12 @@ export function UnifiedDataTable<TData>({
   hidePagination = false,
   pageSizeOptions,
   
-  // 工具栏
+  // Toolbar
   hideToolbar = false,
   toolbarLeft,
   toolbarRight,
   
-  // 搜索/过滤
+  // Search/Filter
   searchMode = 'simple',
   searchPlaceholder,
   searchValue,
@@ -100,52 +100,52 @@ export function UnifiedDataTable<TData>({
   filterFields,
   filterExamples,
   
-  // 选择
+  // Selection
   enableRowSelection = true,
   rowSelection: externalRowSelection,
   onRowSelectionChange: externalOnRowSelectionChange,
   onSelectionChange,
   
-  // 批量操作
+  // Bulk operations
   onBulkDelete,
   bulkDeleteLabel = "Delete",
   showBulkDelete = true,
   
-  // 添加操作
+  // Add operation
   onAddNew,
   onAddHover,
   addButtonLabel = "Add",
   showAddButton = true,
   
-  // 批量添加操作
+  // Bulk add operation
   onBulkAdd,
-  bulkAddLabel = "批量添加",
+  bulkAddLabel = "Bulk Add",
   showBulkAdd = true,
   
-  // 下载操作
+  // Download operation
   downloadOptions,
   
-  // 列控制
+  // Column control
   columnVisibility: externalColumnVisibility,
   onColumnVisibilityChange: externalOnColumnVisibilityChange,
   
-  // 排序
+  // Sorting
   sorting: externalSorting,
   onSortingChange: externalOnSortingChange,
   defaultSorting = [],
   
-  // 空状态
+  // Empty state
   emptyMessage = "No results",
   emptyComponent,
   
-  // 确认对话框
+  // Confirmation dialog
   deleteConfirmation,
   
-  // 样式
+  // Styles
   className,
   tableClassName,
 }: UnifiedDataTableProps<TData>) {
-  // 内部状态
+  // Internal state
   const [internalRowSelection, setInternalRowSelection] = React.useState<Record<string, boolean>>({})
   const [internalColumnVisibility, setInternalColumnVisibility] = React.useState<VisibilityState>({})
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(defaultSorting)
@@ -156,47 +156,47 @@ export function UnifiedDataTable<TData>({
     pageSize: 10,
   })
   
-  // 删除确认对话框状态
+  // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 
-  // 使用外部状态或内部状态
+  // Use external state or internal state
   const rowSelection = externalRowSelection ?? internalRowSelection
   const columnVisibility = externalColumnVisibility ?? internalColumnVisibility
   const sorting = externalSorting ?? internalSorting
   
-  // 判断是否使用外部分页控制
+  // Determine whether to use external pagination control
   const isExternalPagination = !!(externalPagination && (onPaginationChange || setExternalPagination))
   const pagination = externalPagination ?? internalPagination
   
-  // 使用 ref 存储最新的 pagination 值，避免闭包问题
+  // Use ref to store the latest pagination value to avoid closure issues
   const paginationRef = React.useRef(pagination)
   paginationRef.current = pagination
   
-  // 分页更新处理器
+  // Pagination update handler
   const handlePaginationChange = React.useCallback((updater: Updater<PaginationState>) => {
     const currentPagination = paginationRef.current
     const newPagination = typeof updater === 'function' ? updater(currentPagination) : updater
     
-    // 值没有变化，不更新
+    // No change in value, don't update
     if (newPagination.pageIndex === currentPagination.pageIndex && 
         newPagination.pageSize === currentPagination.pageSize) {
       return
     }
     
     if (isExternalPagination) {
-      // 外部控制分页
+      // External pagination control
       if (onPaginationChange) {
         onPaginationChange(newPagination)
       } else if (setExternalPagination) {
         setExternalPagination(newPagination)
       }
     } else {
-      // 内部控制分页
+      // Internal pagination control
       setInternalPagination(newPagination)
     }
   }, [isExternalPagination, onPaginationChange, setExternalPagination])
 
-  // 处理状态更新（支持 Updater 模式）
+  // Handle state updates (supports Updater pattern)
   const handleRowSelectionChange = (updater: Updater<Record<string, boolean>>) => {
     const newValue = typeof updater === 'function' ? updater(rowSelection) : updater
     if (externalOnRowSelectionChange) {
@@ -224,12 +224,12 @@ export function UnifiedDataTable<TData>({
     }
   }
 
-  // 过滤有效数据
+  // Filter valid data
   const validData = React.useMemo(() => {
     return (data || []).filter(item => item && typeof getRowId(item) !== 'undefined')
   }, [data, getRowId])
 
-  // 创建表格实例
+  // Create table instance
   const table = useReactTable({
     data: validData,
     columns,
@@ -241,11 +241,11 @@ export function UnifiedDataTable<TData>({
       pagination,
       columnSizing,
     },
-    // 列宽调整配置 - 按照 TanStack Table 官方推荐
+    // Column resizing configuration - following TanStack Table official recommendations
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     onColumnSizingChange: setColumnSizing,
-    // 默认列配置
+    // Default column configuration
     defaultColumn: {
       minSize: 50,
       maxSize: 1000,
@@ -268,9 +268,9 @@ export function UnifiedDataTable<TData>({
   })
 
   /**
-   * 按照 TanStack Table 官方推荐的高性能方案：
-   * 在表格根元素一次性计算所有列宽，存为 CSS 变量
-   * 避免在每个单元格上调用 column.getSize()
+   * Following TanStack Table's official high-performance approach:
+   * Calculate all column widths once at the table root element, store as CSS variables
+   * Avoid calling column.getSize() on every cell
    */
   const columnSizeVars = React.useMemo(() => {
     const headers = table.getFlatHeaders()
@@ -283,11 +283,11 @@ export function UnifiedDataTable<TData>({
     return colSizes
   }, [table.getState().columnSizingInfo, table.getState().columnSizing])
 
-  // 监听选中行变化
+  // Listen for selected row changes
   const prevRowSelectionRef = React.useRef<Record<string, boolean>>({})
   React.useEffect(() => {
     if (onSelectionChange) {
-      // 只在 rowSelection 实际变化时才调用
+      // Only call when rowSelection actually changes
       const prevSelection = prevRowSelectionRef.current
       const selectionChanged = Object.keys(rowSelection).length !== Object.keys(prevSelection).length ||
         Object.keys(rowSelection).some(key => rowSelection[key] !== prevSelection[key])
@@ -300,10 +300,10 @@ export function UnifiedDataTable<TData>({
     }
   }, [rowSelection, onSelectionChange, table])
 
-  // 获取选中行数量
+  // Get selected row count
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
-  // 处理删除确认
+  // Handle delete confirmation
   const handleDeleteClick = () => {
     if (deleteConfirmation) {
       setDeleteDialogOpen(true)
@@ -317,13 +317,13 @@ export function UnifiedDataTable<TData>({
     onBulkDelete?.()
   }
 
-  // 获取列标签 - 仅使用 meta.title，强制开发者显式定义
+  // Get column label - only use meta.title, force developers to explicitly define
   const getColumnLabel = (column: { id: string; columnDef: { meta?: { title?: string } } }) => {
-    // 只使用 meta.title，如果没有定义则返回 column.id（便于发现遗漏）
+    // Only use meta.title, return column.id if not defined (to help discover omissions)
     return column.columnDef.meta?.title ?? column.id
   }
 
-  // 渲染下载按钮
+  // Render download button
   const renderDownloadButton = () => {
     if (!downloadOptions || downloadOptions.length === 0) return null
 
@@ -379,7 +379,7 @@ export function UnifiedDataTable<TData>({
 
   return (
     <div className={cn("w-full space-y-4", className)}>
-      {/* 工具栏 */}
+      {/* Toolbar */}
       {!hideToolbar && (
         <DataTableToolbar
           searchMode={searchMode}
@@ -391,12 +391,12 @@ export function UnifiedDataTable<TData>({
           filterExamples={filterExamples}
           leftContent={toolbarLeft}
         >
-          {/* 列显示控制 */}
+          {/* Column visibility control */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <IconLayoutColumns className="h-4 w-4" />
-                列控制
+                Columns
                 <IconChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -419,10 +419,10 @@ export function UnifiedDataTable<TData>({
 
           {toolbarRight}
 
-          {/* 下载按钮 */}
+          {/* Download button */}
           {renderDownloadButton()}
 
-          {/* 批量删除按钮 */}
+          {/* Bulk delete button */}
           {showBulkDelete && onBulkDelete && (
             <Button
               onClick={handleDeleteClick}
@@ -440,7 +440,7 @@ export function UnifiedDataTable<TData>({
             </Button>
           )}
 
-          {/* 添加按钮 */}
+          {/* Add button */}
           {showAddButton && onAddNew && (
             <Button onClick={onAddNew} onMouseEnter={onAddHover} size="sm">
               <IconPlus className="h-4 w-4" />
@@ -448,7 +448,7 @@ export function UnifiedDataTable<TData>({
             </Button>
           )}
 
-          {/* 批量添加按钮 */}
+          {/* Bulk add button */}
           {showBulkAdd && onBulkAdd && (
             <Button onClick={onBulkAdd} size="sm" variant="outline">
               <IconPlus className="h-4 w-4" />
@@ -458,7 +458,7 @@ export function UnifiedDataTable<TData>({
         </DataTableToolbar>
       )}
 
-      {/* 表格 - 按照 TanStack Table 官方推荐使用 CSS 变量 */}
+      {/* Table - Following TanStack Table official recommendations using CSS variables */}
       <div className={cn("rounded-md border overflow-x-auto", tableClassName)}>
         <table 
           className="w-full caption-bottom text-sm"
@@ -521,7 +521,7 @@ export function UnifiedDataTable<TData>({
         </table>
       </div>
 
-      {/* 分页 */}
+      {/* Pagination */}
       {!hidePagination && (
         <DataTablePagination
           table={table}
@@ -530,7 +530,7 @@ export function UnifiedDataTable<TData>({
         />
       )}
 
-      {/* 删除确认对话框 */}
+      {/* Delete confirmation dialog */}
       {deleteConfirmation && (
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>

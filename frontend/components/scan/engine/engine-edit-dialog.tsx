@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { FileCode, Save, X, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
 import Editor from "@monaco-editor/react"
 import * as yaml from "js-yaml"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,9 @@ export function EngineEditDialog({
   onOpenChange,
   onSave,
 }: EngineEditDialogProps) {
+  const t = useTranslations("scan.engine.edit")
+  const tToast = useTranslations("toast")
+  const tCommon = useTranslations("common.actions")
   const [yamlContent, setYamlContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -188,12 +192,12 @@ url_fetch:
 
     // YAML 验证
     if (!yamlContent.trim()) {
-      toast.error("配置内容不能为空")
+      toast.error(tToast("configRequired"))
       return
     }
 
     if (!validateYaml(yamlContent)) {
-      toast.error("YAML 语法错误", {
+      toast.error(tToast("yamlSyntaxError"), {
         description: yamlError?.message,
       })
       return
@@ -208,15 +212,15 @@ url_fetch:
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
 
-      toast.success("配置保存成功", {
-        description: `引擎 "${engine.name}" 的配置已更新`,
+      toast.success(tToast("configSaveSuccess"), {
+        description: tToast("configSaveSuccessDesc", { name: engine.name }),
       })
       setHasChanges(false)
       onOpenChange(false)
     } catch (error) {
       console.error("Failed to save YAML config:", error)
-      toast.error("配置保存失败", {
-        description: error instanceof Error ? error.message : "未知错误",
+      toast.error(tToast("configSaveFailed"), {
+        description: error instanceof Error ? error.message : tToast("unknownError"),
       })
     } finally {
       setIsSubmitting(false)
@@ -226,7 +230,7 @@ url_fetch:
   // 处理关闭
   const handleClose = () => {
     if (hasChanges) {
-      const confirmed = window.confirm("您有未保存的更改，确定要关闭吗？")
+      const confirmed = window.confirm(t("confirmClose"))
       if (!confirmed) return
     }
     onOpenChange(false)
@@ -239,29 +243,29 @@ url_fetch:
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle className="flex items-center gap-2">
               <FileCode className="h-5 w-5" />
-              编辑引擎配置 - {engine?.name}
+              {t("title", { name: engine?.name })}
             </DialogTitle>
             <DialogDescription>
-              使用 Monaco Editor 编辑引擎的 YAML 配置文件，支持语法高亮、自动补全和错误提示。
+              {t("desc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden px-6 py-4">
             <div className="flex flex-col h-full gap-2">
               <div className="flex items-center justify-between">
-                <Label>YAML 配置</Label>
+                <Label>{t("yamlConfig")}</Label>
                 {/* 语法验证状态 */}
                 <div className="flex items-center gap-2">
                   {yamlContent.trim() && (
                     yamlError ? (
                       <div className="flex items-center gap-1 text-xs text-destructive">
                         <AlertCircle className="h-3.5 w-3.5" />
-                        <span>语法错误</span>
+                        <span>{t("syntaxError")}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>语法正确</span>
+                        <span>{t("syntaxValid")}</span>
                       </div>
                     )
                   )}
@@ -304,7 +308,7 @@ url_fetch:
                     <div className="flex items-center justify-center h-full">
                       <div className="flex flex-col items-center gap-2">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                        <p className="text-sm text-muted-foreground">加载编辑器...</p>
+                        <p className="text-sm text-muted-foreground">{t("loadingEditor")}</p>
                       </div>
                     </div>
                   }
@@ -318,8 +322,8 @@ url_fetch:
                   <div className="flex-1 text-xs">
                     <p className="font-semibold text-destructive mb-1">
                       {yamlError.line && yamlError.column
-                        ? `第 ${yamlError.line} 行，第 ${yamlError.column} 列`
-                        : "YAML 语法错误"}
+                        ? t("errorLocation", { line: yamlError.line, column: yamlError.column })
+                        : tToast("yamlSyntaxError")}
                     </p>
                     <p className="text-muted-foreground">{yamlError.message}</p>
                   </div>
@@ -327,7 +331,7 @@ url_fetch:
               )}
               <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                您有未保存的更改
+                {t("unsavedChanges")}
               </p>
             </div>
           </div>
@@ -340,7 +344,7 @@ url_fetch:
               disabled={isSubmitting}
             >
               <X className="h-4 w-4" />
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button
               type="button"
@@ -350,12 +354,12 @@ url_fetch:
               {isSubmitting ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  保存中...
+                  {t("saving")}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  保存配置
+                  {t("saveConfig")}
                 </>
               )}
             </Button>

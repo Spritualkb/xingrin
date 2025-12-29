@@ -6,9 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * 格式化日期时间
- * @param date 日期字符串或 Date 对象
- * @returns 格式化后的日期时间字符串
+ * Format date time
+ * @param date Date string or Date object
+ * @returns Formatted date time string
  */
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return "-"

@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import { VulnerabilitiesDataTable } from "./vulnerabilities-data-table"
 import { createVulnerabilityColumns } from "./vulnerabilities-columns"
 import { VulnerabilityDetailDialog } from "./vulnerability-detail-dialog"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
+import { getDateLocale } from "@/lib/date-utils"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +46,40 @@ export function VulnerabilitiesDetailView({
     pageIndex: 0,
     pageSize: 10,
   })
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tSeverity = useTranslations("severity")
+  const tConfirm = useTranslations("common.confirm")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      severity: tColumns("vulnerability.severity"),
+      source: tColumns("vulnerability.source"),
+      vulnType: tColumns("vulnerability.vulnType"),
+      url: tColumns("common.url"),
+      createdAt: tColumns("common.createdAt"),
+    },
+    actions: {
+      details: tCommon("actions.details"),
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      vulnDetails: tTooltips("vulnDetails"),
+    },
+    severity: {
+      critical: tSeverity("critical"),
+      high: tSeverity("high"),
+      medium: tSeverity("medium"),
+      low: tSeverity("low"),
+      info: tSeverity("info"),
+    },
+  }), [tColumns, tCommon, tTooltips, tSeverity])
 
   // 智能过滤查询
   const [filterQuery, setFilterQuery] = useState("")
@@ -94,7 +130,7 @@ export function VulnerabilitiesDetailView({
   }
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -178,8 +214,9 @@ export function VulnerabilitiesDetailView({
       createVulnerabilityColumns({
         formatDate,
         handleViewDetail,
+        t: translations,
       }),
-    [handleViewDetail]
+    [handleViewDetail, translations]
   )
 
   if ((isLoading || isQueryLoading) && !activeQuery.data) {
@@ -221,18 +258,18 @@ export function VulnerabilitiesDetailView({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除漏洞 &quot;{vulnerabilityToDelete?.vulnType}&quot; 及其相关数据。
+              {tConfirm("deleteVulnMessage", { name: vulnerabilityToDelete?.vulnType })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除
+              {tCommon("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -241,9 +278,9 @@ export function VulnerabilitiesDetailView({
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("bulkDeleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除以下 {selectedVulnerabilities.length} 个漏洞及其相关数据。
+              {tConfirm("bulkDeleteVulnMessage", { count: selectedVulnerabilities.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="mt-2 p-2 bg-muted rounded-md max-h-96 overflow-y-auto">
@@ -256,12 +293,12 @@ export function VulnerabilitiesDetailView({
             </ul>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              删除 {selectedVulnerabilities.length} 个漏洞
+              {tConfirm("deleteVulnCount", { count: selectedVulnerabilities.length })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

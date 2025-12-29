@@ -11,24 +11,52 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 
 import type { Vulnerability, VulnerabilitySeverity } from "@/types/vulnerability.types"
 
-// 统一的漏洞严重程度颜色配置（与图表一致）
-const severityConfig: Record<VulnerabilitySeverity, { label: string; className: string }> = {
-  critical: { label: "Critical", className: "bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/20 dark:text-[#f85149]" },
-  high: { label: "High", className: "bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20" },
-  medium: { label: "Medium", className: "bg-[#d4a72c]/10 text-[#d4a72c] border border-[#d4a72c]/20" },
-  low: { label: "Low", className: "bg-[#238636]/10 text-[#238636] border border-[#238636]/20 dark:text-[#3fb950]" },
-  info: { label: "Info", className: "bg-[#848d97]/10 text-[#848d97] border border-[#848d97]/20" },
+// 翻译类型定义
+export interface VulnerabilityTranslations {
+  columns: {
+    severity: string
+    source: string
+    vulnType: string
+    url: string
+    createdAt: string
+  }
+  actions: {
+    details: string
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    vulnDetails: string
+  }
+  severity: {
+    critical: string
+    high: string
+    medium: string
+    low: string
+    info: string
+  }
 }
 
 interface ColumnActions {
   formatDate: (date: string) => string
   handleViewDetail: (vulnerability: Vulnerability) => void
+  t: VulnerabilityTranslations
 }
 
 export function createVulnerabilityColumns({
   formatDate,
   handleViewDetail,
+  t,
 }: ColumnActions): ColumnDef<Vulnerability>[] {
+  // 统一的漏洞严重程度颜色配置
+  const severityConfig: Record<VulnerabilitySeverity, { label: string; className: string }> = {
+    critical: { label: t.severity.critical, className: "bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/20 dark:text-[#f85149]" },
+    high: { label: t.severity.high, className: "bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20" },
+    medium: { label: t.severity.medium, className: "bg-[#d4a72c]/10 text-[#d4a72c] border border-[#d4a72c]/20" },
+    low: { label: t.severity.low, className: "bg-[#238636]/10 text-[#238636] border border-[#238636]/20 dark:text-[#3fb950]" },
+    info: { label: t.severity.info, className: "bg-[#848d97]/10 text-[#848d97] border border-[#848d97]/20" },
+  }
+
   return [
     {
       id: "select",
@@ -43,14 +71,14 @@ export function createVulnerabilityColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="全选"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="选择行"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
@@ -58,9 +86,9 @@ export function createVulnerabilityColumns({
     },
     {
       accessorKey: "severity",
-      meta: { title: "Status" },
+      meta: { title: t.columns.severity },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t.columns.severity} />
       ),
       size: 100,
       minSize: 80,
@@ -78,9 +106,9 @@ export function createVulnerabilityColumns({
     },
     {
       accessorKey: "source",
-      meta: { title: "Source" },
+      meta: { title: t.columns.source },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Source" />
+        <DataTableColumnHeader column={column} title={t.columns.source} />
       ),
       size: 100,
       minSize: 80,
@@ -97,9 +125,9 @@ export function createVulnerabilityColumns({
     },
     {
       accessorKey: "vulnType",
-      meta: { title: "Vuln Type" },
+      meta: { title: t.columns.vulnType },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Vuln Type" />
+        <DataTableColumnHeader column={column} title={t.columns.vulnType} />
       ),
       size: 150,
       minSize: 100,
@@ -117,16 +145,16 @@ export function createVulnerabilityColumns({
                 {vulnType}
               </span>
             </TooltipTrigger>
-            <TooltipContent>漏洞详情</TooltipContent>
+            <TooltipContent>{t.tooltips.vulnDetails}</TooltipContent>
           </Tooltip>
         )
       },
     },
     {
       accessorKey: "url",
-      meta: { title: "URL" },
+      meta: { title: t.columns.url },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="URL" />
+        <DataTableColumnHeader column={column} title={t.columns.url} />
       ),
       size: 500,
       minSize: 300,
@@ -137,9 +165,9 @@ export function createVulnerabilityColumns({
     },
     {
       accessorKey: "createdAt",
-      meta: { title: "Created At" },
+      meta: { title: t.columns.createdAt },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created At" />
+        <DataTableColumnHeader column={column} title={t.columns.createdAt} />
       ),
       size: 150,
       minSize: 120,
@@ -173,7 +201,7 @@ export function createVulnerabilityColumns({
               onClick={() => handleViewDetail(vulnerability)}
             >
               <Eye className="h-4 w-4 mr-1" />
-              详情
+              {t.actions.details}
             </Button>
           </div>
         )

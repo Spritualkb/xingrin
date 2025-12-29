@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { AlertTriangle } from "lucide-react"
+import { useTranslations, useLocale } from "next-intl"
 import { WebSitesDataTable } from "./websites-data-table"
 import { createWebSiteColumns } from "./websites-columns"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
@@ -10,6 +11,7 @@ import { useTargetWebSites, useScanWebSites } from "@/hooks/use-websites"
 import { useTarget } from "@/hooks/use-targets"
 import { WebsiteService } from "@/services/website.service"
 import { BulkAddUrlsDialog } from "@/components/common/bulk-add-urls-dialog"
+import { getDateLocale } from "@/lib/date-utils"
 import type { TargetType } from "@/lib/url-validator"
 import type { WebSite } from "@/types/website.types"
 import { toast } from "sonner"
@@ -30,6 +32,35 @@ export function WebSitesView({
 
   const [filterQuery, setFilterQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tToast = useTranslations("toast")
+  const tStatus = useTranslations("common.status")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      url: tColumns("common.url"),
+      host: tColumns("website.host"),
+      title: tColumns("endpoint.title"),
+      status: tColumns("common.status"),
+      technologies: tColumns("endpoint.technologies"),
+      contentLength: tColumns("endpoint.contentLength"),
+      location: tColumns("endpoint.location"),
+      webServer: tColumns("endpoint.webServer"),
+      contentType: tColumns("endpoint.contentType"),
+      bodyPreview: tColumns("endpoint.bodyPreview"),
+      vhost: tColumns("endpoint.vhost"),
+      createdAt: tColumns("common.createdAt"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+  }), [tColumns, tCommon])
 
   // 获取目标信息（用于 URL 匹配校验）
   const { data: target } = useTarget(targetId || 0, { enabled: !!targetId })
@@ -71,7 +102,7 @@ export function WebSitesView({
   }, [isFetching, isSearching])
 
   const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -80,14 +111,15 @@ export function WebSitesView({
       second: "2-digit",
       hour12: false,
     })
-  }, [])
+  }, [locale])
 
   const columns = useMemo(
     () =>
       createWebSiteColumns({
         formatDate,
+        t: translations,
       }),
-    [formatDate]
+    [formatDate, translations]
   )
 
   const websites: WebSite[] = useMemo(() => {
@@ -196,7 +228,7 @@ export function WebSitesView({
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error("下载网站列表失败", error)
-      toast.error("下载网站列表失败，请稍后重试")
+      toast.error(tToast("downloadFailed"))
     }
   }
 
@@ -224,11 +256,11 @@ export function WebSitesView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tStatus("error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          加载网站数据时出现错误，请重试
+          {tStatus("error")}
         </p>
-        <Button onClick={() => refetch()}>重新加载</Button>
+        <Button onClick={() => refetch()}>{tCommon("actions.retry")}</Button>
       </div>
     )
   }

@@ -10,11 +10,11 @@ import type {
 } from "@/types/command.types"
 
 /**
- * 命令服务
+ * Command service
  */
 export class CommandService {
   /**
-   * 获取命令列表
+   * Get command list
    */
   static async getCommands(
     params: GetCommandsRequest = {}
@@ -27,7 +27,7 @@ export class CommandService {
   }
 
   /**
-   * 获取单个命令
+   * Get single command
    */
   static async getCommandById(id: number): Promise<CommandResponseData> {
     const response = await api.get<CommandResponseData>(
@@ -37,7 +37,7 @@ export class CommandService {
   }
 
   /**
-   * 创建命令
+   * Create command
    */
   static async createCommand(
     data: CreateCommandRequest
@@ -50,7 +50,7 @@ export class CommandService {
   }
 
   /**
-   * 更新命令
+   * Update command
    */
   static async updateCommand(
     id: number,
@@ -64,7 +64,7 @@ export class CommandService {
   }
 
   /**
-   * 删除命令
+   * Delete command
    */
   static async deleteCommand(
     id: number
@@ -75,7 +75,7 @@ export class CommandService {
   }
 
   /**
-   * 批量删除命令
+   * Batch delete commands
    */
   static async batchDeleteCommands(
     ids: number[]

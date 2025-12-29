@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UnifiedDataTable } from "@/components/ui/data-table"
@@ -39,16 +40,20 @@ export function TargetsDataTable({
   onAddHover,
   onBulkDelete,
   onSelectionChange,
-  searchPlaceholder = "搜索目标名称...",
+  searchPlaceholder,
   searchValue,
   onSearch,
   isSearching = false,
-  addButtonText = "添加目标",
+  addButtonText,
   pagination: externalPagination,
   onPaginationChange,
   totalCount,
   manualPagination = false,
 }: TargetsDataTableProps) {
+  const t = useTranslations("common.status")
+  const tActions = useTranslations("common.actions")
+  const tTarget = useTranslations("target")
+  
   // 内部分页状态
   const [internalPagination, setInternalPagination] = React.useState<{ pageIndex: number, pageSize: number }>({
     pageIndex: 0,
@@ -107,19 +112,19 @@ export function TargetsDataTable({
       onSelectionChange={onSelectionChange}
       // 批量操作
       onBulkDelete={onBulkDelete}
-      bulkDeleteLabel="删除"
+      bulkDeleteLabel={tActions("delete")}
       // 添加按钮
       onAddNew={onAddNew}
       onAddHover={onAddHover}
-      addButtonLabel={addButtonText}
+      addButtonLabel={addButtonText || tTarget("createTarget")}
       showAddButton={!!onAddNew}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
       // 自定义工具栏
       toolbarLeft={
         <div className="flex items-center space-x-2">
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || tTarget("title")}
             value={localSearchValue}
             onChange={(e) => setLocalSearchValue(e.target.value)}
             onKeyDown={handleKeyDown}

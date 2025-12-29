@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { DownloadOption, PaginationState } from "@/types/data-table.types"
@@ -58,6 +59,10 @@ export function EndpointsDataTable<TData extends { id: number | string }, TValue
   onDownloadSelected,
   onBulkAdd,
 }: EndpointsDataTableProps<TData, TValue>) {
+  const t = useTranslations("common.status")
+  const tActions = useTranslations("common.actions")
+  const tDownload = useTranslations("common.download")
+  
   const [internalPagination, setInternalPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -94,14 +99,14 @@ export function EndpointsDataTable<TData extends { id: number | string }, TValue
   if (onDownloadAll) {
     downloadOptions.push({
       key: "all",
-      label: "Download All Endpoints",
+      label: tDownload("allEndpoints"),
       onClick: onDownloadAll,
     })
   }
   if (onDownloadSelected) {
     downloadOptions.push({
       key: "selected",
-      label: "Download Selected Endpoints",
+      label: tDownload("selectedEndpoints"),
       onClick: onDownloadSelected,
       disabled: (count) => count === 0,
     })
@@ -132,11 +137,11 @@ export function EndpointsDataTable<TData extends { id: number | string }, TValue
       addButtonLabel={addButtonText}
       // 批量添加按钮
       onBulkAdd={onBulkAdd}
-      bulkAddLabel="批量添加"
+      bulkAddLabel={tActions("add")}
       // 下载
       downloadOptions={downloadOptions.length > 0 ? downloadOptions : undefined}
       // 空状态
-      emptyMessage="No results"
+      emptyMessage={t("noData")}
     />
   )
 }

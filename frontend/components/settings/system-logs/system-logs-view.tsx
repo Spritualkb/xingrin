@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react"
 import Editor from "@monaco-editor/react"
 import { useColorTheme } from "@/hooks/use-color-theme"
+import { useTranslations } from "next-intl"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { useSystemLogs } from "@/hooks/use-system-logs"
@@ -10,6 +11,7 @@ import { useSystemLogs } from "@/hooks/use-system-logs"
 export function SystemLogsView() {
   const { currentTheme } = useColorTheme()
   const { data } = useSystemLogs({ lines: 500 })
+  const t = useTranslations("settings.systemLogs")
 
   const content = useMemo(() => data?.content ?? "", [data?.content])
 
@@ -33,7 +35,7 @@ export function SystemLogsView() {
           <Editor
             height="100%"
             defaultLanguage="log"
-            value={content || "（暂无日志内容）"}
+            value={content || t("noContent")}
             theme={currentTheme.isDark ? "vs-dark" : "light"}
             onMount={(editor) => {
               editorRef.current = editor

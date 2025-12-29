@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -31,93 +32,6 @@ interface ImportFingerprintDialogProps {
   fingerprintType?: FingerprintType
 }
 
-// 指纹类型配置
-const FINGERPRINT_CONFIG: Record<FingerprintType, {
-  title: string
-  description: string
-  formatHint: string
-  validate: (json: any) => { valid: boolean; error?: string }
-}> = {
-  ehole: {
-    title: "导入 EHole 指纹",
-    description: "上传 EHole 格式的 JSON 指纹文件",
-    formatHint: '{"fingerprint": [...]}',
-    validate: (json) => {
-      if (!json.fingerprint) {
-        return { valid: false, error: "无效的 EHole 格式：缺少 fingerprint 字段" }
-      }
-      if (!Array.isArray(json.fingerprint)) {
-        return { valid: false, error: "无效的 EHole 格式：fingerprint 必须是数组" }
-      }
-      if (json.fingerprint.length === 0) {
-        return { valid: false, error: "指纹数据为空" }
-      }
-      const first = json.fingerprint[0]
-      if (!first.cms || !first.keyword) {
-        return { valid: false, error: "无效的 EHole 格式：指纹缺少必要字段 (cms, keyword)" }
-      }
-      return { valid: true }
-    },
-  },
-  goby: {
-    title: "导入 Goby 指纹",
-    description: "上传 Goby 格式的 JSON 指纹文件",
-    formatHint: "[{...}] 或 {...}",
-    validate: (json) => {
-      // 支持数组和对象两种格式
-      if (Array.isArray(json)) {
-        if (json.length === 0) {
-          return { valid: false, error: "指纹数据为空" }
-        }
-        const first = json[0]
-        if (!first.product || !first.rule) {
-          return { valid: false, error: "无效的 Goby 格式：指纹缺少必要字段 (product, rule)" }
-        }
-      } else if (typeof json === "object" && json !== null) {
-        if (Object.keys(json).length === 0) {
-          return { valid: false, error: "指纹数据为空" }
-        }
-      } else {
-        return { valid: false, error: "无效的 Goby 格式：必须是数组或对象" }
-      }
-      return { valid: true }
-    },
-  },
-  wappalyzer: {
-    title: "导入 Wappalyzer 指纹",
-    description: "上传 Wappalyzer 格式的 JSON 指纹文件",
-    formatHint: '{"apps": {...}} 或 [{...}]',
-    validate: (json) => {
-      // 支持数组格式
-      if (Array.isArray(json)) {
-        if (json.length === 0) {
-          return { valid: false, error: "指纹数据为空" }
-        }
-        return { valid: true }
-      }
-      // 支持对象格式 (apps 或 technologies)
-      const apps = json.apps || json.technologies
-      if (apps) {
-        if (typeof apps !== "object" || Array.isArray(apps)) {
-          return { valid: false, error: "无效的 Wappalyzer 格式：apps/technologies 必须是对象" }
-        }
-        if (Object.keys(apps).length === 0) {
-          return { valid: false, error: "指纹数据为空" }
-        }
-        return { valid: true }
-      }
-      // 直接是对象格式
-      if (typeof json === "object" && json !== null) {
-        if (Object.keys(json).length === 0) {
-          return { valid: false, error: "指纹数据为空" }
-        }
-        return { valid: true }
-      }
-      return { valid: false, error: "无效的 Wappalyzer 格式" }
-    },
-  },
-}
-
 export function ImportFingerprintDialog({
   open,
   onOpenChange,
@@ -125,10 +39,100 @@ export function ImportFingerprintDialog({
   fingerprintType = "ehole",
 }: ImportFingerprintDialogProps) {
   const [files, setFiles] = useState<File[]>([])
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
+  const tToast = useTranslations("toast")
   
   const eholeImportMutation = useImportEholeFingerprints()
   const gobyImportMutation = useImportGobyFingerprints()
   const wappalyzerImportMutation = useImportWappalyzerFingerprints()
+
+  // 指纹类型配置
+  const FINGERPRINT_CONFIG: Record<FingerprintType, {
+    title: string
+    description: string
+    formatHint: string
+    validate: (json: any) => { valid: boolean; error?: string }
+  }> = {
+    ehole: {
+      title: t("import.eholeTitle"),
+      description: t("import.eholeDesc"),
+      formatHint: t("import.eholeFormatHint"),
+      validate: (json) => {
+        if (!json.fingerprint) {
+          return { valid: false, error: t("import.eholeInvalidMissing") }
+        }
+        if (!Array.isArray(json.fingerprint)) {
+          return { valid: false, error: t("import.eholeInvalidArray") }
+        }
+        if (json.fingerprint.length === 0) {
+          return { valid: false, error: t("import.emptyData") }
+        }
+        const first = json.fingerprint[0]
+        if (!first.cms || !first.keyword) {
+          return { valid: false, error: t("import.eholeInvalidFields") }
+        }
+        return { valid: true }
+      },
+    },
+    goby: {
+      title: t("import.gobyTitle"),
+      description: t("import.gobyDesc"),
+      formatHint: t("import.gobyFormatHint"),
+      validate: (json) => {
+        // 支持数组和对象两种格式
+        if (Array.isArray(json)) {
+          if (json.length === 0) {
+            return { valid: false, error: t("import.emptyData") }
+          }
+          const first = json[0]
+          if (!first.product || !first.rule) {
+            return { valid: false, error: t("import.gobyInvalidFields") }
+          }
+        } else if (typeof json === "object" && json !== null) {
+          if (Object.keys(json).length === 0) {
+            return { valid: false, error: t("import.emptyData") }
+          }
+        } else {
+          return { valid: false, error: t("import.gobyInvalidFormat") }
+        }
+        return { valid: true }
+      },
+    },
+    wappalyzer: {
+      title: t("import.wappalyzerTitle"),
+      description: t("import.wappalyzerDesc"),
+      formatHint: t("import.wappalyzerFormatHint"),
+      validate: (json) => {
+        // 支持数组格式
+        if (Array.isArray(json)) {
+          if (json.length === 0) {
+            return { valid: false, error: t("import.emptyData") }
+          }
+          return { valid: true }
+        }
+        // 支持对象格式 (apps 或 technologies)
+        const apps = json.apps || json.technologies
+        if (apps) {
+          if (typeof apps !== "object" || Array.isArray(apps)) {
+            return { valid: false, error: t("import.wappalyzerInvalidApps") }
+          }
+          if (Object.keys(apps).length === 0) {
+            return { valid: false, error: t("import.emptyData") }
+          }
+          return { valid: true }
+        }
+        // 直接是对象格式
+        if (typeof json === "object" && json !== null) {
+          if (Object.keys(json).length === 0) {
+            return { valid: false, error: t("import.emptyData") }
+          }
+          return { valid: true }
+        }
+        return { valid: false, error: t("import.wappalyzerInvalidFormat") }
+      },
+    },
+  }
 
   const config = FINGERPRINT_CONFIG[fingerprintType]
   
@@ -144,7 +148,7 @@ export function ImportFingerprintDialog({
 
   const handleImport = async () => {
     if (files.length === 0) {
-      toast.error("请先选择文件")
+      toast.error(tToast("selectFileFirst"))
       return
     }
 
@@ -161,19 +165,19 @@ export function ImportFingerprintDialog({
         return
       }
     } catch (e) {
-      toast.error("无效的 JSON 文件")
+      toast.error(tToast("invalidJsonFile"))
       return
     }
 
     // 校验通过，提交到后端
     try {
       const result = await importMutation.mutateAsync(file)
-      toast.success(`导入成功：创建 ${result.created} 条，失败 ${result.failed} 条`)
+      toast.success(t("import.importSuccessDetail", { created: result.created, failed: result.failed }))
       setFiles([])
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      toast.error(error.message || "导入失败")
+      toast.error(error.message || tToast("importFailed"))
     }
   }
 
@@ -208,7 +212,7 @@ export function ImportFingerprintDialog({
           </Dropzone>
 
           <p className="text-xs text-muted-foreground mt-3">
-            支持的 JSON 格式：{" "}
+            {t("import.supportedFormat")}{" "}
             <code className="bg-muted px-1 rounded">
               {config.formatHint}
             </code>
@@ -217,13 +221,13 @@ export function ImportFingerprintDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
-            取消
+            {tCommon("cancel")}
           </Button>
           <Button
             onClick={handleImport}
             disabled={files.length === 0 || importMutation.isPending}
           >
-            {importMutation.isPending ? "导入中..." : "导入"}
+            {importMutation.isPending ? t("import.importing") : tCommon("import")}
           </Button>
         </DialogFooter>
       </DialogContent>

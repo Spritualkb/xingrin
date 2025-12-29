@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react"
 import { Plus, Link } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -78,6 +79,8 @@ export function BulkAddUrlsDialog({
   onOpenChange: externalOnOpenChange,
   onSuccess,
 }: BulkAddUrlsDialogProps) {
+  const tBulkAdd = useTranslations("bulkAdd.common")
+  
   // 对话框开关状态
   const [internalOpen, setInternalOpen] = useState(false)
   const open = externalOpen !== undefined ? externalOpen : internalOpen
@@ -141,7 +144,7 @@ export function BulkAddUrlsDialog({
         ? {
             index: result.invalidItems[0].index,
             url: result.invalidItems[0].url,
-            error: result.invalidItems[0].error || "格式无效",
+            error: result.invalidItems[0].error || tBulkAdd("formatInvalid"),
           }
         : undefined,
       firstMismatch: result.mismatchedItems[0]

@@ -30,7 +30,7 @@ export class IPAddressService {
     return response.data
   }
 
-  /** 按目标导出所有 IP 地址（文本文件，一行一个） */
+  /** Export all IP addresses by target (text file, one per line) */
   static async exportIPAddressesByTargetId(targetId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/targets/${targetId}/ip-addresses/export/`, {
       responseType: 'blob',
@@ -38,7 +38,7 @@ export class IPAddressService {
     return response.data
   }
 
-  /** 按扫描任务导出所有 IP 地址（文本文件，一行一个） */
+  /** Export all IP addresses by scan task (text file, one per line) */
   static async exportIPAddressesByScanId(scanId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/scans/${scanId}/ip-addresses/export/`, {
       responseType: 'blob',

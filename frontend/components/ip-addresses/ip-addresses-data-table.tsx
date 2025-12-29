@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import { PREDEFINED_FIELDS, type FilterField } from "@/components/common/smart-filter-input"
 import type { IPAddress } from "@/types/ip-address.types"
@@ -51,6 +52,9 @@ export function IPAddressesDataTable({
   onDownloadAll,
   onDownloadSelected,
 }: IPAddressesDataTableProps) {
+  const t = useTranslations("common.status")
+  const tDownload = useTranslations("common.download")
+  
   // 智能搜索处理
   const handleSmartSearch = (rawQuery: string) => {
     onFilterChange?.(rawQuery)
@@ -61,14 +65,14 @@ export function IPAddressesDataTable({
   if (onDownloadAll) {
     downloadOptions.push({
       key: "all",
-      label: "Download All IP Addresses",
+      label: tDownload("allIpAddresses"),
       onClick: onDownloadAll,
     })
   }
   if (onDownloadSelected) {
     downloadOptions.push({
       key: "selected",
-      label: "Download Selected IP Addresses",
+      label: tDownload("selectedIpAddresses"),
       onClick: onDownloadSelected,
       disabled: (count) => count === 0,
     })
@@ -99,7 +103,7 @@ export function IPAddressesDataTable({
       // 下载
       downloadOptions={downloadOptions.length > 0 ? downloadOptions : undefined}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
     />
   )
 }

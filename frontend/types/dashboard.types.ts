@@ -6,7 +6,7 @@ export interface DashboardStats {
 }
 
 /**
- * 资产统计数据（预聚合）
+ * Asset statistics data (pre-aggregated)
  */
 export interface VulnBySeverity {
   critical: number
@@ -26,7 +26,7 @@ export interface AssetStatistics {
   totalAssets: number
   runningScans: number
   updatedAt: string | null
-  // 变化值
+  // Change values
   changeTargets: number
   changeSubdomains: number
   changeIps: number
@@ -34,12 +34,12 @@ export interface AssetStatistics {
   changeWebsites: number
   changeVulns: number
   changeAssets: number
-  // 漏洞严重程度分布
+  // Vulnerability severity distribution
   vulnBySeverity: VulnBySeverity
 }
 
 /**
- * 统计历史数据（用于折线图）
+ * Statistics history data (for line charts)
  */
 export interface StatisticsHistoryItem {
   date: string

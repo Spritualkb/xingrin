@@ -1,5 +1,5 @@
 /**
- * Worker 节点管理 API 服务
+ * Worker node management API service
  */
 
 import apiClient from '@/lib/api-client'
@@ -14,7 +14,7 @@ const BASE_URL = '/workers'
 
 export const workerService = {
   /**
-   * 获取 Worker 列表
+   * Get Worker list
    */
   async getWorkers(page = 1, pageSize = 10): Promise<WorkersResponse> {
     const response = await apiClient.get<WorkersResponse>(
@@ -24,7 +24,7 @@ export const workerService = {
   },
 
   /**
-   * 获取单个 Worker 详情
+   * Get single Worker details
    */
   async getWorker(id: number): Promise<WorkerNode> {
     const response = await apiClient.get<WorkerNode>(`${BASE_URL}/${id}/`)
@@ -32,7 +32,7 @@ export const workerService = {
   },
 
   /**
-   * 创建 Worker 节点
+   * Create Worker node
    */
   async createWorker(data: CreateWorkerRequest): Promise<WorkerNode> {
     const response = await apiClient.post<WorkerNode>(`${BASE_URL}/`, {
@@ -46,7 +46,7 @@ export const workerService = {
   },
 
   /**
-   * 更新 Worker 节点
+   * Update Worker node
    */
   async updateWorker(id: number, data: UpdateWorkerRequest): Promise<WorkerNode> {
     const response = await apiClient.patch<WorkerNode>(`${BASE_URL}/${id}/`, {
@@ -59,21 +59,21 @@ export const workerService = {
   },
 
   /**
-   * 删除 Worker 节点
+   * Delete Worker node
    */
   async deleteWorker(id: number): Promise<void> {
     await apiClient.delete(`${BASE_URL}/${id}/`)
   },
 
   /**
-   * 部署 Worker 节点（占位实现，当前仅用于消除前端类型错误）
+   * Deploy Worker node (placeholder implementation, currently only used to eliminate frontend type errors)
    */
   async deployWorker(id: number): Promise<never> {
     return Promise.reject(new Error(`Worker deploy is not implemented for id=${id}`))
   },
 
   /**
-   * 重启 Worker
+   * Restart Worker
    */
   async restartWorker(id: number): Promise<{ message: string }> {
     const response = await apiClient.post<{ message: string }>(`${BASE_URL}/${id}/restart/`)
@@ -81,7 +81,7 @@ export const workerService = {
   },
 
   /**
-   * 停止 Worker
+   * Stop Worker
    */
   async stopWorker(id: number): Promise<{ message: string }> {
     const response = await apiClient.post<{ message: string }>(`${BASE_URL}/${id}/stop/`)

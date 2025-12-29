@@ -7,8 +7,29 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ExpandableCell } from "@/components/ui/data-table/expandable-cell"
 import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
 
+// 翻译类型定义
+export interface WappalyzerFingerprintTranslations {
+  columns: {
+    name: string
+    cats: string
+    rules: string
+    implies: string
+    description: string
+    website: string
+    cpe: string
+    created: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+    expand: string
+    collapse: string
+  }
+}
+
 interface ColumnOptions {
   formatDate: (date: string) => string
+  t: WappalyzerFingerprintTranslations
 }
 
 interface RuleItem {
@@ -36,7 +57,7 @@ function extractRules(fp: WappalyzerFingerprint): RuleItem[] {
 /**
  * 规则列表单元格 - 显示原始 JSON 格式
  */
-function RulesCell({ fp }: { fp: WappalyzerFingerprint }) {
+function RulesCell({ fp, t }: { fp: WappalyzerFingerprint; t: WappalyzerFingerprintTranslations }) {
   const [expanded, setExpanded] = React.useState(false)
   const rules = extractRules(fp)
   
@@ -61,7 +82,7 @@ function RulesCell({ fp }: { fp: WappalyzerFingerprint }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-primary hover:underline self-start"
         >
-          {expanded ? "收起" : "展开"}
+          {expanded ? t.actions.collapse : t.actions.expand}
         </button>
       )}
     </div>
@@ -73,9 +94,9 @@ function RulesCell({ fp }: { fp: WappalyzerFingerprint }) {
  */
 export function createWappalyzerFingerprintColumns({
   formatDate,
+  t,
 }: ColumnOptions): ColumnDef<WappalyzerFingerprint>[] {
   return [
-    // 选择列
     {
       id: "select",
       header: ({ table }) => (
@@ -85,14 +106,14 @@ export function createWappalyzerFingerprintColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
@@ -100,12 +121,11 @@ export function createWappalyzerFingerprintColumns({
       enableResizing: false,
       size: 40,
     },
-    // 应用名称
     {
       accessorKey: "name",
-      meta: { title: "Name" },
+      meta: { title: t.columns.name },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={t.columns.name} />
       ),
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("name")}</div>
@@ -113,12 +133,11 @@ export function createWappalyzerFingerprintColumns({
       enableResizing: true,
       size: 180,
     },
-    // 分类
     {
       accessorKey: "cats",
-      meta: { title: "Cats" },
+      meta: { title: t.columns.cats },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Cats" />
+        <DataTableColumnHeader column={column} title={t.columns.cats} />
       ),
       cell: ({ row }) => {
         const cats = row.getValue("cats") as number[]
@@ -128,23 +147,21 @@ export function createWappalyzerFingerprintColumns({
       enableResizing: true,
       size: 100,
     },
-    // 规则（合并 cookies, headers, scriptSrc, js, meta, html）
     {
       id: "rules",
-      meta: { title: "Rules" },
+      meta: { title: t.columns.rules },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rules" />
+        <DataTableColumnHeader column={column} title={t.columns.rules} />
       ),
-      cell: ({ row }) => <RulesCell fp={row.original} />,
+      cell: ({ row }) => <RulesCell fp={row.original} t={t} />,
       enableResizing: true,
       size: 350,
     },
-    // 依赖
     {
       accessorKey: "implies",
-      meta: { title: "Implies" },
+      meta: { title: t.columns.implies },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Implies" />
+        <DataTableColumnHeader column={column} title={t.columns.implies} />
       ),
       cell: ({ row }) => {
         const implies = row.getValue("implies") as string[]
@@ -154,34 +171,31 @@ export function createWappalyzerFingerprintColumns({
       enableResizing: true,
       size: 150,
     },
-    // 描述
     {
       accessorKey: "description",
-      meta: { title: "Description" },
+      meta: { title: t.columns.description },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Description" />
+        <DataTableColumnHeader column={column} title={t.columns.description} />
       ),
       cell: ({ row }) => <ExpandableCell value={row.getValue("description")} maxLines={2} />,
       enableResizing: true,
       size: 250,
     },
-    // 官网
     {
       accessorKey: "website",
-      meta: { title: "Website" },
+      meta: { title: t.columns.website },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Website" />
+        <DataTableColumnHeader column={column} title={t.columns.website} />
       ),
       cell: ({ row }) => <ExpandableCell value={row.getValue("website")} variant="url" maxLines={1} />,
       enableResizing: true,
       size: 180,
     },
-    // CPE
     {
       accessorKey: "cpe",
-      meta: { title: "CPE" },
+      meta: { title: t.columns.cpe },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="CPE" />
+        <DataTableColumnHeader column={column} title={t.columns.cpe} />
       ),
       cell: ({ row }) => {
         const cpe = row.getValue("cpe") as string
@@ -190,12 +204,11 @@ export function createWappalyzerFingerprintColumns({
       enableResizing: true,
       size: 150,
     },
-    // 创建时间
     {
       accessorKey: "createdAt",
-      meta: { title: "Created" },
+      meta: { title: t.columns.created },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader column={column} title={t.columns.created} />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

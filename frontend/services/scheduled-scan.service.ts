@@ -7,7 +7,7 @@ import type {
 } from '@/types/scheduled-scan.types'
 
 /**
- * 获取定时扫描列表
+ * Get scheduled scan list
  */
 export async function getScheduledScans(params?: { page?: number; pageSize?: number; search?: string }): Promise<GetScheduledScansResponse> {
   const res = await api.get<GetScheduledScansResponse>('/scheduled-scans/', { params })
@@ -15,7 +15,7 @@ export async function getScheduledScans(params?: { page?: number; pageSize?: num
 }
 
 /**
- * 获取定时扫描详情
+ * Get scheduled scan details
  */
 export async function getScheduledScan(id: number): Promise<ScheduledScan> {
   const res = await api.get<ScheduledScan>(`/scheduled-scans/${id}/`)
@@ -23,7 +23,7 @@ export async function getScheduledScan(id: number): Promise<ScheduledScan> {
 }
 
 /**
- * 创建定时扫描
+ * Create scheduled scan
  */
 export async function createScheduledScan(data: CreateScheduledScanRequest): Promise<{
   message: string
@@ -34,7 +34,7 @@ export async function createScheduledScan(data: CreateScheduledScanRequest): Pro
 }
 
 /**
- * 更新定时扫描
+ * Update scheduled scan
  */
 export async function updateScheduledScan(id: number, data: UpdateScheduledScanRequest): Promise<{
   message: string
@@ -45,7 +45,7 @@ export async function updateScheduledScan(id: number, data: UpdateScheduledScanR
 }
 
 /**
- * 删除定时扫描
+ * Delete scheduled scan
  */
 export async function deleteScheduledScan(id: number): Promise<{ message: string; id: number }> {
   const res = await api.delete<{ message: string; id: number }>(`/scheduled-scans/${id}/`)
@@ -53,7 +53,7 @@ export async function deleteScheduledScan(id: number): Promise<{ message: string
 }
 
 /**
- * 切换定时扫描启用状态
+ * Toggle scheduled scan enabled status
  */
 export async function toggleScheduledScan(id: number, isEnabled: boolean): Promise<{
   message: string

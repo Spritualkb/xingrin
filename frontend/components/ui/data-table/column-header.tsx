@@ -12,12 +12,12 @@ interface DataTableColumnHeaderProps<TData, TValue> {
 }
 
 /**
- * 统一的列头组件
+ * Unified column header component
  * 
- * 特性：
- * - 支持排序指示器
- * - 点击切换排序方向
- * - 统一的样式
+ * Features:
+ * - Supports sort indicators
+ * - Click to toggle sort direction
+ * - Unified styling
  */
 export function DataTableColumnHeader<TData, TValue>({
   column,

@@ -1,17 +1,17 @@
 /**
- * 通知类型定义
+ * Notification type definitions
  */
 
-// 通知类型枚举（与后端 NotificationCategory 对应）
+// Notification type enum (corresponds to backend NotificationCategory)
 export type NotificationType = "vulnerability" | "scan" | "asset" | "system"
 
-// 严重等级（与后端 NotificationLevel 对应）
+// Severity level (corresponds to backend NotificationLevel)
 export type NotificationSeverity = "low" | "medium" | "high" | "critical"
 
-// 后端通知级别（与后端保持一致）
+// Backend notification level (consistent with backend)
 export type BackendNotificationLevel = NotificationSeverity
 
-// 后端通知数据格式
+// Backend notification data format
 export interface BackendNotification {
   id: number
   category?: NotificationType
@@ -26,7 +26,7 @@ export interface BackendNotification {
   isRead?: boolean
 }
 
-// 通知接口
+// Notification interface
 export interface Notification {
   id: number
   type: NotificationType
@@ -39,7 +39,7 @@ export interface Notification {
   createdAt?: string
 }
 
-// 获取通知列表请求参数
+// Get notifications list request parameters
 export interface GetNotificationsRequest {
   page?: number
   pageSize?: number
@@ -47,14 +47,14 @@ export interface GetNotificationsRequest {
   unread?: boolean
 }
 
-// 获取通知列表响应
+// Get notifications list response
 export interface GetNotificationsResponse {
   results: BackendNotification[]
   total: number
   page: number
-  pageSize: number      // 后端返回 camelCase 格式
-  totalPages: number    // 后端返回 camelCase 格式
-  // 兼容字段（向后兼容）
+  pageSize: number      // Backend returns camelCase format
+  totalPages: number    // Backend returns camelCase format
+  // Compatibility fields (backward compatible)
   page_size?: number
   total_pages?: number
 }

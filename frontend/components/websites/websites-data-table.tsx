@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { WebSite } from "@/types/website.types"
@@ -57,6 +58,10 @@ export function WebSitesDataTable({
   onDownloadSelected,
   onBulkAdd,
 }: WebSitesDataTableProps) {
+  const t = useTranslations("common.status")
+  const tActions = useTranslations("common.actions")
+  const tDownload = useTranslations("common.download")
+  
   // 处理智能过滤搜索
   const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
@@ -69,14 +74,14 @@ export function WebSitesDataTable({
   if (onDownloadAll) {
     downloadOptions.push({
       key: "all",
-      label: "Download All Websites",
+      label: tDownload("allWebsites"),
       onClick: onDownloadAll,
     })
   }
   if (onDownloadSelected) {
     downloadOptions.push({
       key: "selected",
-      label: "Download Selected Websites",
+      label: tDownload("selectedWebsites"),
       onClick: onDownloadSelected,
       disabled: (count) => count === 0,
     })
@@ -107,11 +112,11 @@ export function WebSitesDataTable({
       showAddButton={false}
       // 批量添加按钮
       onBulkAdd={onBulkAdd}
-      bulkAddLabel="批量添加"
+      bulkAddLabel={tActions("add")}
       // 下载
       downloadOptions={downloadOptions.length > 0 ? downloadOptions : undefined}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
     />
   )
 }

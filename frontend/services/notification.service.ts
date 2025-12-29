@@ -1,6 +1,6 @@
 /**
- * 通知服务
- * 处理所有与通知相关的 API 请求
+ * Notification service
+ * Handles all notification-related API requests
  */
 
 import api from '@/lib/api-client'
@@ -13,7 +13,7 @@ import type {
 
 export class NotificationService {
   /**
-   * 获取通知列表
+   * Get notification list
    */
   static async getNotifications(
     params: GetNotificationsRequest = {}
@@ -36,7 +36,7 @@ export class NotificationService {
   }
 
   /**
-   * 标记所有通知为已读
+   * Mark all notifications as read
    */
   static async markAllAsRead(): Promise<ApiResponse<null>> {
     const response = await api.post<ApiResponse<null>>('/notifications/mark-all-as-read/')
@@ -44,7 +44,7 @@ export class NotificationService {
   }
 
   /**
-   * 获取未读通知数量
+   * Get unread notification count
    */
   static async getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
     const response = await api.get<ApiResponse<{ count: number }>>('/notifications/unread-count/')

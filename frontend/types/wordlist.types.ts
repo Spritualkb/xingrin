@@ -1,23 +1,23 @@
-// 字典（Wordlist）相关类型
+// Wordlist related types
 
 import type { PaginationInfo } from "@/types/common.types"
 
-// 字典基础信息
+// Wordlist basic info
 export interface Wordlist {
   id: number
   name: string
   description?: string
-  // 文件大小（字节），可选，由后端返回
+  // File size (bytes), optional, returned by backend
   fileSize?: number
-  // 行数，便于估算耗时，可选，由后端返回
+  // Line count, for estimating duration, optional, returned by backend
   lineCount?: number
-  // 文件 SHA-256 哈希，用于缓存校验
+  // File SHA-256 hash, for cache validation
   fileHash?: string
   createdAt: string
   updatedAt: string
 }
 
-// 获取字典列表响应（遵循统一分页结构）
+// Get wordlists list response (follows unified pagination structure)
 export interface GetWordlistsResponse extends PaginationInfo {
   results: Wordlist[]
 }

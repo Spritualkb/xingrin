@@ -8,6 +8,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
 } from "@tabler/icons-react"
+import { useTranslations } from 'next-intl'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -30,10 +31,10 @@ interface DataTablePaginationProps<TData> {
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000]
 
 /**
- * 统一的分页组件
+ * Unified pagination component
  * 
- * 通过 table.setPageIndex/setPageSize 更新分页状态，
- * 由 useReactTable 的 onPaginationChange 统一处理状态同步。
+ * Updates pagination state through table.setPageIndex/setPageSize,
+ * handled uniformly by useReactTable's onPaginationChange for state synchronization.
  */
 export function DataTablePagination<TData>({
   table,
@@ -41,17 +42,19 @@ export function DataTablePagination<TData>({
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   className,
 }: DataTablePaginationProps<TData>) {
+  const t = useTranslations('common.pagination')
+  const tDataTable = useTranslations('dataTable')
   const { pageIndex, pageSize } = table.getState().pagination
   
-  // 服务端分页模式
+  // Server-side pagination mode
   const isServerSide = !!paginationInfo
   
-  // 计算总数和总页数
+  // Calculate total count and total pages
   const total = paginationInfo?.total ?? table.getFilteredRowModel().rows.length
   const totalPages = paginationInfo?.totalPages ?? table.getPageCount()
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
-  // 使用 useCallback 包装处理函数，避免不必要的重新渲染
+  // Use useCallback to wrap handler functions to avoid unnecessary re-renders
   const handlePageSizeChange = React.useCallback((value: string) => {
     const newPageSize = Number(value)
     table.setPageSize(newPageSize)
@@ -81,23 +84,23 @@ export function DataTablePagination<TData>({
     table.setPageIndex(Math.max(0, totalPages - 1))
   }, [table, totalPages])
 
-  // 服务端分页时使用自己计算的值，客户端分页使用 table 方法
+  // For server-side pagination use our calculated values, for client-side pagination use table methods
   const canPreviousPage = isServerSide ? pageIndex > 0 : table.getCanPreviousPage()
   const canNextPage = isServerSide ? pageIndex < totalPages - 1 : table.getCanNextPage()
 
   return (
     <div className={cn("flex items-center justify-between px-2", className)}>
-      {/* 选中行信息 */}
+      {/* Selected rows info */}
       <div className="flex-1 text-sm text-muted-foreground">
-        {selectedCount} of {total} row(s) selected
+        {tDataTable('selected', { count: selectedCount })} / {t('total', { count: total })}
       </div>
 
-      {/* 分页控制器 */}
+      {/* Pagination controls */}
       <div className="flex items-center space-x-6 lg:space-x-8">
-        {/* 每页显示数量选择 */}
+        {/* Rows per page selection */}
         <div className="flex items-center space-x-2">
           <Label htmlFor="rows-per-page" className="text-sm font-medium">
-            Rows per page
+            {t('rowsPerPage')}
           </Label>
           <Select
             value={`${pageSize}`}
@@ -116,12 +119,12 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
 
-        {/* 页码信息 */}
+        {/* Page info */}
         <div className="flex items-center justify-center text-sm font-medium whitespace-nowrap">
-          Page {pageIndex + 1} of {totalPages || 1}
+          {t('page', { current: pageIndex + 1, total: totalPages || 1 })}
         </div>
 
-        {/* 分页按钮 */}
+        {/* Pagination buttons */}
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -129,7 +132,7 @@ export function DataTablePagination<TData>({
             onClick={handleFirstPage}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">{t('first')}</span>
             <IconChevronsLeft className="h-4 w-4" />
           </Button>
           <Button
@@ -138,7 +141,7 @@ export function DataTablePagination<TData>({
             onClick={handlePreviousPage}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">{t('previous')}</span>
             <IconChevronLeft className="h-4 w-4" />
           </Button>
           <Button
@@ -147,7 +150,7 @@ export function DataTablePagination<TData>({
             onClick={handleNextPage}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">{t('next')}</span>
             <IconChevronRight className="h-4 w-4" />
           </Button>
           <Button
@@ -156,7 +159,7 @@ export function DataTablePagination<TData>({
             onClick={handleLastPage}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">{t('last')}</span>
             <IconChevronsRight className="h-4 w-4" />
           </Button>
         </div>

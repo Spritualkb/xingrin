@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
+import { useTranslations } from 'next-intl'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SmartFilterInput } from "@/components/common/smart-filter-input"
@@ -9,7 +10,7 @@ import type { FilterField, ParsedFilter } from "@/components/common/smart-filter
 import { cn } from "@/lib/utils"
 
 interface DataTableToolbarProps {
-  // 搜索模式
+  // Search mode
   searchMode?: 'simple' | 'smart'
   searchPlaceholder?: string
   searchValue?: string
@@ -18,27 +19,27 @@ interface DataTableToolbarProps {
   filterFields?: FilterField[]
   filterExamples?: string[]
   
-  // 左侧自定义内容
+  // Left custom content
   leftContent?: React.ReactNode
   
-  // 右侧操作
+  // Right actions
   children?: React.ReactNode
   
-  // 样式
+  // Styles
   className?: string
 }
 
 /**
- * 统一的工具栏组件
+ * Unified toolbar component
  * 
- * 特性：
- * - 支持简单搜索和智能过滤两种模式
- * - 左侧搜索/过滤，右侧操作按钮
- * - 支持自定义内容插槽
+ * Features:
+ * - Supports both simple search and smart filter modes
+ * - Left side search/filter, right side action buttons
+ * - Supports custom content slots
  */
 export function DataTableToolbar({
   searchMode = 'simple',
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
   searchValue = "",
   onSearch,
   isSearching = false,
@@ -48,34 +49,39 @@ export function DataTableToolbar({
   children,
   className,
 }: DataTableToolbarProps) {
-  // 本地搜索值状态（简单模式）
+  const t = useTranslations('common.actions')
+  
+  // Use translation as default placeholder
+  const placeholder = searchPlaceholder ?? t('search')
+  
+  // Local search value state (simple mode)
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue)
 
-  // 同步外部搜索值
+  // Sync external search value
   React.useEffect(() => {
     setLocalSearchValue(searchValue)
   }, [searchValue])
 
-  // 处理简单搜索提交
+  // Handle simple search submit
   const handleSimpleSearchSubmit = () => {
     onSearch?.(localSearchValue)
   }
 
-  // 处理键盘事件
+  // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSimpleSearchSubmit()
     }
   }
 
-  // 处理智能过滤搜索
+  // Handle smart filter search
   const handleSmartSearch = (_filters: ParsedFilter[], rawQuery: string) => {
     onSearch?.(rawQuery)
   }
 
   return (
     <div className={cn("flex items-center justify-between", className)}>
-      {/* 左侧：搜索/过滤 */}
+      {/* Left: Search/Filter */}
       <div className="flex items-center space-x-2 flex-1 max-w-xl">
         {leftContent ? (
           leftContent
@@ -83,7 +89,7 @@ export function DataTableToolbar({
           <SmartFilterInput
             fields={filterFields}
             examples={filterExamples}
-            placeholder={searchPlaceholder}
+            placeholder={placeholder}
             value={searchValue}
             onSearch={handleSmartSearch}
             className="flex-1"
@@ -91,7 +97,7 @@ export function DataTableToolbar({
         ) : (
           <>
             <Input
-              placeholder={searchPlaceholder}
+              placeholder={placeholder}
               value={localSearchValue}
               onChange={(e) => setLocalSearchValue(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -113,7 +119,7 @@ export function DataTableToolbar({
         )}
       </div>
 
-      {/* 右侧：操作按钮 */}
+      {/* Right: Action buttons */}
       {children && (
         <div className="flex items-center space-x-2">
           {children}

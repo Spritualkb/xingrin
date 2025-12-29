@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Pie, PieChart, Cell, Label } from "recharts"
 import { useAssetStatistics } from "@/hooks/use-dashboard"
 import {
@@ -16,45 +17,56 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useTranslations } from "next-intl"
 
 // 漏洞严重程度使用固定语义化颜色
-const chartConfig = {
-  count: {
-    label: "Count",
-  },
-  critical: {
-    label: "Critical",
-    color: "#dc2626", // 红色
-  },
-  high: {
-    label: "High",
-    color: "#f97316", // 橙色
-  },
-  medium: {
-    label: "Medium",
-    color: "#eab308", // 黄色
-  },
-  low: {
-    label: "Low",
-    color: "#3b82f6", // 蓝色
-  },
-  info: {
-    label: "Info",
-    color: "#6b7280", // 灰色
-  },
-} satisfies ChartConfig
+const SEVERITY_COLORS = {
+  critical: "#dc2626", // 红色
+  high: "#f97316", // 橙色
+  medium: "#eab308", // 黄色
+  low: "#3b82f6", // 蓝色
+  info: "#6b7280", // 灰色
+}
 
 export function VulnSeverityChart() {
   const { data, isLoading } = useAssetStatistics()
+  const t = useTranslations("dashboard.vulnDistribution")
+  const tSeverity = useTranslations("severity")
+
+  const chartConfig = useMemo(() => ({
+    count: {
+      label: "Count",
+    },
+    critical: {
+      label: tSeverity("critical"),
+      color: SEVERITY_COLORS.critical,
+    },
+    high: {
+      label: tSeverity("high"),
+      color: SEVERITY_COLORS.high,
+    },
+    medium: {
+      label: tSeverity("medium"),
+      color: SEVERITY_COLORS.medium,
+    },
+    low: {
+      label: tSeverity("low"),
+      color: SEVERITY_COLORS.low,
+    },
+    info: {
+      label: tSeverity("info"),
+      color: SEVERITY_COLORS.info,
+    },
+  } satisfies ChartConfig), [tSeverity])
 
   const vulnData = data?.vulnBySeverity
-  const allData = [
-    { severity: "critical", count: vulnData?.critical ?? 0, fill: chartConfig.critical.color },
-    { severity: "high", count: vulnData?.high ?? 0, fill: chartConfig.high.color },
-    { severity: "medium", count: vulnData?.medium ?? 0, fill: chartConfig.medium.color },
-    { severity: "low", count: vulnData?.low ?? 0, fill: chartConfig.low.color },
-    { severity: "info", count: vulnData?.info ?? 0, fill: chartConfig.info.color },
-  ]
+  const allData = useMemo(() => [
+    { severity: "critical", count: vulnData?.critical ?? 0, fill: SEVERITY_COLORS.critical },
+    { severity: "high", count: vulnData?.high ?? 0, fill: SEVERITY_COLORS.high },
+    { severity: "medium", count: vulnData?.medium ?? 0, fill: SEVERITY_COLORS.medium },
+    { severity: "low", count: vulnData?.low ?? 0, fill: SEVERITY_COLORS.low },
+    { severity: "info", count: vulnData?.info ?? 0, fill: SEVERITY_COLORS.info },
+  ], [vulnData])
   // 饼图只显示有数据的
   const chartData = allData.filter(item => item.count > 0)
 
@@ -63,8 +75,8 @@ export function VulnSeverityChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>漏洞分布</CardTitle>
-        <CardDescription>按严重程度统计</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -73,7 +85,7 @@ export function VulnSeverityChart() {
           </div>
         ) : total === 0 ? (
           <div className="flex items-center justify-center h-[180px] text-muted-foreground">
-            暂无漏洞数据
+            {t("noData")}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
@@ -115,7 +127,7 @@ export function VulnSeverityChart() {
                               y={(viewBox.cy || 0) + 18}
                               className="fill-muted-foreground text-xs"
                             >
-                              漏洞
+                              {t("vulns")}
                             </tspan>
                           </text>
                         )

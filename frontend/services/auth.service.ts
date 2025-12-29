@@ -1,5 +1,5 @@
 /**
- * 认证服务
+ * Authentication service
  */
 import { api } from '@/lib/api-client'
 import type { 
@@ -12,7 +12,7 @@ import type {
 } from '@/types/auth.types'
 
 /**
- * 用户登录
+ * User login
  */
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const res = await api.post<LoginResponse>('/auth/login/', data)
@@ -20,7 +20,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
 }
 
 /**
- * 用户登出
+ * User logout
  */
 export async function logout(): Promise<LogoutResponse> {
   const res = await api.post<LogoutResponse>('/auth/logout/')
@@ -28,7 +28,7 @@ export async function logout(): Promise<LogoutResponse> {
 }
 
 /**
- * 获取当前用户信息
+ * Get current user information
  */
 export async function getMe(): Promise<MeResponse> {
   const res = await api.get<MeResponse>('/auth/me/')
@@ -36,7 +36,7 @@ export async function getMe(): Promise<MeResponse> {
 }
 
 /**
- * 修改密码
+ * Change password
  */
 export async function changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
   const res = await api.post<ChangePasswordResponse>('/auth/change-password/', data)

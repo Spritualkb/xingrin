@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,11 +39,11 @@ export function ScanHistoryDataTable({
   onAddNew,
   onBulkDelete,
   onSelectionChange,
-  searchPlaceholder = "搜索目标名称...",
+  searchPlaceholder,
   searchValue,
   onSearch,
   isSearching = false,
-  addButtonText = "新建扫描",
+  addButtonText,
   pagination: externalPagination,
   setPagination: setExternalPagination,
   paginationInfo,
@@ -50,6 +51,9 @@ export function ScanHistoryDataTable({
   hideToolbar = false,
   hidePagination = false,
 }: ScanHistoryDataTableProps) {
+  const t = useTranslations("common.status")
+  const tScan = useTranslations("scan.history")
+  
   // 搜索本地状态
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue || "")
 
@@ -86,16 +90,16 @@ export function ScanHistoryDataTable({
       onBulkDelete={onBulkDelete}
       bulkDeleteLabel="Delete"
       onAddNew={onAddNew}
-      addButtonLabel={addButtonText}
+      addButtonLabel={addButtonText || tScan("title")}
       // 工具栏
       hideToolbar={hideToolbar}
       // 空状态
-      emptyMessage="No results"
+      emptyMessage={t("noData")}
       // 自定义搜索框
       toolbarLeft={
         <div className="flex items-center space-x-2">
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || tScan("searchPlaceholder")}
             value={localSearchValue}
             onChange={(e) => setLocalSearchValue(e.target.value)}
             onKeyDown={handleKeyDown}

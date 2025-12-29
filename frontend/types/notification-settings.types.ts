@@ -3,15 +3,15 @@ export interface DiscordSettings {
   webhookUrl: string
 }
 
-/** 通知分类 - 与后端 NotificationCategory 对应 */
+/** Notification category - corresponds to backend NotificationCategory */
 export type NotificationCategory = 'scan' | 'vulnerability' | 'asset' | 'system'
 
-/** 按分类的通知开关 */
+/** Notification switches by category */
 export interface NotificationCategories {
-  scan: boolean        // 扫描任务
-  vulnerability: boolean // 漏洞发现
-  asset: boolean       // 资产发现
-  system: boolean      // 系统消息
+  scan: boolean        // Scan tasks
+  vulnerability: boolean // Vulnerability discovery
+  asset: boolean       // Asset discovery
+  system: boolean      // System messages
 }
 
 export interface NotificationSettings {

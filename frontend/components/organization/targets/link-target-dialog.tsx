@@ -5,6 +5,7 @@ import { Plus, Target, Building2, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useTranslations } from "next-intl"
 
 // 导入 UI 组件
 import { Button } from "@/components/ui/button"
@@ -37,21 +38,6 @@ import { useBatchCreateTargets } from "@/hooks/use-targets"
 // 导入类型定义
 import type { BatchCreateResponse } from "@/types/api-response.types"
 
-// 表单验证 Schema
-const formSchema = z.object({
-  targets: z.string()
-    .min(1, { message: "请输入至少一个目标" })
-    .refine(
-      (val) => {
-        const lines = val.split('\n').map(l => l.trim()).filter(l => l.length > 0)
-        return lines.length > 0
-      },
-      { message: "请输入至少一个目标" }
-    ),
-})
-
-type FormValues = z.infer<typeof formSchema>
-
 // 组件属性类型定义
 interface LinkTargetDialogProps {
   organizationId: number                                     // 组织ID（固定，不可修改）
@@ -78,6 +64,23 @@ export function LinkTargetDialog({
   open: externalOpen, 
   onOpenChange: externalOnOpenChange,
 }: LinkTargetDialogProps) {
+  const t = useTranslations("organization.linkTarget")
+  const tCommon = useTranslations("common")
+  const tTarget = useTranslations("target")
+
+  // 表单验证 Schema - 使用翻译
+  const formSchema = useMemo(() => z.object({
+    targets: z.string()
+      .min(1, { message: t("validation.required") })
+      .refine(
+        (val) => {
+          const lines = val.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+          return lines.length > 0
+        },
+        { message: t("validation.required") }
+      ),
+  }), [t])
+
   // 对话框开关状态 - 支持外部控制
   const [internalOpen, setInternalOpen] = useState(false)
   const open = externalOpen !== undefined ? externalOpen : internalOpen
@@ -89,6 +92,8 @@ export function LinkTargetDialog({
   
   // 使用 React Query 的批量创建目标 mutation
   const batchCreateTargets = useBatchCreateTargets()
+  
+  type FormValues = z.infer<typeof formSchema>
   
   // 初始化表单
   const form = useForm<FormValues>({
@@ -118,7 +123,7 @@ export function LinkTargetDialog({
     const results = TargetValidator.validateTargetBatch(lines)
     const invalid = results
       .filter((r) => !r.isValid)
-      .map((r) => ({ index: r.index, originalTarget: r.originalTarget, error: r.error || "目标格式无效", type: r.type }))
+      .map((r) => ({ index: r.index, originalTarget: r.originalTarget, error: r.error || t("validation.invalidFormat"), type: r.type }))
     
     return {
       count: lines.length,
@@ -214,7 +219,7 @@ export function LinkTargetDialog({
         <DialogTrigger asChild>
           <Button size="sm" variant="secondary">
             <Plus />
-            添加目标
+            {tTarget("addTarget")}
           </Button>
         </DialogTrigger>
       )}
@@ -224,10 +229,10 @@ export function LinkTargetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Target />
-            <span>添加目标到组织</span>
+            <span>{t("title")}</span>
           </DialogTitle>
           <DialogDescription>
-            输入目标并关联到 &quot;{organizationName}&quot;。支持批量添加，每行一个目标。标有 * 的字段为必填项。
+            {t("description", { name: organizationName })}
           </DialogDescription>
         </DialogHeader>
         
@@ -242,7 +247,7 @@ export function LinkTargetDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      目标 <span className="text-destructive">*</span>
+                      {t("targetLabel")} <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <div className="relative border rounded-md overflow-hidden bg-background">
@@ -268,7 +273,7 @@ export function LinkTargetDialog({
                               textareaRef.current = e
                             }}
                             onScroll={handleTextareaScroll}
-                            placeholder={`请输入目标，每行一个\n支持域名、IP、CIDR\n例如：\nexample.com\n192.168.1.1\n10.0.0.0/8`}
+                            placeholder={t("placeholder")}
                             disabled={batchCreateTargets.isPending}
                             className="font-mono h-full overflow-y-auto resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 leading-[1.4] text-sm py-3"
                             style={{ lineHeight: '20px' }}
@@ -277,16 +282,16 @@ export function LinkTargetDialog({
                       </div>
                     </FormControl>
                     <FormDescription>
-                      {targetValidation.count} 个目标
+                      {t("targetCount", { count: targetValidation.count })}
                       {targetValidation.invalid.length > 0 && (
                         <span className="text-destructive ml-2">
-                          | {targetValidation.invalid.length} 个无效
+                          | {t("invalidCount", { count: targetValidation.invalid.length })}
                         </span>
                       )}
                     </FormDescription>
                     {targetValidation.invalid.length > 0 && (
                       <div className="text-xs text-destructive">
-                        例如 第 {targetValidation.invalid[0].index + 1} 行: &quot;{targetValidation.invalid[0].originalTarget}&quot; - {targetValidation.invalid[0].error}
+                        {t("invalidExample", { line: targetValidation.invalid[0].index + 1, target: targetValidation.invalid[0].originalTarget, error: targetValidation.invalid[0].error })}
                       </div>
                     )}
                     <FormMessage />
@@ -298,7 +303,7 @@ export function LinkTargetDialog({
             <div className="grid gap-2">
               <Label className="flex items-center space-x-2">
                 <Building2 />
-                <span>所属组织</span>
+                <span>{t("organizationLabel")}</span>
               </Label>
               <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/50">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -315,7 +320,7 @@ export function LinkTargetDialog({
               onClick={() => handleOpenChange(false)}
               disabled={batchCreateTargets.isPending}
             >
-              取消
+              {tCommon("actions.cancel")}
             </Button>
             <Button 
               type="submit" 
@@ -324,12 +329,12 @@ export function LinkTargetDialog({
               {batchCreateTargets.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  创建中...
+                  {t("creating")}
                 </>
               ) : (
                 <>
                   <Plus />
-                  创建目标
+                  {t("createTarget")}
                 </>
               )}
             </Button>

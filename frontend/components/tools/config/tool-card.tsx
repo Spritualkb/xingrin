@@ -7,6 +7,7 @@ import { IconBrandGithub, IconScale, IconRefresh, IconEdit, IconTrash } from "@t
 import type { Tool } from "@/types/tool.types"
 import { CategoryNameMap } from "@/types/tool.types"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 interface ToolCardProps {
   tool: Tool
@@ -29,6 +30,7 @@ function HighlightedDescription({ description }: { description: string }) {
  * 显示单个扫描工具的信息
  */
 export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = false }: ToolCardProps) {
+  const t = useTranslations("tools.config")
   // 从 name 生成首字母大写的 displayName
   const displayName = tool.name.charAt(0).toUpperCase() + tool.name.slice(1)
   
@@ -53,7 +55,7 @@ export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = f
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
               <IconBrandGithub className="h-4 w-4" />
-              <span>Repository</span>
+              <span>{t("repository")}</span>
             </Link>
           )}
         </div>
@@ -78,7 +80,7 @@ export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = f
             </div>
           ) : (
             <Badge variant="outline" className="text-xs text-muted-foreground">
-              未分类
+              {t("uncategorized")}
             </Badge>
           )}
         </div>
@@ -88,7 +90,7 @@ export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = f
         {/* 当前安装版本 */}
         <div className="mb-2">
           <div className="text-xs text-muted-foreground text-center mb-1">
-            Current Installed Version
+            {t("currentVersion")}
           </div>
           <div className="text-center font-semibold text-base">
             {tool.version || 'N/A'}
@@ -98,9 +100,9 @@ export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = f
         {/* 工具描述 */}
         <CardDescription 
           className="flex-1 text-center line-clamp-3 text-sm leading-snug"
-          title={tool.description || '暂无描述'}
+          title={tool.description || t("noDescription")}
         >
-          {tool.description || '暂无描述'}
+          {tool.description || t("noDescription")}
         </CardDescription>
       </CardContent>
 
@@ -112,7 +114,7 @@ export function ToolCard({ tool, onCheckUpdate, onEdit, onDelete, isChecking = f
           disabled={isChecking}
         >
           <IconRefresh className={isChecking ? "animate-spin h-4 w-4" : "h-4 w-4"} />
-          {isChecking ? "检查中..." : "Check Update"}
+          {isChecking ? t("checking") : t("checkUpdate")}
         </Button>
         <Button
           size="sm"

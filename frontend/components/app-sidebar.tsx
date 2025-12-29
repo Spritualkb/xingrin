@@ -12,15 +12,14 @@ import {
   IconChevronRight, // 右箭头图标
   IconRadar, // 雷达扫描图标
   IconTool, // 工具图标
-  IconFlask, // 实验瓶图标
   IconServer, // 服务器图标
   IconTerminal2, // 终端图标
   IconBug, // 漏洞图标
 } from "@tabler/icons-react"
-// 导入路径名 hook
-import { usePathname } from "next/navigation"
-// 导入 Link 组件
-import Link from "next/link"
+// 导入国际化 hook
+import { useTranslations } from 'next-intl'
+// 导入国际化导航组件
+import { Link, usePathname } from '@/i18n/navigation'
 
 // 导入自定义导航组件
 import { NavSystem } from "@/components/nav-system"
@@ -50,105 +49,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
-// 定义侧边栏的数据结构
-const data = {
-  // 用户信息
-  user: {
-    name: "admin",
-    email: "admin@admin.com",
-    avatar: "",
-  },
-  // 主导航菜单项
-  navMain: [
-    {
-      title: "仪表盘", // 仪表板
-      url: "/dashboard/",
-      icon: IconDashboard,
-    },
-    {
-      title: "组织", // 组织
-      url: "/organization/",
-      icon: IconUsers,
-    },
-    {
-      title: "目标", // 目标
-      url: "/target/",
-      icon: IconListDetails,
-    },
-    {
-      title: "漏洞", // 漏洞
-      url: "/vulnerabilities/",
-      icon: IconBug,
-    },
-    {
-      title: "扫描", // 扫描
-      url: "/scan/",
-      icon: IconRadar,
-      items: [
-        {
-          title: "扫描历史", // 扫描历史
-          url: "/scan/history/",
-        },
-        {
-          title: "定时扫描", // 定时扫描
-          url: "/scan/scheduled/",
-        },
-        {
-          title: "扫描引擎", // 扫描引擎
-          url: "/scan/engine/",
-        },
-      ],
-    },
-    {
-      title: "工具", // 工具
-      url: "/tools/",
-      icon: IconTool,
-      items: [
-        {
-          title: "字典管理", // 字典管理
-          url: "/tools/wordlists/",
-        },
-        {
-          title: "指纹管理", // 指纹管理
-          url: "/tools/fingerprints/",
-        },
-        {
-          title: "Nuclei 模板", // Nuclei 模板
-          url: "/tools/nuclei/",
-        },
-        
-      ],
-    },
-    // 测试中心相关菜单已移除
-  ],
-  // 次要导航菜单项
-  navSecondary: [
-    {
-      title: "Get Help", // 获取帮助
-      url: "https://github.com/yyhuni/xingrin",
-      icon: IconHelp,
-    },
-  ],
-  // 系统设置相关菜单项
-  documents: [
-    {
-      name: "扫描节点",
-      url: "/settings/workers/",
-      icon: IconServer,
-    },
-    {
-      name: "系统日志",
-      url: "/settings/system-logs/",
-      icon: IconTerminal2,
-    },
-    {
-      name: "通知设置", // 通知设置
-      url: "/settings/notifications/",
-      icon: IconSettings,
-    },
-  ],
-}
-
 /**
  * 应用侧边栏组件
  * 显示应用的主要导航菜单,包括用户信息、主菜单、文档和次要菜单
@@ -156,9 +56,107 @@ const data = {
  * @param props - Sidebar 组件的所有属性
  */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const t = useTranslations('navigation')
   const pathname = usePathname()
   const normalize = (p: string) => (p !== "/" && p.endsWith("/") ? p.slice(0, -1) : p)
   const current = normalize(pathname)
+
+  // 用户信息
+  const user = {
+    name: "admin",
+    email: "admin@admin.com",
+    avatar: "",
+  }
+
+  // 主导航菜单项 - 使用翻译
+  const navMain = [
+    {
+      title: t('dashboard'),
+      url: "/dashboard/",
+      icon: IconDashboard,
+    },
+    {
+      title: t('organization'),
+      url: "/organization/",
+      icon: IconUsers,
+    },
+    {
+      title: t('target'),
+      url: "/target/",
+      icon: IconListDetails,
+    },
+    {
+      title: t('vulnerabilities'),
+      url: "/vulnerabilities/",
+      icon: IconBug,
+    },
+    {
+      title: t('scan'),
+      url: "/scan/",
+      icon: IconRadar,
+      items: [
+        {
+          title: t('scanHistory'),
+          url: "/scan/history/",
+        },
+        {
+          title: t('scheduledScan'),
+          url: "/scan/scheduled/",
+        },
+        {
+          title: t('scanEngine'),
+          url: "/scan/engine/",
+        },
+      ],
+    },
+    {
+      title: t('tools'),
+      url: "/tools/",
+      icon: IconTool,
+      items: [
+        {
+          title: t('wordlists'),
+          url: "/tools/wordlists/",
+        },
+        {
+          title: t('fingerprints'),
+          url: "/tools/fingerprints/",
+        },
+        {
+          title: t('nucleiTemplates'),
+          url: "/tools/nuclei/",
+        },
+      ],
+    },
+  ]
+
+  // 次要导航菜单项
+  const navSecondary = [
+    {
+      title: t('help'),
+      url: "https://github.com/yyhuni/xingrin",
+      icon: IconHelp,
+    },
+  ]
+
+  // 系统设置相关菜单项
+  const documents = [
+    {
+      name: t('workers'),
+      url: "/settings/workers/",
+      icon: IconServer,
+    },
+    {
+      name: t('systemLogs'),
+      url: "/settings/system-logs/",
+      icon: IconTerminal2,
+    },
+    {
+      name: t('notifications'),
+      url: "/settings/notifications/",
+      icon: IconSettings,
+    },
+  ]
 
   return (
     // collapsible="icon" 表示侧边栏可以折叠为仅图标模式
@@ -167,18 +165,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            {/* 
-              侧边栏菜单按钮,作为链接使用
-              data-[slot=sidebar-menu-button]:!p-1.5 设置内边距
-            */}
             <SidebarMenuButton 
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/">
-                {/* 公司 Logo 图标 */}
                 <IconRadar className="!size-5" />
-                {/* 公司名称 */}
                 <span className="text-base font-semibold">XingRin</span>
               </Link>
             </SidebarMenuButton>
@@ -190,16 +182,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* 主导航菜单 */}
         <SidebarGroup>
-          <SidebarGroupLabel>主要功能</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('mainFeatures')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navMain.map((item) => {
+              {navMain.map((item) => {
                 const navUrl = normalize(item.url)
                 const isActive = navUrl === "/" ? current === "/" : current === navUrl || current.startsWith(navUrl + "/")
                 const hasSubItems = item.items && item.items.length > 0
 
                 if (!hasSubItems) {
-                  // 无子菜单的普通菜单项
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
@@ -212,7 +203,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   )
                 }
 
-                // 有子菜单的折叠菜单项
                 return (
                   <Collapsible
                     key={item.title}
@@ -256,15 +246,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
         
         {/* 系统设置导航菜单 */}
-        <NavSystem items={data.documents} />
+        <NavSystem items={documents} />
         {/* 次要导航菜单,使用 mt-auto 推到底部 */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
 
       {/* 侧边栏底部 */}
       <SidebarFooter>
-        {/* 用户信息组件 */}
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

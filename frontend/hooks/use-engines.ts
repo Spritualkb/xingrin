@@ -10,7 +10,7 @@ import {
 import type { ScanEngine } from '@/types/engine.types'
 
 /**
- * 获取引擎列表
+ * Get engine list
  */
 export function useEngines() {
   return useQuery({
@@ -20,7 +20,7 @@ export function useEngines() {
 }
 
 /**
- * 获取引擎详情
+ * Get engine details
  */
 export function useEngine(id: number) {
   return useQuery({
@@ -31,7 +31,7 @@ export function useEngine(id: number) {
 }
 
 /**
- * 创建引擎
+ * Create engine
  */
 export function useCreateEngine() {
   const queryClient = useQueryClient()
@@ -40,10 +40,10 @@ export function useCreateEngine() {
     mutationFn: createEngine,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['engines'] })
-      toast.success('引擎创建成功')
+      toast.success('Engine created successfully')
     },
     onError: (error: any) => {
-      toast.error('引擎创建失败', {
+      toast.error('Failed to create engine', {
         description: error?.response?.data?.error || error.message,
       })
     },
@@ -51,7 +51,7 @@ export function useCreateEngine() {
 }
 
 /**
- * 更新引擎
+ * Update engine
  */
 export function useUpdateEngine() {
   const queryClient = useQueryClient()
@@ -62,10 +62,10 @@ export function useUpdateEngine() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['engines'] })
       queryClient.invalidateQueries({ queryKey: ['engines', variables.id] })
-      toast.success('引擎更新成功')
+      toast.success('Engine updated successfully')
     },
     onError: (error: any) => {
-      toast.error('引擎更新失败', {
+      toast.error('Failed to update engine', {
         description: error?.response?.data?.error || error.message,
       })
     },
@@ -73,7 +73,7 @@ export function useUpdateEngine() {
 }
 
 /**
- * 删除引擎
+ * Delete engine
  */
 export function useDeleteEngine() {
   const queryClient = useQueryClient()
@@ -82,10 +82,10 @@ export function useDeleteEngine() {
     mutationFn: deleteEngine,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['engines'] })
-      toast.success('引擎删除成功')
+      toast.success('Engine deleted successfully')
     },
     onError: (error: any) => {
-      toast.error('引擎删除失败', {
+      toast.error('Failed to delete engine', {
         description: error?.response?.data?.error || error.message,
       })
     },

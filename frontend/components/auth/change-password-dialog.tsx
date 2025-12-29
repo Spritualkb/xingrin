@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,8 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
+  const t = useTranslations("auth.changePassword")
+  
   const [oldPassword, setOldPassword] = React.useState("")
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
@@ -33,12 +36,12 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     setError("")
     
     if (newPassword !== confirmPassword) {
-      setError("新密码与确认密码不一致")
+      setError(t("passwordMismatch"))
       return
     }
     
     if (newPassword.length < 4) {
-      setError("新密码长度至少 4 位")
+      setError(t("passwordTooShort", { min: 4 }))
       return
     }
     
@@ -62,15 +65,13 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>修改密码</DialogTitle>
-          <DialogDescription>
-            请输入当前密码和新密码
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("desc")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="oldPassword">当前密码</Label>
+              <Label htmlFor="oldPassword">{t("currentPassword")}</Label>
               <Input
                 id="oldPassword"
                 type="password"
@@ -81,7 +82,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="newPassword">新密码</Label>
+              <Label htmlFor="newPassword">{t("newPassword")}</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -91,7 +92,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">确认新密码</Label>
+              <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -106,10 +107,10 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              取消
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "保存中..." : "保存"}
+              {isPending ? t("saving") : t("save")}
             </Button>
           </DialogFooter>
         </form>

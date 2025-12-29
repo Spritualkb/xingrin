@@ -17,10 +17,10 @@ export function useUpdateNotificationSettings() {
       NotificationSettingsService.updateSettings(data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['notification-settings'] })
-      toast.success(res?.message || '已保存通知设置')
+      toast.success(res?.message || 'Notification settings saved')
     },
     onError: () => {
-      toast.error('保存失败，请重试')
+      toast.error('Save failed, please try again')
     },
   })
 }

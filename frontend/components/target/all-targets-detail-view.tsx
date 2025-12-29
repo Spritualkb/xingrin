@@ -2,7 +2,8 @@
 
 import React, { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { createAllTargetsColumns } from "@/components/target/all-targets-columns"
+import { useTranslations } from "next-intl"
+import { createAllTargetsColumns, AllTargetsTranslations } from "@/components/target/all-targets-columns"
 import { TargetsDataTable } from "@/components/target/targets-data-table"
 import { AddTargetDialog } from "@/components/target/add-target-dialog"
 import { InitiateScanDialog } from "@/components/scan/initiate-scan-dialog"
@@ -30,6 +31,33 @@ import type { Organization } from "@/types/organization.types"
  */
 export function AllTargetsDetailView() {
   const router = useRouter()
+  const tColumns = useTranslations("columns")
+  const tTooltips = useTranslations("tooltips")
+  const tCommon = useTranslations("common")
+  const tConfirm = useTranslations("common.confirm")
+  
+  // 构建翻译对象
+  const translations: AllTargetsTranslations = {
+    columns: {
+      target: tColumns("target.target"),
+      organization: tColumns("organization.organization"),
+      addedOn: tColumns("target.addedOn"),
+      lastScanned: tColumns("target.lastScanned"),
+    },
+    actions: {
+      scheduleScan: tTooltips("scheduleScan"),
+      delete: tCommon("actions.delete"),
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      targetDetails: tTooltips("targetDetails"),
+      targetSummary: tTooltips("targetSummary"),
+      initiateScan: tTooltips("initiateScan"),
+      clickToCopy: tTooltips("clickToCopy"),
+      copied: tTooltips("copied"),
+    },
+  }
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTargets, setSelectedTargets] = useState<Target[]>([])
@@ -136,6 +164,7 @@ export function AllTargetsDetailView() {
     handleDelete: handleDeleteTarget,
     handleInitiateScan,
     handleScheduleScan,
+    t: translations,
   })
 
   // 加载中
@@ -154,7 +183,7 @@ export function AllTargetsDetailView() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-destructive mb-2">加载失败</p>
+          <p className="text-destructive mb-2">{tCommon("status.error")}</p>
           <p className="text-sm text-muted-foreground">{error.message}</p>
         </div>
       </div>
@@ -170,11 +199,11 @@ export function AllTargetsDetailView() {
         onAddHover={() => setShouldPrefetchOrgs(true)}
         onBulkDelete={handleBatchDelete}
         onSelectionChange={setSelectedTargets}
-        searchPlaceholder="搜索目标名称..."
+        searchPlaceholder={tColumns("target.target")}
         searchValue={searchQuery}
         onSearch={handleSearchChange}
         isSearching={isSearching}
-        addButtonText="添加目标"
+        addButtonText={tCommon("actions.add")}
         // 分页相关属性
         pagination={pagination}
         onPaginationChange={handlePaginationChange}
@@ -196,13 +225,13 @@ export function AllTargetsDetailView() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除目标</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTargetTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除目标 &quot;{targetToDelete?.name}&quot; 及其所有关联数据。
+              {tConfirm("deleteTargetMessage", { name: targetToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -211,10 +240,10 @@ export function AllTargetsDetailView() {
               {deleteTargetMutation.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                "确认删除"
+                tConfirm("confirmDelete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -256,9 +285,9 @@ export function AllTargetsDetailView() {
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除目标</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("bulkDeleteTargetTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除以下 {selectedTargets.length} 个目标及其所有关联数据。
+              {tConfirm("bulkDeleteTargetMessage", { count: selectedTargets.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {/* 目标列表容器 - 固定最大高度并支持滚动 */}
@@ -275,7 +304,7 @@ export function AllTargetsDetailView() {
             </ul>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBulkDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -284,10 +313,10 @@ export function AllTargetsDetailView() {
               {batchDeleteMutation.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                `确认删除 ${selectedTargets.length} 个目标`
+                tConfirm("deleteTargetCount", { count: selectedTargets.length })
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

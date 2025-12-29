@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react"
 import { AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations, useLocale } from "next-intl"
 import { useTarget } from "@/hooks/use-targets"
 import {
   useTargetSubdomains,
@@ -13,6 +14,7 @@ import { createSubdomainColumns } from "./subdomains-columns"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
 import { SubdomainService } from "@/services/subdomain.service"
 import { BulkAddSubdomainsDialog } from "./bulk-add-subdomains-dialog"
+import { getDateLocale } from "@/lib/date-utils"
 import type { Subdomain } from "@/types/subdomain.types"
 
 /**
@@ -29,6 +31,24 @@ export function SubdomainsDetailView({
   scanId?: number
 }) {
   const [selectedSubdomains, setSelectedSubdomains] = useState<Subdomain[]>([])
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tSubdomains = useTranslations("subdomains")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      subdomain: tColumns("subdomain.subdomain"),
+      createdAt: tColumns("common.createdAt"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+  }), [tColumns, tCommon])
 
   // 批量添加弹窗状态
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
@@ -85,7 +105,7 @@ export function SubdomainsDetailView({
 
   // 辅助函数 - 格式化日期
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -200,8 +220,9 @@ export function SubdomainsDetailView({
     () =>
       createSubdomainColumns({
         formatDate,
+        t: translations,
       }),
-    [formatDate]
+    [formatDate, translations]
   )
 
   // 转换后端数据格式为前端 Subdomain 类型（必须在条件渲染之前调用）
@@ -222,15 +243,15 @@ export function SubdomainsDetailView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tSubdomains("loadFailed")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载域名数据时出现错误，请重试"}
+          {error.message || tSubdomains("loadError")}
         </p>
         <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
-          重新加载
+          {tSubdomains("reload")}
         </button>
       </div>
     )

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,12 +18,14 @@ function StatCard({
   icon,
   loading,
   footer,
+  badgeText,
 }: {
   title: string
   value: string | number
   icon: React.ReactNode
   loading?: boolean
   footer: string
+  badgeText: string
 }) {
   return (
     <Card className="@container/card">
@@ -39,7 +42,7 @@ function StatCard({
           </CardTitle>
         )}
         <CardAction>
-          <Badge variant="outline">全部</Badge>
+          <Badge variant="outline">{badgeText}</Badge>
         </CardAction>
       </CardHeader>
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -51,36 +54,41 @@ function StatCard({
 
 export function ScanHistoryStatCards() {
   const { data, isLoading } = useScanStatistics()
+  const t = useTranslations("scan.history.stats")
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <StatCard
-        title="总扫描数"
+        title={t("totalScans")}
         value={data?.total ?? 0}
         icon={<IconRadar className="size-4" />}
         loading={isLoading}
-        footer="所有扫描任务"
+        footer={t("allScanTasks")}
+        badgeText={t("all")}
       />
       <StatCard
-        title="进行中"
+        title={t("running")}
         value={data?.running ?? 0}
         icon={<IconPlayerPlay className="size-4" />}
         loading={isLoading}
-        footer="正在执行的扫描"
+        footer={t("runningScans")}
+        badgeText={t("all")}
       />
       <StatCard
-        title="发现漏洞"
+        title={t("vulnsFound")}
         value={data?.totalVulns ?? 0}
         icon={<IconBug className="size-4" />}
         loading={isLoading}
-        footer="已完成扫描发现"
+        footer={t("completedScansFound")}
+        badgeText={t("all")}
       />
       <StatCard
-        title="发现资产"
+        title={t("assetsFound")}
         value={data?.totalAssets ?? 0}
         icon={<IconStack2 className="size-4" />}
         loading={isLoading}
-        footer="子域名 + IP + 端点 + 网站"
+        footer={t("assetTypes")}
+        badgeText={t("all")}
       />
     </div>
   )

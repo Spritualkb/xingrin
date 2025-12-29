@@ -4,10 +4,11 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Copy, Check } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 /**
- * 可复制的 Popover 内容组件
- * 直接显示内容，右上角有复制按钮
+ * Copyable Popover content component
+ * Displays content directly with a copy button in the top right corner
  */
 export function CopyablePopoverContent({ 
   value, 
@@ -17,15 +18,16 @@ export function CopyablePopoverContent({
   className?: string 
 }) {
   const [copied, setCopied] = React.useState(false)
+  const tToast = useTranslations("toast")
   
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(value)
       setCopied(true)
-      toast.success("已复制")
+      toast.success(tToast("copied"))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('复制失败')
+      toast.error(tToast("copyFailed"))
     }
   }
   

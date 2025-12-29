@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react"
 import { Plus, Target as TargetIcon, Building2, Loader2, Check, ChevronsUpDown } from "lucide-react"
 import { IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 
 // 导入 UI 组件
 import { Button } from "@/components/ui/button"
@@ -67,6 +68,10 @@ export function AddTargetDialog({
   onOpenChange: externalOnOpenChange,
   prefetchEnabled,
 }: AddTargetDialogProps) {
+  const t = useTranslations("target.dialog")
+  const tCommon = useTranslations("common.actions")
+  const tPagination = useTranslations("common.pagination")
+  
   // 对话框开关状态 - 支持外部控制
   const [internalOpen, setInternalOpen] = useState(false)
   const open = externalOpen !== undefined ? externalOpen : internalOpen
@@ -126,7 +131,7 @@ export function AddTargetDialog({
       const results = TargetValidator.validateTargetBatch(lines)
       const invalid = results
         .filter((r) => !r.isValid)
-        .map((r) => ({ index: r.index, originalTarget: r.originalTarget, error: r.error || "目标格式无效", type: r.type }))
+        .map((r) => ({ index: r.index, originalTarget: r.originalTarget, error: r.error || t("invalidFormat"), type: r.type }))
       setInvalidTargets(invalid)
     }
   }
@@ -266,7 +271,7 @@ export function AddTargetDialog({
         <DialogTrigger asChild>
           <Button size="sm">
             <Plus />
-            添加目标
+            {t("addTarget")}
           </Button>
         </DialogTrigger>
       )}
@@ -276,10 +281,10 @@ export function AddTargetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <TargetIcon />
-            <span>添加目标</span>
+            <span>{t("addTitle")}</span>
           </DialogTitle>
           <DialogDescription>
-            输入目标并关联到组织。支持批量添加，每行一个目标。标有 * 的字段为必填项。
+            {t("addDesc")}
           </DialogDescription>
         </DialogHeader>
         
@@ -289,7 +294,7 @@ export function AddTargetDialog({
             {/* 目标输入框（支持多行） */}
             <div className="grid gap-2">
               <Label htmlFor="targets">
-                目标列表 <span className="text-destructive">*</span>
+                {t("targetList")} <span className="text-destructive">*</span>
               </Label>
               <div className="flex border rounded-md overflow-hidden h-[180px]">
                 {/* 行号列 - 固定宽度 */}
@@ -314,12 +319,7 @@ export function AddTargetDialog({
                     value={formData.targets}
                     onChange={(e) => handleInputChange("targets", e.target.value)}
                     onScroll={handleTextareaScroll}
-                    placeholder={`请输入目标，每行一个
-支持域名、IP、CIDR
-例如：
-example.com
-192.168.1.1
-10.0.0.0/8`}
+                    placeholder={t("targetPlaceholder")}
                     disabled={batchCreateTargets.isPending}
                     className="font-mono h-full overflow-y-auto resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 leading-[1.4] text-sm py-3"
                     style={{ lineHeight: '20px' }}
@@ -327,11 +327,16 @@ example.com
                 </div>
               </div>
               <div className="text-xs text-muted-foreground">
-                {targetCount} 个目标
+                {t("targetCount", { count: targetCount })}
               </div>
               {invalidTargets.length > 0 && (
                 <div className="text-xs text-destructive">
-                  {invalidTargets.length} 个无效目标，例如 第 {invalidTargets[0].index + 1} 行: &quot;{invalidTargets[0].originalTarget}&quot; - {invalidTargets[0].error}
+                  {t("invalidCount", {
+                    count: invalidTargets.length,
+                    line: invalidTargets[0].index + 1,
+                    target: invalidTargets[0].originalTarget,
+                    error: invalidTargets[0].error,
+                  })}
                 </div>
               )}
             </div>
@@ -339,7 +344,7 @@ example.com
             {/* 所属组织（可选择、可搜索、分页） */}
             <div className="grid gap-2">
               <Label htmlFor="organization">
-                关联组织（可选）
+                {t("linkOrganization")}
               </Label>
               <Button
                 variant="outline"
@@ -351,7 +356,7 @@ example.com
                 {isLoadingOrganizations ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    加载中...
+                    {t("loading")}
                   </span>
                 ) : formData.organizationId ? (
                   <span className="flex items-center gap-2">
@@ -359,7 +364,7 @@ example.com
                     <span className="truncate">{selectedOrgName}</span>
                   </span>
                 ) : (
-                  "请选择组织"
+                  t("selectOrganization")
                 )}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -375,7 +380,7 @@ example.com
                 }}
               >
                 <CommandInput
-                  placeholder="搜索组织..."
+                  placeholder={t("searchOrganization")}
                   value={orgSearchQuery}
                   onValueChange={(v) => setOrgSearchQuery(v)}
                 />
@@ -385,7 +390,7 @@ example.com
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                     </div>
                   ) : filteredOrganizations.length === 0 ? (
-                    <CommandEmpty>未找到组织</CommandEmpty>
+                    <CommandEmpty>{t("noOrganization")}</CommandEmpty>
                   ) : (
                     <CommandGroup>
                       <div className="grid grid-cols-2 gap-1 p-1">
@@ -415,11 +420,15 @@ example.com
                 {organizationsData && (
                   <div className="flex items-center justify-between border-t p-2 bg-muted/50">
                     <div className="text-xs text-muted-foreground">
-                      共 {organizationsData.pagination.total} 个组织 · 第 {organizationsData.pagination.page} / {organizationsData.pagination.totalPages} 页
+                      {t("orgPagination", {
+                        total: organizationsData.pagination.total,
+                        page: organizationsData.pagination.page,
+                        totalPages: organizationsData.pagination.totalPages,
+                      })}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">每页:</span>
+                        <span className="text-xs text-muted-foreground">{t("perPage")}</span>
                         <Select value={orgPageSize.toString()} onValueChange={(value) => {
                           setOrgPageSize(Number(value))
                           setOrgPage(1)
@@ -443,7 +452,7 @@ example.com
                           onClick={() => setOrgPage(1)}
                           disabled={orgPage === 1 || isLoadingOrganizations}
                         >
-                          <span className="sr-only">第一页</span>
+                          <span className="sr-only">{tPagination("first")}</span>
                           <IconChevronsLeft />
                         </Button>
                         <Button
@@ -452,7 +461,7 @@ example.com
                           onClick={() => setOrgPage(prev => Math.max(1, prev - 1))}
                           disabled={orgPage === 1 || isLoadingOrganizations}
                         >
-                          <span className="sr-only">上一页</span>
+                          <span className="sr-only">{tPagination("previous")}</span>
                           <IconChevronLeft />
                         </Button>
                         <Button
@@ -461,7 +470,7 @@ example.com
                           onClick={() => setOrgPage(prev => Math.min(organizationsData.pagination.totalPages, prev + 1))}
                           disabled={orgPage === organizationsData.pagination.totalPages || isLoadingOrganizations}
                         >
-                          <span className="sr-only">下一页</span>
+                          <span className="sr-only">{tPagination("next")}</span>
                           <IconChevronRight />
                         </Button>
                         <Button
@@ -470,7 +479,7 @@ example.com
                           onClick={() => setOrgPage(organizationsData.pagination.totalPages)}
                           disabled={orgPage === organizationsData.pagination.totalPages || isLoadingOrganizations}
                         >
-                          <span className="sr-only">最后一页</span>
+                          <span className="sr-only">{tPagination("last")}</span>
                           <IconChevronsRight />
                         </Button>
                       </div>
@@ -489,7 +498,7 @@ example.com
               onClick={() => handleOpenChange(false)}
               disabled={batchCreateTargets.isPending}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button 
               type="submit" 
@@ -498,12 +507,12 @@ example.com
               {batchCreateTargets.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  创建中...
+                  {t("creating")}
                 </>
               ) : (
                 <>
                   <Plus />
-                  创建目标
+                  {t("addTarget")}
                 </>
               )}
             </Button>

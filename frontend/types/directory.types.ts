@@ -1,18 +1,18 @@
 /**
- * Directory 相关类型定义
+ * Directory related type definitions
  */
 
 export interface Directory {
   id: number
   url: string
   status: number | null
-  contentLength: number | null  // 后端返回 contentLength
+  contentLength: number | null  // Backend returns contentLength
   words: number | null
   lines: number | null
   contentType: string
   duration: number | null
-  websiteUrl: string  // 后端返回 websiteUrl
-  createdAt: string  // 后端返回 createdAt
+  websiteUrl: string  // Backend returns websiteUrl
+  createdAt: string  // Backend returns createdAt
 }
 
 export interface DirectoryFilters {

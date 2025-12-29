@@ -1,8 +1,8 @@
 /**
- * 认证相关类型定义
+ * Authentication related type definitions
  */
 
-// 用户信息
+// User info
 export interface User {
   id: number
   username: string
@@ -10,36 +10,36 @@ export interface User {
   isSuperuser: boolean
 }
 
-// 登录请求
+// Login request
 export interface LoginRequest {
   username: string
   password: string
 }
 
-// 登录响应
+// Login response
 export interface LoginResponse {
   message: string
   user: User
 }
 
-// 获取当前用户响应
+// Get current user response
 export interface MeResponse {
   authenticated: boolean
   user: User | null
 }
 
-// 登出响应
+// Logout response
 export interface LogoutResponse {
   message: string
 }
 
-// 修改密码请求
+// Change password request
 export interface ChangePasswordRequest {
   oldPassword: string
   newPassword: string
 }
 
-// 修改密码响应
+// Change password response
 export interface ChangePasswordResponse {
   message: string
 }

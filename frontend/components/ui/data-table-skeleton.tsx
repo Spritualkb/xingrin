@@ -13,8 +13,8 @@ interface DataTableSkeletonProps {
 }
 
 /**
- * 通用表格页面骨架屏
- * 可配置统计卡片、工具栏按钮、表格列数等
+ * Generic data table skeleton screen
+ * Configurable stats cards, toolbar buttons, table columns, etc.
  */
 export function DataTableSkeleton({
   statsCount = 0,

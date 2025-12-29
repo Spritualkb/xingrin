@@ -1,41 +1,41 @@
 /**
- * 扫描任务状态枚举
- * 与后端 ScanStatus 保持一致
+ * Scan task status enum
+ * Consistent with backend ScanStatus
  */
 export type ScanStatus = "cancelled" | "completed" | "failed" | "initiated" | "running"
 
 /**
- * 扫描阶段（动态，来自 engine_config 的 key）
+ * Scan stage (dynamic, from engine_config key)
  */
 export type ScanStage = string
 
 /**
- * 阶段进度状态
+ * Stage progress status
  */
 export type StageStatus = "pending" | "running" | "completed" | "failed" | "cancelled"
 
 /**
- * 单个阶段的进度信息
+ * Single stage progress info
  */
 export interface StageProgressItem {
   status: StageStatus
-  order: number          // 执行顺序（从 0 开始）
-  startedAt?: string     // ISO 时间字符串
-  duration?: number      // 执行时长（秒）
-  detail?: string        // 完成详情
-  error?: string         // 错误信息
-  reason?: string        // 跳过原因
+  order: number          // Execution order (starting from 0)
+  startedAt?: string     // ISO time string
+  duration?: number      // Execution duration (seconds)
+  detail?: string        // Completion details
+  error?: string         // Error message
+  reason?: string        // Skip reason
 }
 
 /**
- * 各阶段进度字典（动态 key）
+ * Stage progress dictionary (dynamic keys)
  */
 export type StageProgress = Record<string, StageProgressItem>
 
 export interface ScanRecord {
   id: number
-  target?: number              // 目标ID（对应后端 target）
-  targetName: string           // 目标名称（对应后端 targetName）
+  target?: number              // Target ID (corresponds to backend target)
+  targetName: string           // Target name (corresponds to backend targetName)
   summary: {
     subdomains: number
     websites: number
@@ -50,14 +50,14 @@ export interface ScanRecord {
       low: number
     }
   }
-  engine?: number              // 引擎ID（对应后端 engine）
-  engineName: string           // 引擎名称（对应后端 engineName）
-  createdAt: string            // 创建时间（对应后端 createdAt）
+  engine?: number              // Engine ID (corresponds to backend engine)
+  engineName: string           // Engine name (corresponds to backend engineName)
+  createdAt: string            // Creation time (corresponds to backend createdAt)
   status: ScanStatus
-  errorMessage?: string        // 错误信息（对应后端 errorMessage，失败时有值）
+  errorMessage?: string        // Error message (corresponds to backend errorMessage, has value when failed)
   progress: number             // 0-100
-  currentStage?: ScanStage     // 当前扫描阶段（仅 running 状态有值）
-  stageProgress?: StageProgress // 各阶段进度详情
+  currentStage?: ScanStage     // Current scan stage (only has value in running status)
+  stageProgress?: StageProgress // Stage progress details
 }
 
 export interface GetScansParams {
@@ -68,7 +68,7 @@ export interface GetScansParams {
 }
 
 export interface GetScansResponse {
-  results: ScanRecord[]        // 对应后端 results 字段
+  results: ScanRecord[]        // Corresponds to backend results field
   total: number
   page: number
   pageSize: number
@@ -76,24 +76,24 @@ export interface GetScansResponse {
 }
 
 /**
- * 发起扫描请求参数（用于已存在的目标/组织）
+ * Initiate scan request parameters (for existing target/organization)
  */
 export interface InitiateScanRequest {
-  organizationId?: number  // 组织ID（二选一）
-  targetId?: number        // 目标ID（二选一）
-  engineId: number         // 扫描引擎ID（必填）
+  organizationId?: number  // Organization ID (choose one)
+  targetId?: number        // Target ID (choose one)
+  engineId: number         // Scan engine ID (required)
 }
 
 /**
- * 快速扫描请求参数（自动创建目标并扫描）
+ * Quick scan request parameters (auto-create target and scan)
  */
 export interface QuickScanRequest {
-  targets: { name: string }[]  // 目标列表
-  engineId: number             // 扫描引擎ID（必填）
+  targets: { name: string }[]  // Target list
+  engineId: number             // Scan engine ID (required)
 }
 
 /**
- * 快速扫描响应
+ * Quick scan response
  */
 export interface QuickScanResponse {
   message: string
@@ -105,22 +105,22 @@ export interface QuickScanResponse {
 }
 
 /**
- * 单个扫描任务信息
+ * Single scan task info
  */
 export interface ScanTask {
   id: number
-  target: number           // 目标ID
-  engine: number           // 引擎ID
+  target: number           // Target ID
+  engine: number           // Engine ID
   status: ScanStatus
   createdAt: string
   updatedAt: string
 }
 
 /**
- * 发起扫描响应
+ * Initiate scan response
  */
 export interface InitiateScanResponse {
-  message: string          // 成功消息
-  count: number            // 创建的扫描任务数量
-  scans: ScanTask[]        // 扫描任务列表
+  message: string          // Success message
+  count: number            // Number of scan tasks created
+  scans: ScanTask[]        // Scan task list
 }

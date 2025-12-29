@@ -1,11 +1,11 @@
-// 统一数据表格组件导出
+// Unified data table component exports
 export { UnifiedDataTable } from "./unified-data-table"
 export { DataTableToolbar } from "./toolbar"
 export { DataTablePagination } from "./pagination"
 export { DataTableColumnHeader } from "./column-header"
 export { ColumnResizer } from "./column-resizer"
 
-// 类型导出
+// Type exports
 export type {
   UnifiedDataTableProps,
   DataTableToolbarProps,

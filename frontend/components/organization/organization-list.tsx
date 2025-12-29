@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2, Plus, Building2 } from "lucide-react"
+import { useTranslations, useLocale } from "next-intl"
+import { getDateLocale } from "@/lib/date-utils"
 
 // 导入 UI 组件
 import { Button } from "@/components/ui/button"
@@ -51,6 +53,35 @@ import type { Organization } from "@/types/organization.types"
  * 5. 更好的用户体验
  */
 export function OrganizationList() {
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tConfirm = useTranslations("common.confirm")
+  const locale = useLocale()
+  
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      organization: tColumns("organization.organization"),
+      description: tColumns("common.description"),
+      totalTargets: tColumns("organization.totalTargets"),
+      added: tColumns("organization.added"),
+    },
+    actions: {
+      scheduleScan: tTooltips("scheduleScan"),
+      editOrganization: tCommon("actions.edit"),
+      delete: tCommon("actions.delete"),
+      openMenu: tCommon("actions.openMenu"),
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      targetSummary: tTooltips("targetSummary"),
+      initiateScan: tTooltips("initiateScan"),
+    },
+  }), [tColumns, tCommon, tTooltips])
+
   // 状态管理
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -105,7 +136,7 @@ export function OrganizationList() {
 
   // 辅助函数 - 格式化日期
   const formatDate = useCallback((dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric", 
       day: "numeric",
@@ -114,7 +145,7 @@ export function OrganizationList() {
       second: "2-digit",
       hour12: false,
     })
-  }, [])
+  }, [locale])
 
   // 处理删除操作
   const handleDelete = useCallback((org: Organization) => {
@@ -155,8 +186,9 @@ export function OrganizationList() {
       handleDelete,
       handleInitiateScan,
       handleScheduleScan,
+      t: translations,
     }),
-    [formatDate, navigate, handleEdit, handleDelete, handleInitiateScan, handleScheduleScan]
+    [formatDate, navigate, handleEdit, handleDelete, handleInitiateScan, handleScheduleScan, translations]
   )
 
   // 确认删除组织
@@ -210,12 +242,12 @@ export function OrganizationList() {
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <Trash2 className="text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tCommon("status.error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载组织数据时出现错误，请重试"}
+          {error.message}
         </p>
         <Button variant="outline" onClick={() => refetch()}>
-          重新加载
+          {tCommon("actions.retry")}
         </Button>
       </div>
     )
@@ -240,7 +272,7 @@ export function OrganizationList() {
         onAddNew={() => setAddDialogOpen(true)}
         onBulkDelete={handleBulkDelete}
         onSelectionChange={setSelectedOrganizations}
-        searchPlaceholder="搜索组织名称..."
+        searchPlaceholder={tColumns("organization.organization")}
         searchColumn="name"
         searchValue={searchQuery}
         onSearch={handleSearchChange}
@@ -255,13 +287,13 @@ export function OrganizationList() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作将永久删除组织 &quot;{organizationToDelete?.name}&quot; 并解除其与域名的关联。域名本身不会被删除，仍可正常使用。
+              {tConfirm("deleteOrgMessage", { name: organizationToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -270,10 +302,10 @@ export function OrganizationList() {
               {deleteOrganization.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                "删除"
+                tCommon("actions.delete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -294,9 +326,9 @@ export function OrganizationList() {
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("bulkDeleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作将永久删除以下 {selectedOrganizations.length} 个组织并解除其与域名的关联。域名本身不会被删除，仍可正常使用。
+              {tConfirm("bulkDeleteOrgMessage", { count: selectedOrganizations.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {/* 组织列表容器 - 固定最大高度并支持滚动 */}
@@ -313,7 +345,7 @@ export function OrganizationList() {
             </ul>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmBulkDelete} 
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -322,10 +354,10 @@ export function OrganizationList() {
               {batchDeleteOrganizations.isPending ? (
                 <>
                   <LoadingSpinner/>
-                  删除中...
+                  {tConfirm("deleting")}
                 </>
               ) : (
-                `删除 ${selectedOrganizations.length} 个组织`
+                tConfirm("deleteOrgCount", { count: selectedOrganizations.length })
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

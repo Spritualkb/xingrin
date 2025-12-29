@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react"
 import { Plus, Globe, Loader2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,6 +41,9 @@ export function BulkAddSubdomainsDialog({
   onOpenChange: externalOnOpenChange,
   onSuccess,
 }: BulkAddSubdomainsDialogProps) {
+  const t = useTranslations("bulkAdd.subdomain")
+  const tCommon = useTranslations("common.actions")
+  
   // 对话框开关状态
   const [internalOpen, setInternalOpen] = useState(false)
   const open = externalOpen !== undefined ? externalOpen : internalOpen
@@ -83,7 +87,7 @@ export function BulkAddSubdomainsDialog({
         ? {
             index: result.invalidItems[0].index,
             subdomain: result.invalidItems[0].subdomain,
-            error: result.invalidItems[0].error || "格式无效",
+            error: result.invalidItems[0].error || t("formatInvalid"),
           }
         : undefined,
     })
@@ -149,7 +153,7 @@ export function BulkAddSubdomainsDialog({
         <DialogTrigger asChild>
           <Button size="sm" variant="outline">
             <Plus className="h-4 w-4" />
-            批量添加
+            {t("bulkAdd")}
           </Button>
         </DialogTrigger>
       )}
@@ -158,13 +162,13 @@ export function BulkAddSubdomainsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Globe className="h-5 w-5" />
-            <span>批量添加子域名</span>
+            <span>{t("title")}</span>
           </DialogTitle>
           <DialogDescription>
-            输入子域名列表，每行一个。
+            {t("description")}
             {targetName && (
               <span className="block mt-1">
-                子域名必须属于 <code className="bg-muted px-1 rounded">{targetName}</code>
+                {t("belongsTo")} <code className="bg-muted px-1 rounded">{targetName}</code>
               </span>
             )}
           </DialogDescription>
@@ -174,7 +178,7 @@ export function BulkAddSubdomainsDialog({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="subdomains">
-                子域名列表 <span className="text-destructive">*</span>
+                {t("label")} <span className="text-destructive">*</span>
               </Label>
               <div className="flex border rounded-md overflow-hidden h-[220px]">
                 {/* 行号列 */}
@@ -198,11 +202,7 @@ export function BulkAddSubdomainsDialog({
                     value={inputText}
                     onChange={(e) => handleInputChange(e.target.value)}
                     onScroll={handleTextareaScroll}
-                    placeholder={`请输入子域名，每行一个
-例如：
-api.example.com
-www.example.com
-mail.example.com`}
+                    placeholder={t("placeholder")}
                     disabled={bulkCreateSubdomains.isPending}
                     className="font-mono h-full overflow-y-auto resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 leading-[1.4] text-sm py-3"
                     style={{ lineHeight: "20px" }}
@@ -214,23 +214,25 @@ mail.example.com`}
               {validationResult && (
                 <div className="text-xs space-y-1">
                   <div className="text-muted-foreground">
-                    有效: {validationResult.validCount} 个
+                    {t("valid", { count: validationResult.validCount })}
                     {validationResult.duplicateCount > 0 && (
                       <span className="text-yellow-600 ml-2">
-                        重复: {validationResult.duplicateCount} 个
+                        {t("duplicate", { count: validationResult.duplicateCount })}
                       </span>
                     )}
                     {validationResult.invalidCount > 0 && (
                       <span className="text-destructive ml-2">
-                        无效: {validationResult.invalidCount} 个
+                        {t("invalid", { count: validationResult.invalidCount })}
                       </span>
                     )}
                   </div>
                   {validationResult.firstError && (
                     <div className="text-destructive">
-                      第 {validationResult.firstError.index + 1} 行: &quot;
-                      {validationResult.firstError.subdomain}&quot; -{" "}
-                      {validationResult.firstError.error}
+                      {t("lineError", {
+                        line: validationResult.firstError.index + 1,
+                        value: validationResult.firstError.subdomain,
+                        error: validationResult.firstError.error,
+                      })}
                     </div>
                   )}
                 </div>
@@ -245,7 +247,7 @@ mail.example.com`}
               onClick={() => handleOpenChange(false)}
               disabled={bulkCreateSubdomains.isPending}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"
@@ -254,12 +256,12 @@ mail.example.com`}
               {bulkCreateSubdomains.isPending ? (
                 <>
                   <LoadingSpinner />
-                  创建中...
+                  {t("creating")}
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  批量添加
+                  {t("bulkAdd")}
                 </>
               )}
             </Button>

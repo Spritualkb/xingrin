@@ -8,6 +8,29 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ExpandableCell } from "@/components/ui/data-table/expandable-cell"
 import type { Directory } from "@/types/directory.types"
 
+// 翻译类型定义
+export interface DirectoryTranslations {
+  columns: {
+    url: string
+    status: string
+    length: string
+    words: string
+    lines: string
+    contentType: string
+    duration: string
+    createdAt: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+  }
+}
+
+interface CreateColumnsProps {
+  formatDate: (date: string) => string
+  t: DirectoryTranslations
+}
+
 /**
  * HTTP 状态码徽章组件
  */
@@ -47,11 +70,9 @@ function formatDuration(nanoseconds: number | null): string {
  */
 export function createDirectoryColumns({
   formatDate,
-}: {
-  formatDate: (date: string) => string
-}): ColumnDef<Directory>[] {
+  t,
+}: CreateColumnsProps): ColumnDef<Directory>[] {
   return [
-    // 选择列
     {
       id: "select",
       size: 40,
@@ -65,101 +86,95 @@ export function createDirectoryColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="全选"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="选择行"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
       enableHiding: false,
     },
-    // URL 列
     {
       accessorKey: "url",
       size: 400,
       minSize: 200,
       maxSize: 800,
-      meta: { title: "URL" },
+      meta: { title: t.columns.url },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="URL" />
+        <DataTableColumnHeader column={column} title={t.columns.url} />
       ),
       cell: ({ row }) => (
         <ExpandableCell value={row.getValue("url")} />
       ),
     },
-    // Status 列
     {
       accessorKey: "status",
       size: 80,
       minSize: 60,
       maxSize: 120,
       enableResizing: false,
-      meta: { title: "Status" },
+      meta: { title: t.columns.status },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t.columns.status} />
       ),
       cell: ({ row }) => <StatusBadge status={row.getValue("status")} />,
     },
-    // Content Length 列
     {
       accessorKey: "contentLength",
       size: 100,
       minSize: 80,
       maxSize: 150,
-      meta: { title: "Length" },
+      meta: { title: t.columns.length },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Length" />
+        <DataTableColumnHeader column={column} title={t.columns.length} />
       ),
       cell: ({ row }) => {
         const length = row.getValue("contentLength") as number | null
         return <span>{length !== null ? length.toLocaleString() : "-"}</span>
       },
     },
-    // Words 列
     {
       accessorKey: "words",
       size: 80,
       minSize: 60,
       maxSize: 120,
-      meta: { title: "Words" },
+      meta: { title: t.columns.words },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Words" />
+        <DataTableColumnHeader column={column} title={t.columns.words} />
       ),
       cell: ({ row }) => {
         const words = row.getValue("words") as number | null
         return <span>{words !== null ? words.toLocaleString() : "-"}</span>
       },
     },
-    // Lines 列
     {
       accessorKey: "lines",
       size: 80,
       minSize: 60,
       maxSize: 120,
-      meta: { title: "Lines" },
+      meta: { title: t.columns.lines },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Lines" />
+        <DataTableColumnHeader column={column} title={t.columns.lines} />
       ),
       cell: ({ row }) => {
         const lines = row.getValue("lines") as number | null
         return <span>{lines !== null ? lines.toLocaleString() : "-"}</span>
       },
     },
-    // Content Type 列
     {
       accessorKey: "contentType",
       size: 120,
       minSize: 80,
       maxSize: 200,
       enableResizing: false,
-      meta: { title: "Content Type" },
+      meta: { title: t.columns.contentType },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Content Type" />
+        <DataTableColumnHeader column={column} title={t.columns.contentType} />
       ),
       cell: ({ row }) => {
         const contentType = row.getValue("contentType") as string
@@ -170,31 +185,29 @@ export function createDirectoryColumns({
         )
       },
     },
-    // Duration 列
     {
       accessorKey: "duration",
       size: 100,
       minSize: 80,
       maxSize: 150,
-      meta: { title: "Duration" },
+      meta: { title: t.columns.duration },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Duration" />
+        <DataTableColumnHeader column={column} title={t.columns.duration} />
       ),
       cell: ({ row }) => {
         const duration = row.getValue("duration") as number | null
         return <span className="text-muted-foreground">{formatDuration(duration)}</span>
       },
     },
-    // Created At 列
     {
       accessorKey: "createdAt",
       size: 150,
       minSize: 120,
       maxSize: 200,
       enableResizing: false,
-      meta: { title: "Created At" },
+      meta: { title: t.columns.createdAt },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created At" />
+        <DataTableColumnHeader column={column} title={t.columns.createdAt} />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

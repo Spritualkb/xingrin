@@ -6,7 +6,7 @@ export type StatusProps = ComponentProps<typeof Badge> & {
   status: 'online' | 'offline' | 'maintenance' | 'degraded';
 };
 
-// GitHub 风格的状态颜色配置
+// GitHub-style status color configuration
 const statusStyles = {
   online: 'bg-[#238636]/10 text-[#238636] border-[#238636]/20 dark:text-[#3fb950]',
   offline: 'bg-[#da3633]/10 text-[#da3633] border-[#da3633]/20 dark:text-[#f85149]',

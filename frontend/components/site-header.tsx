@@ -9,6 +9,8 @@ import { NotificationDrawer } from "@/components/notifications"
 import { ColorThemeSwitcher } from "@/components/color-theme-switcher"
 // 导入快速扫描组件
 import { QuickScanDialog } from "@/components/scan/quick-scan-dialog"
+// 导入语言切换组件
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 /**
  * 网站头部组件
@@ -33,6 +35,9 @@ export function SiteHeader() {
           
           {/* 颜色主题切换按钮 */}
           <ColorThemeSwitcher />
+          
+          {/* 语言切换按钮 */}
+          <LanguageSwitcher />
           
           {/* GitHub 链接按钮,在小屏幕上隐藏 */}
           <Button variant="ghost" asChild size="sm" className="hidden sm:flex">

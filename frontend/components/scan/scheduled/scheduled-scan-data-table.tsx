@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,11 +36,11 @@ export function ScheduledScanDataTable({
   data = [],
   columns,
   onAddNew,
-  searchPlaceholder = "搜索任务名称...",
+  searchPlaceholder,
   searchValue,
   onSearch,
   isSearching = false,
-  addButtonText = "新建定时扫描",
+  addButtonText,
   page = 1,
   pageSize = 10,
   total = 0,
@@ -47,6 +48,9 @@ export function ScheduledScanDataTable({
   onPageChange,
   onPageSizeChange,
 }: ScheduledScanDataTableProps) {
+  const t = useTranslations("common.status")
+  const tScan = useTranslations("scan.scheduled")
+  
   // 搜索本地状态
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue || "")
 
@@ -98,14 +102,14 @@ export function ScheduledScanDataTable({
       // 批量操作
       showBulkDelete={false}
       onAddNew={onAddNew}
-      addButtonLabel={addButtonText}
+      addButtonLabel={addButtonText || tScan("createTitle")}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
       // 自定义搜索框
       toolbarLeft={
         <div className="flex items-center space-x-2">
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={searchPlaceholder || tScan("searchPlaceholder")}
             value={localSearchValue}
             onChange={(e) => setLocalSearchValue(e.target.value)}
             onKeyDown={handleKeyDown}

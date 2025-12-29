@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { Wrench } from "lucide-react"
 import { IconPlus } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 
 // 导入 UI 组件
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,8 @@ export function AddCustomToolDialog({
   open: externalOpen, 
   onOpenChange: externalOnOpenChange 
 }: AddCustomToolDialogProps) {
+  const t = useTranslations("tools.config")
+  
   // 判断是编辑模式还是添加模式
   const isEditMode = !!tool
   
@@ -174,7 +177,7 @@ export function AddCustomToolDialog({
         <DialogTrigger asChild>
           <Button>
             <IconPlus className="h-5 w-5" />
-            添加工具
+            {t("addTool")}
           </Button>
         </DialogTrigger>
       )}
@@ -184,10 +187,10 @@ export function AddCustomToolDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Wrench />
-            <span>{isEditMode ? "编辑自定义工具" : "添加自定义工具"}</span>
+            <span>{isEditMode ? t("editCustomTool") : t("addCustomTool")}</span>
           </DialogTitle>
           <DialogDescription>
-            配置自定义扫描工具的基本信息。标有 * 的字段为必填项。
+            {t("customDialogDesc")}
           </DialogDescription>
         </DialogHeader>
         
@@ -197,11 +200,11 @@ export function AddCustomToolDialog({
             {/* 工具名称 */}
             <div className="grid gap-2">
               <Label htmlFor="name">
-                工具名称 <span className="text-red-500">*</span>
+                {t("toolName")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="例如：自定义端口扫描"
+                placeholder={t("customToolNamePlaceholder")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={createTool.isPending || updateTool.isPending}
@@ -211,10 +214,10 @@ export function AddCustomToolDialog({
 
             {/* 工具描述 */}
             <div className="grid gap-2">
-              <Label htmlFor="description">工具描述</Label>
+              <Label htmlFor="description">{t("toolDesc")}</Label>
               <Textarea
                 id="description"
-                placeholder="描述工具的功能和用途..."
+                placeholder={t("customToolDescPlaceholder")}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 disabled={createTool.isPending || updateTool.isPending}
@@ -225,24 +228,24 @@ export function AddCustomToolDialog({
             {/* 工具路径 */}
             <div className="grid gap-2">
               <Label htmlFor="directory">
-                工具路径 <span className="text-red-500">*</span>
+                {t("toolPath")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="directory"
-                placeholder="例如：/opt/security-tools/port-scanner"
+                placeholder={t("toolPathPlaceholder")}
                 value={formData.directory}
                 onChange={(e) => setFormData({ ...formData, directory: e.target.value })}
                 disabled={createTool.isPending || updateTool.isPending}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                脚本或工具所在的目录路径
+                {t("toolPathHint")}
               </p>
             </div>
 
             {/* 分类标签 */}
             <div className="grid gap-2">
-              <Label>分类标签</Label>
+              <Label>{t("categoryTags")}</Label>
               
               {/* 已选择的标签 */}
               {formData.categoryNames.length > 0 && (
@@ -284,7 +287,7 @@ export function AddCustomToolDialog({
                     )
                   })
                 ) : (
-                  <p className="text-sm text-muted-foreground">暂无可用分类</p>
+                  <p className="text-sm text-muted-foreground">{t("noCategories")}</p>
                 )}
               </div>
             </div>
@@ -297,7 +300,7 @@ export function AddCustomToolDialog({
               onClick={() => handleOpenChange(false)}
               disabled={createTool.isPending || updateTool.isPending}
             >
-              取消
+              {t("cancel")}
             </Button>
             <Button 
               type="submit" 
@@ -306,12 +309,12 @@ export function AddCustomToolDialog({
               {(createTool.isPending || updateTool.isPending) ? (
                 <>
                   <LoadingSpinner/>
-                  {isEditMode ? "保存中..." : "创建中..."}
+                  {isEditMode ? t("saving") : t("creating")}
                 </>
               ) : (
                 <>
                   <IconPlus className="h-5 w-5" />
-                  {isEditMode ? "保存修改" : "创建工具"}
+                  {isEditMode ? t("saveChanges") : t("createTool")}
                 </>
               )}
             </Button>

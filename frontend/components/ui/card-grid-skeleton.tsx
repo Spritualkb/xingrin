@@ -10,8 +10,8 @@ interface CardGridSkeletonProps {
 }
 
 /**
- * 通用卡片网格骨架屏
- * 适用于工具列表等卡片布局
+ * Generic card grid skeleton screen
+ * Suitable for tool lists and other card layouts
  */
 export function CardGridSkeleton({
   cards = 4,

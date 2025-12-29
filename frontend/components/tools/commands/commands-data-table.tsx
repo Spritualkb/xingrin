@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 
@@ -18,6 +19,9 @@ export function CommandsDataTable<TData extends { id: number }>({
   onBulkDelete,
   onAdd,
 }: CommandsDataTableProps<TData>) {
+  const t = useTranslations("tools.commands")
+  const tCommon = useTranslations("common")
+  
   // 本地搜索状态
   const [searchValue, setSearchValue] = React.useState("")
   const [selectedRows, setSelectedRows] = React.useState<TData[]>([])
@@ -47,12 +51,12 @@ export function CommandsDataTable<TData extends { id: number }>({
       onSelectionChange={setSelectedRows}
       onBulkDelete={onBulkDelete ? handleBulkDelete : undefined}
       onAddNew={onAdd}
-      addButtonLabel="Add"
-      bulkDeleteLabel="Delete"
-      emptyMessage="暂无数据"
+      addButtonLabel={tCommon("actions.add")}
+      bulkDeleteLabel={tCommon("actions.delete")}
+      emptyMessage={tCommon("status.noData")}
       toolbarLeft={
         <Input
-          placeholder="搜索命令名称..."
+          placeholder={t("searchPlaceholder")}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           className="max-w-sm h-8"

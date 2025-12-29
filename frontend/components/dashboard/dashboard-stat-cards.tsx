@@ -5,6 +5,8 @@ import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } 
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { IconTarget, IconStack2, IconBug, IconPlayerPlay, IconTrendingUp, IconTrendingDown } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
+import { useLocale } from "next-intl"
 
 function TrendBadge({ change }: { change: number }) {
   if (change === 0) return null
@@ -66,10 +68,10 @@ function StatCard({
   )
 }
 
-function formatUpdateTime(dateStr: string | null) {
-  if (!dateStr) return '暂无数据'
+function formatUpdateTime(dateStr: string | null, locale: string, noDataText: string) {
+  if (!dateStr) return noDataText
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN', {
+  return date.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -79,45 +81,47 @@ function formatUpdateTime(dateStr: string | null) {
 
 export function DashboardStatCards() {
   const { data, isLoading } = useAssetStatistics()
+  const t = useTranslations("dashboard.statCards")
+  const locale = useLocale()
 
   return (
     <div className="flex flex-col gap-2 px-4 lg:px-6">
       <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         <StatCard
-          title="发现资产"
+          title={t("assetsFound")}
           value={data?.totalAssets ?? 0}
           change={data?.changeAssets}
           icon={<IconStack2 className="size-4" />}
           loading={isLoading}
-          footer="子域名 + IP + 端点 + 网站"
+          footer={t("assetsFooter")}
         />
         <StatCard
-          title="发现漏洞"
+          title={t("vulnsFound")}
           value={data?.totalVulns ?? 0}
           change={data?.changeVulns}
           icon={<IconBug className="size-4" />}
           loading={isLoading}
-          footer="所有扫描发现的漏洞"
+          footer={t("vulnsFooter")}
         />
         <StatCard
-          title="监控目标"
+          title={t("monitoredTargets")}
           value={data?.totalTargets ?? 0}
           change={data?.changeTargets}
           icon={<IconTarget className="size-4" />}
           loading={isLoading}
-          footer="已添加的目标总数"
+          footer={t("targetsFooter")}
         />
         <StatCard
-          title="正在扫描"
+          title={t("runningScans")}
           value={data?.runningScans ?? 0}
           icon={<IconPlayerPlay className="size-4" />}
           loading={isLoading}
-          footer="当前运行中的任务"
+          footer={t("scansFooter")}
         />
       </div>
       <div className="flex items-center gap-3 mt-1 -mb-2 text-xs text-muted-foreground">
         <div className="flex-1 border-t" />
-        <span>统计更新于 {formatUpdateTime(data?.updatedAt ?? null)}</span>
+        <span>{t("updatedAt", { time: formatUpdateTime(data?.updatedAt ?? null, locale, t("noData")) })}</span>
       </div>
     </div>
   )

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
   IconTrash,
@@ -32,15 +33,6 @@ import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
 import type { PaginationInfo } from "@/types/common.types"
-
-// Wappalyzer 过滤字段配置
-const WAPPALYZER_FILTER_FIELDS: FilterField[] = [
-  { key: "name", label: "Name", description: "应用名称" },
-  { key: "description", label: "Description", description: "应用描述" },
-  { key: "website", label: "Website", description: "官网地址" },
-  { key: "cpe", label: "CPE", description: "CPE 标识符" },
-  { key: "implies", label: "Implies", description: "依赖项 (如 PHP, MySQL)" },
-]
 
 const WAPPALYZER_FILTER_EXAMPLES = [
   'name="WordPress"',
@@ -84,10 +76,21 @@ export function WappalyzerFingerprintDataTable({
   paginationInfo,
   onPaginationChange,
 }: WappalyzerFingerprintDataTableProps) {
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
   const [selectedCount, setSelectedCount] = React.useState(0)
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = React.useState(false)
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = React.useState(false)
+
+  // Wappalyzer 过滤字段配置（使用翻译）
+  const wappalyzerFilterFields: FilterField[] = React.useMemo(() => [
+    { key: "name", label: "Name", description: t("filter.wappalyzer.name") },
+    { key: "description", label: "Description", description: t("filter.wappalyzer.description") },
+    { key: "website", label: "Website", description: t("filter.wappalyzer.website") },
+    { key: "cpe", label: "CPE", description: t("filter.wappalyzer.cpe") },
+    { key: "implies", label: "Implies", description: t("filter.wappalyzer.implies") },
+  ], [t])
 
   const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
@@ -108,7 +111,7 @@ export function WappalyzerFingerprintDataTable({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm">
             <IconSettings className="h-4 w-4" />
-            操作
+            {t("actions.operations")}
             <IconChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -116,7 +119,7 @@ export function WappalyzerFingerprintDataTable({
           {onExport && (
             <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
               <IconDownload className="h-4 w-4" />
-              导出所有指纹
+              {t("actions.exportAll")}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
@@ -127,7 +130,7 @@ export function WappalyzerFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除选中 ({selectedCount})
+              {t("actions.deleteSelected")} ({selectedCount})
             </DropdownMenuItem>
           )}
           {onDeleteAll && (
@@ -136,7 +139,7 @@ export function WappalyzerFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除所有
+              {t("actions.deleteAll")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -148,7 +151,7 @@ export function WappalyzerFingerprintDataTable({
           <DropdownMenuTrigger asChild>
             <Button size="sm">
               <IconPlus className="h-4 w-4" />
-              添加指纹
+              {t("actions.addFingerprint")}
               <IconChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -156,13 +159,13 @@ export function WappalyzerFingerprintDataTable({
             {onAddSingle && (
               <DropdownMenuItem onClick={onAddSingle}>
                 <IconPlus className="h-4 w-4" />
-                单条添加
+                {t("actions.addSingle")}
               </DropdownMenuItem>
             )}
             {onAddImport && (
               <DropdownMenuItem onClick={onAddImport}>
                 <IconUpload className="h-4 w-4" />
-                文件导入
+                {t("actions.importFile")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -186,7 +189,7 @@ export function WappalyzerFingerprintDataTable({
         searchValue={filterValue}
         onSearch={handleSmartSearch}
         isSearching={isSearching}
-        filterFields={WAPPALYZER_FILTER_FIELDS}
+        filterFields={wappalyzerFilterFields}
         filterExamples={WAPPALYZER_FILTER_EXAMPLES}
         // 选择
         onSelectionChange={handleSelectionChange}
@@ -203,15 +206,15 @@ export function WappalyzerFingerprintDataTable({
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导出所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.exportTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              将导出所有 {totalCount} 条 Wappalyzer 指纹数据为 JSON 文件。
+              {t("dialogs.exportDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { onExport?.(); setExportDialogOpen(false); }}>
-              确认导出
+              {t("dialogs.confirmExport")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -221,18 +224,18 @@ export function WappalyzerFingerprintDataTable({
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除选中指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteSelectedTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除选中的 {selectedCount} 条指纹吗？此操作不可撤销。
+              {t("dialogs.deleteSelectedDesc", { count: selectedCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onBulkDelete?.(); setBulkDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -242,18 +245,18 @@ export function WappalyzerFingerprintDataTable({
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除所有 {totalCount} 条 Wappalyzer 指纹吗？此操作不可撤销。
+              {t("dialogs.deleteAllDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onDeleteAll?.(); setDeleteAllDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

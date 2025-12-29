@@ -4,6 +4,7 @@ import * as React from "react"
 import { flushSync } from "react-dom"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 /**
@@ -14,6 +15,7 @@ export function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false)
   const [isToggled, setIsToggled] = React.useState(false)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const tCommon = useTranslations("common")
 
   React.useEffect(() => {
     setMounted(true)
@@ -107,7 +109,7 @@ export function ThemeToggle() {
         "relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isToggled ? "bg-primary" : "bg-gray-200"
       )}
-      aria-label={isToggled ? "切换到亮色模式" : "切换到暗色模式"}
+      aria-label={isToggled ? tCommon("theme.switchToLight") : tCommon("theme.switchToDark")}
     >
       <div
         className={cn(

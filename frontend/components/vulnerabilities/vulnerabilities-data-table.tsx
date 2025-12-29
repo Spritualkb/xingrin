@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { useTranslations } from "next-intl"
 import { UnifiedDataTable } from "@/components/ui/data-table"
 import { PREDEFINED_FIELDS, type FilterField } from "@/components/common/smart-filter-input"
 import type { Vulnerability } from "@/types/vulnerability.types"
@@ -55,6 +56,9 @@ export function VulnerabilitiesDataTable({
   onDownloadSelected,
   hideToolbar = false,
 }: VulnerabilitiesDataTableProps) {
+  const t = useTranslations("common.status")
+  const tDownload = useTranslations("common.download")
+  
   // 处理智能过滤搜索
   const handleFilterSearch = (rawQuery: string) => {
     onFilterChange?.(rawQuery)
@@ -65,14 +69,14 @@ export function VulnerabilitiesDataTable({
   if (onDownloadAll) {
     downloadOptions.push({
       key: "all",
-      label: "Download All Vulnerabilities",
+      label: tDownload("allVulnerabilities"),
       onClick: onDownloadAll,
     })
   }
   if (onDownloadSelected) {
     downloadOptions.push({
       key: "selected",
-      label: "Download Selected Vulnerabilities",
+      label: tDownload("selectedVulnerabilities"),
       onClick: onDownloadSelected,
       disabled: (count) => count === 0,
     })
@@ -105,7 +109,7 @@ export function VulnerabilitiesDataTable({
       // 工具栏
       hideToolbar={hideToolbar}
       // 空状态
-      emptyMessage="暂无数据"
+      emptyMessage={t("noData")}
     />
   )
 }

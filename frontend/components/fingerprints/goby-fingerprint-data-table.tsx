@@ -32,12 +32,7 @@ import { UnifiedDataTable } from "@/components/ui/data-table"
 import type { FilterField } from "@/components/common/smart-filter-input"
 import type { GobyFingerprint } from "@/types/fingerprint.types"
 import type { PaginationInfo } from "@/types/common.types"
-
-// Goby 过滤字段配置
-const GOBY_FILTER_FIELDS: FilterField[] = [
-  { key: "name", label: "Name", description: "产品名称" },
-  { key: "logic", label: "Logic", description: "逻辑表达式" },
-]
+import { useTranslations } from "next-intl"
 
 const GOBY_FILTER_EXAMPLES = [
   'name="Apache"',
@@ -84,6 +79,14 @@ export function GobyFingerprintDataTable({
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false)
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = React.useState(false)
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = React.useState(false)
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
+
+  // Goby 过滤字段配置（使用翻译）
+  const gobyFilterFields: FilterField[] = React.useMemo(() => [
+    { key: "name", label: "Name", description: t("filter.goby.product") },
+    { key: "logic", label: "Logic", description: t("filter.goby.logic") },
+  ], [t])
 
   const handleSmartSearch = (rawQuery: string) => {
     if (onFilterChange) {
@@ -104,7 +107,7 @@ export function GobyFingerprintDataTable({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm">
             <IconSettings className="h-4 w-4" />
-            操作
+            {t("actions.operations")}
             <IconChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -112,7 +115,7 @@ export function GobyFingerprintDataTable({
           {onExport && (
             <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
               <IconDownload className="h-4 w-4" />
-              导出所有指纹
+              {t("actions.exportAll")}
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
@@ -123,7 +126,7 @@ export function GobyFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除选中 ({selectedCount})
+              {t("actions.deleteSelected")} ({selectedCount})
             </DropdownMenuItem>
           )}
           {onDeleteAll && (
@@ -132,7 +135,7 @@ export function GobyFingerprintDataTable({
               className="text-destructive focus:text-destructive"
             >
               <IconTrash className="h-4 w-4" />
-              删除所有
+              {t("actions.deleteAll")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -144,7 +147,7 @@ export function GobyFingerprintDataTable({
           <DropdownMenuTrigger asChild>
             <Button size="sm">
               <IconPlus className="h-4 w-4" />
-              添加指纹
+              {t("actions.addFingerprint")}
               <IconChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -152,13 +155,13 @@ export function GobyFingerprintDataTable({
             {onAddSingle && (
               <DropdownMenuItem onClick={onAddSingle}>
                 <IconPlus className="h-4 w-4" />
-                单条添加
+                {t("actions.addSingle")}
               </DropdownMenuItem>
             )}
             {onAddImport && (
               <DropdownMenuItem onClick={onAddImport}>
                 <IconUpload className="h-4 w-4" />
-                文件导入
+                {t("actions.importFile")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -182,7 +185,7 @@ export function GobyFingerprintDataTable({
         searchValue={filterValue}
         onSearch={handleSmartSearch}
         isSearching={isSearching}
-        filterFields={GOBY_FILTER_FIELDS}
+        filterFields={gobyFilterFields}
         filterExamples={GOBY_FILTER_EXAMPLES}
         // 选择
         onSelectionChange={handleSelectionChange}
@@ -199,15 +202,15 @@ export function GobyFingerprintDataTable({
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导出所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.exportTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              将导出所有 {totalCount} 条 Goby 指纹数据为 JSON 文件。
+              {t("dialogs.exportDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { onExport?.(); setExportDialogOpen(false); }}>
-              确认导出
+              {t("dialogs.confirmExport")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -217,18 +220,18 @@ export function GobyFingerprintDataTable({
       <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除选中指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteSelectedTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除选中的 {selectedCount} 条指纹吗？此操作不可撤销。
+              {t("dialogs.deleteSelectedDesc", { count: selectedCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onBulkDelete?.(); setBulkDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -238,18 +241,18 @@ export function GobyFingerprintDataTable({
       <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除所有指纹</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.deleteAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除所有 {totalCount} 条 Goby 指纹吗？此操作不可撤销。
+              {t("dialogs.deleteAllDesc", { count: totalCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { onDeleteAll?.(); setDeleteAllDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认删除
+              {t("dialogs.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

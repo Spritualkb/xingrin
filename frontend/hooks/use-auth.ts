@@ -1,5 +1,5 @@
 /**
- * 认证相关 hooks
+ * Authentication-related hooks
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -9,7 +9,7 @@ import { getErrorMessage } from '@/lib/api-client'
 import type { LoginRequest, ChangePasswordRequest } from '@/types/auth.types'
 
 /**
- * 获取当前用户信息
+ * Get current user information
  */
 export function useAuth() {
   const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true'
@@ -19,13 +19,13 @@ export function useAuth() {
     queryFn: skipAuth 
       ? () => Promise.resolve({ authenticated: true } as Awaited<ReturnType<typeof getMe>>)
       : getMe,
-    staleTime: 1000 * 60 * 5, // 5 分钟内不重新请求
+    staleTime: 1000 * 60 * 5, // Don't re-request within 5 minutes
     retry: false,
   })
 }
 
 /**
- * 用户登录
+ * User login
  */
 export function useLogin() {
   const queryClient = useQueryClient()
@@ -35,7 +35,7 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) => login(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
-      toast.success('登录成功')
+      toast.success('Login successful')
       router.push('/dashboard/')
     },
     onError: (error: unknown) => {
@@ -45,7 +45,7 @@ export function useLogin() {
 }
 
 /**
- * 用户登出
+ * User logout
  */
 export function useLogout() {
   const queryClient = useQueryClient()
@@ -55,7 +55,7 @@ export function useLogout() {
     mutationFn: logout,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
-      toast.success('已登出')
+      toast.success('Logged out')
       router.push('/login/')
     },
     onError: (error: unknown) => {
@@ -65,13 +65,13 @@ export function useLogout() {
 }
 
 /**
- * 修改密码
+ * Change password
  */
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: ChangePasswordRequest) => changePassword(data),
     onSuccess: () => {
-      toast.success('密码修改成功')
+      toast.success('Password changed successfully')
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error))

@@ -4,6 +4,7 @@ import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons"
 import { Command as CommandPrimitive } from "cmdk"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -28,10 +29,12 @@ interface CommandDialogProps extends DialogProps {
 }
 
 const CommandDialog = ({ children, contentClassName, ...props }: CommandDialogProps) => {
+  const t = useTranslations("common.ui")
+  
   return (
     <Dialog {...props}>
       <DialogContent className={cn("overflow-hidden p-0 sm:max-w-[500px]", contentClassName)}>
-        <DialogTitle className="sr-only">Command Dialog</DialogTitle>
+        <DialogTitle className="sr-only">{t("commandDialog")}</DialogTitle>
         <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
           {children}
         </Command>

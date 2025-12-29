@@ -1,11 +1,11 @@
 /**
- * Worker 节点相关类型定义
+ * Worker node related type definitions
  */
 
-// Worker 状态枚举（前后端统一）
+// Worker status enum (unified between frontend and backend)
 export type WorkerStatus = 'pending' | 'deploying' | 'online' | 'offline' | 'updating' | 'outdated'
 
-// Worker 节点
+// Worker node
 export interface WorkerNode {
   id: number
   name: string
@@ -13,7 +13,7 @@ export interface WorkerNode {
   sshPort: number
   username: string
   status: WorkerStatus
-  isLocal: boolean  // 是否为本地节点（Docker 容器内）
+  isLocal: boolean  // Whether it's a local node (inside Docker container)
   createdAt: string
   updatedAt?: string
   info?: {
@@ -22,7 +22,7 @@ export interface WorkerNode {
   }
 }
 
-// 创建 Worker 请求
+// Create Worker request
 export interface CreateWorkerRequest {
   name: string
   ipAddress: string
@@ -31,7 +31,7 @@ export interface CreateWorkerRequest {
   password: string
 }
 
-// 更新 Worker 请求
+// Update Worker request
 export interface UpdateWorkerRequest {
   name?: string
   sshPort?: number
@@ -39,7 +39,7 @@ export interface UpdateWorkerRequest {
   password?: string
 }
 
-// Worker 列表响应
+// Worker list response
 export interface WorkersResponse {
   results: WorkerNode[]
   total: number

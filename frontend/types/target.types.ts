@@ -1,23 +1,23 @@
 /**
- * Target 类型定义
+ * Target type definitions
  */
 
 /**
- * 目标类型
+ * Target type
  */
 export type TargetType = 'domain' | 'ip' | 'cidr'
 
 /**
- * 目标基础信息（用于列表显示）
+ * Target basic info (for list display)
  */
 export interface Target {
   id: number
   name: string
-  type: TargetType  // 后端字段：type
+  type: TargetType  // Backend field: type
   description?: string
-  createdAt: string  // 后端字段：created_at，自动转换为 createdAt
-  lastScannedAt?: string  // 后端字段：last_scanned_at，自动转换为 lastScannedAt
-  // 关联数据（通过 serializer 添加）
+  createdAt: string  // Backend field: created_at, auto-converted to createdAt
+  lastScannedAt?: string  // Backend field: last_scanned_at, auto-converted to lastScannedAt
+  // Associated data (added via serializer)
   organizations?: Array<{
     id: number
     name: string
@@ -25,7 +25,7 @@ export interface Target {
 }
 
 /**
- * 目标详情信息（包含统计数据）
+ * Target detail info (includes statistics data)
  */
 export interface TargetDetail extends Target {
   summary: {
@@ -44,22 +44,22 @@ export interface TargetDetail extends Target {
 }
 
 /**
- * 目标列表响应类型
+ * Target list response type
  */
 export interface TargetsResponse {
   results: Target[]
-  total: number        // 后端返回 total，不是 count
-  page: number         // 当前页码
-  pageSize: number     // 每页大小
-  totalPages: number   // 总页数
-  // 兼容字段（为了向后兼容）
-  count?: number       // 可选，等同于 total
+  total: number        // Backend returns total, not count
+  page: number         // Current page number
+  pageSize: number     // Page size
+  totalPages: number   // Total pages
+  // Compatibility fields (for backward compatibility)
+  count?: number       // Optional, equivalent to total
   next?: string | null
   previous?: string | null
 }
 
 /**
- * 创建目标的请求参数
+ * Create target request parameters
  */
 export interface CreateTargetRequest {
   name: string
@@ -67,7 +67,7 @@ export interface CreateTargetRequest {
 }
 
 /**
- * 更新目标的请求参数
+ * Update target request parameters
  */
 export interface UpdateTargetRequest {
   name?: string
@@ -75,14 +75,14 @@ export interface UpdateTargetRequest {
 }
 
 /**
- * 批量删除目标的请求参数
+ * Batch delete targets request parameters
  */
 export interface BatchDeleteTargetsRequest {
   ids: number[]
 }
 
 /**
- * 批量删除目标的响应
+ * Batch delete targets response
  */
 export interface BatchDeleteTargetsResponse {
   deletedCount: number
@@ -90,18 +90,18 @@ export interface BatchDeleteTargetsResponse {
 }
 
 /**
- * 批量创建目标的请求参数
+ * Batch create targets request parameters
  */
 export interface BatchCreateTargetsRequest {
   targets: Array<{
     name: string
     description?: string
   }>
-  organizationId?: number  // 可选：关联到指定组织
+  organizationId?: number  // Optional: associate with specified organization
 }
 
 /**
- * 批量创建目标的响应
+ * Batch create targets response
  */
 export interface BatchCreateTargetsResponse {
   createdCount: number

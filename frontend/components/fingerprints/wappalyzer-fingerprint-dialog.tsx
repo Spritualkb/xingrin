@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react"
 import { useForm } from "react-hook-form"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -49,6 +50,8 @@ export function WappalyzerFingerprintDialog({
   fingerprint,
   onSuccess,
 }: WappalyzerFingerprintDialogProps) {
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
   const isEdit = !!fingerprint
 
   const createMutation = useCreateWappalyzerFingerprint()
@@ -145,15 +148,15 @@ export function WappalyzerFingerprintDialog({
     try {
       if (isEdit && fingerprint) {
         await updateMutation.mutateAsync({ id: fingerprint.id, data: payload })
-        toast.success("更新成功")
+        toast.success(t("toast.updateSuccess"))
       } else {
         await createMutation.mutateAsync(payload)
-        toast.success("创建成功")
+        toast.success(t("toast.createSuccess"))
       }
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      toast.error(error.message || (isEdit ? "更新失败" : "创建失败"))
+      toast.error(error.message || (isEdit ? t("toast.updateFailed") : t("toast.createFailed")))
     }
   }
 
@@ -161,9 +164,9 @@ export function WappalyzerFingerprintDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "编辑 Wappalyzer 指纹" : "添加 Wappalyzer 指纹"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("wappalyzer.editTitle") : t("wappalyzer.addTitle")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "修改指纹规则配置" : "添加新的指纹规则"}
+            {isEdit ? t("wappalyzer.editDesc") : t("wappalyzer.addDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -171,11 +174,11 @@ export function WappalyzerFingerprintDialog({
           {/* 基本信息 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">应用名称 *</Label>
+              <Label htmlFor="name">{t("form.appNamePlaceholder").split("：")[0]} *</Label>
               <Input
                 id="name"
-                placeholder="如：WordPress、React"
-                {...register("name", { required: "应用名称不能为空" })}
+                placeholder={t("form.appNamePlaceholder")}
+                {...register("name", { required: t("form.appNameRequired") })}
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -183,10 +186,10 @@ export function WappalyzerFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cats">分类 ID</Label>
+              <Label htmlFor="cats">{t("category")}</Label>
               <Input
                 id="cats"
-                placeholder="如：1, 6, 12"
+                placeholder={t("form.catsPlaceholder")}
                 {...register("cats")}
               />
             </div>
@@ -194,7 +197,7 @@ export function WappalyzerFingerprintDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="website">官网</Label>
+              <Label htmlFor="website">{tCommon("website")}</Label>
               <Input
                 id="website"
                 placeholder="https://example.com"
@@ -213,10 +216,10 @@ export function WappalyzerFingerprintDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">描述</Label>
+            <Label htmlFor="description">{tCommon("description")}</Label>
             <Textarea
               id="description"
-              placeholder="应用描述"
+              placeholder={t("form.descPlaceholder")}
               rows={2}
               {...register("description")}
             />
@@ -224,13 +227,13 @@ export function WappalyzerFingerprintDialog({
 
           {/* 检测规则 */}
           <div className="space-y-1">
-            <Label className="text-sm font-medium">检测规则</Label>
-            <p className="text-xs text-muted-foreground">JSON 格式使用对象，数组格式用逗号分隔</p>
+            <Label className="text-sm font-medium">{t("form.detectionRules")}</Label>
+            <p className="text-xs text-muted-foreground">{t("form.detectionRulesHint")}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cookies">Cookies (JSON)</Label>
+              <Label htmlFor="cookies">{t("form.cookies")}</Label>
               <Textarea
                 id="cookies"
                 placeholder='{"name": "pattern"}'
@@ -241,7 +244,7 @@ export function WappalyzerFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="headers">Headers (JSON)</Label>
+              <Label htmlFor="headers">{t("form.headers")}</Label>
               <Textarea
                 id="headers"
                 placeholder='{"X-Powered-By": "pattern"}'
@@ -254,7 +257,7 @@ export function WappalyzerFingerprintDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="scriptSrc">Script URL</Label>
+              <Label htmlFor="scriptSrc">{t("form.scriptUrl")}</Label>
               <Input
                 id="scriptSrc"
                 placeholder="pattern1, pattern2"
@@ -264,7 +267,7 @@ export function WappalyzerFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="js">JS 变量</Label>
+              <Label htmlFor="js">{t("form.jsVariables")}</Label>
               <Input
                 id="js"
                 placeholder="window.var1, window.var2"
@@ -275,7 +278,7 @@ export function WappalyzerFingerprintDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="meta">Meta 标签 (JSON)</Label>
+            <Label htmlFor="meta">{t("form.metaTags")} (JSON)</Label>
             <Textarea
               id="meta"
               placeholder='{"generator": ["pattern"]}'
@@ -287,7 +290,7 @@ export function WappalyzerFingerprintDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="html">HTML 内容</Label>
+              <Label htmlFor="html">{t("form.htmlContent")}</Label>
               <Input
                 id="html"
                 placeholder="pattern1, pattern2"
@@ -297,7 +300,7 @@ export function WappalyzerFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="implies">依赖</Label>
+              <Label htmlFor="implies">{t("form.implies")}</Label>
               <Input
                 id="implies"
                 placeholder="PHP, MySQL"
@@ -308,10 +311,10 @@ export function WappalyzerFingerprintDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "保存中..." : isEdit ? "更新" : "创建"}
+              {isSubmitting ? tCommon("saving") : isEdit ? tCommon("update") : tCommon("create")}
             </Button>
           </DialogFooter>
         </form>

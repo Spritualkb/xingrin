@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconSearch } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 import {
   Command,
   CommandEmpty,
@@ -39,6 +40,24 @@ export const PREDEFINED_FIELDS: Record<string, FilterField> = {
   severity: { key: "severity", label: "Severity", description: "Vulnerability severity" },
   name: { key: "name", label: "Name", description: "Name" },
   type: { key: "type", label: "Type", description: "Type" },
+}
+
+// 获取翻译后的预定义字段
+export function getTranslatedFields(t: (key: string) => string): Record<string, FilterField> {
+  return {
+    ip: { key: "ip", label: "IP", description: t("fields.ip") },
+    port: { key: "port", label: "Port", description: t("fields.port") },
+    host: { key: "host", label: "Host", description: t("fields.host") },
+    domain: { key: "domain", label: "Domain", description: t("fields.domain") },
+    url: { key: "url", label: "URL", description: t("fields.url") },
+    status: { key: "status", label: "Status", description: t("fields.status") },
+    title: { key: "title", label: "Title", description: t("fields.title") },
+    source: { key: "source", label: "Source", description: t("fields.source") },
+    path: { key: "path", label: "Path", description: t("fields.path") },
+    severity: { key: "severity", label: "Severity", description: t("fields.severity") },
+    name: { key: "name", label: "Name", description: t("fields.name") },
+    type: { key: "type", label: "Type", description: t("fields.type") },
+  }
 }
 
 // 默认字段（IP Addresses 页面）
@@ -92,6 +111,7 @@ export function SmartFilterInput({
   onSearch,
   className,
 }: SmartFilterInputProps) {
+  const t = useTranslations("filter")
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value ?? "")
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -244,7 +264,7 @@ export function SmartFilterInput({
             <CommandList ref={listRef}>
               {/* 已解析的筛选条件预览 */}
               {parsedFilters.length > 0 && (
-                <CommandGroup heading="Active filters">
+                <CommandGroup heading={t("groups.activeFilters")}>
                   <div className="flex flex-wrap gap-1 px-2 py-1">
                     {parsedFilters.map((filter, i) => (
                       <Badge key={i} variant="secondary" className="text-xs font-mono">
@@ -257,7 +277,7 @@ export function SmartFilterInput({
 
               {/* 可用字段 */}
               {showFieldSuggestions && (
-                <CommandGroup heading="Available fields">
+                <CommandGroup heading={t("groups.availableFields")}>
                   <div className="flex flex-wrap gap-1 px-2 py-1">
                     {fields.filter(
                       (f) => !currentWord || f.key.startsWith(currentWord.toLowerCase())
@@ -276,28 +296,28 @@ export function SmartFilterInput({
               )}
 
               {/* 语法帮助 */}
-              <CommandGroup heading="Syntax">
+              <CommandGroup heading={t("groups.syntax")}>
                 <div className="px-2 py-1.5 text-xs text-muted-foreground space-y-2">
                   {/* 匹配操作符 */}
                   <div className="space-y-1">
-                    <div className="font-medium text-foreground/80">Operators</div>
+                    <div className="font-medium text-foreground/80">{t("syntax.operators")}</div>
                     <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
                       <code className="bg-muted px-1 rounded">=</code>
-                      <span>contains (fuzzy)</span>
+                      <span>{t("syntax.containsFuzzy")}</span>
                       <code className="bg-muted px-1 rounded">==</code>
-                      <span>exact match</span>
+                      <span>{t("syntax.exactMatch")}</span>
                       <code className="bg-muted px-1 rounded">!=</code>
-                      <span>not equals</span>
+                      <span>{t("syntax.notEquals")}</span>
                     </div>
                   </div>
                   {/* 逻辑运算符 */}
                   <div className="space-y-1 pt-1 border-t border-muted">
-                    <div className="font-medium text-foreground/80">Logic</div>
+                    <div className="font-medium text-foreground/80">{t("syntax.logic")}</div>
                     <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
                       <span><code className="bg-muted px-1 rounded">||</code> <code className="bg-muted px-1 rounded">or</code></span>
-                      <span>match any</span>
+                      <span>{t("syntax.matchAny")}</span>
                       <span><code className="bg-muted px-1 rounded">&&</code> <code className="bg-muted px-1 rounded">and</code> <code className="bg-muted px-1 rounded">space</code></span>
-                      <span>match all</span>
+                      <span>{t("syntax.matchAll")}</span>
                     </div>
                   </div>
                 </div>
@@ -305,7 +325,7 @@ export function SmartFilterInput({
 
               {/* 示例 */}
               {examples && examples.length > 0 && (
-                <CommandGroup heading="Examples">
+                <CommandGroup heading={t("groups.examples")}>
                   {examples.map((example, i) => (
                     <CommandItem
                       key={i}
@@ -318,7 +338,7 @@ export function SmartFilterInput({
                 </CommandGroup>
               )}
 
-              <CommandEmpty>Type to filter...</CommandEmpty>
+              <CommandEmpty>{t("empty")}</CommandEmpty>
             </CommandList>
           </Command>
         </PopoverContent>

@@ -6,16 +6,16 @@ export interface Port {
 }
 
 export interface IPAddress {
-  ip: string  // IP 地址（唯一标识）
-  hosts: string[]  // 关联的主机名列表
-  ports: number[]  // 关联的端口列表
-  createdAt: string  // 首次创建时间
+  ip: string  // IP address (unique identifier)
+  hosts: string[]  // Associated hostname list
+  ports: number[]  // Associated port list
+  createdAt: string  // First creation time
 }
 
 export interface GetIPAddressesParams {
   page?: number
   pageSize?: number
-  filter?: string  // 智能过滤语法字符串
+  filter?: string  // Smart filter syntax string
 }
 
 export interface GetIPAddressesResponse {

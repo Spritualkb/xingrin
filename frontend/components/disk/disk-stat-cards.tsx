@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useDiskStats } from '@/hooks/use-disk'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -28,12 +29,13 @@ function StatCard({ title, value, icon, loading }: { title: string; value: strin
 
 export function DiskStatCards() {
   const { data, isLoading } = useDiskStats()
+  const t = useTranslations("disk")
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-3">
-      <StatCard title="总容量" value={formatBytes(data?.totalBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
-      <StatCard title="已使用" value={formatBytes(data?.usedBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
-      <StatCard title="可用空间" value={formatBytes(data?.freeBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
+      <StatCard title={t("totalCapacity")} value={formatBytes(data?.totalBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
+      <StatCard title={t("used")} value={formatBytes(data?.usedBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
+      <StatCard title={t("available")} value={formatBytes(data?.freeBytes ?? 0)} icon={<IconDatabase />} loading={isLoading} />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react"
 import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslations, useLocale } from "next-intl"
 import {
   useEholeFingerprints,
   useBulkDeleteEholeFingerprints,
@@ -10,13 +11,38 @@ import {
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
 import { EholeFingerprintDataTable } from "./ehole-fingerprint-data-table"
-import { createEholeFingerprintColumns } from "./ehole-fingerprint-columns"
+import { createEholeFingerprintColumns, EholeFingerprintTranslations } from "./ehole-fingerprint-columns"
 import { EholeFingerprintDialog } from "./ehole-fingerprint-dialog"
 import { ImportFingerprintDialog } from "./import-fingerprint-dialog"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
+import { getDateLocale } from "@/lib/date-utils"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
 
 export function EholeFingerprintView() {
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tFingerprints = useTranslations("tools.fingerprints")
+  const locale = useLocale()
+  
+  // 构建翻译对象
+  const translations: EholeFingerprintTranslations = {
+    columns: {
+      cms: tColumns("fingerprint.cms"),
+      method: tColumns("fingerprint.method"),
+      location: tColumns("endpoint.location"),
+      keyword: tColumns("fingerprint.keyword"),
+      type: tColumns("common.type"),
+      important: tColumns("fingerprint.important"),
+      created: tColumns("fingerprint.created"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+      expand: tTooltips("expand"),
+      collapse: tTooltips("collapse"),
+    },
+  }
   const [selectedFingerprints, setSelectedFingerprints] = useState<EholeFingerprint[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [filterQuery, setFilterQuery] = useState("")
@@ -50,7 +76,7 @@ export function EholeFingerprintView() {
 
   // 格式化日期
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -72,9 +98,9 @@ export function EholeFingerprintView() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      toast.success("导出成功")
+      toast.success(tFingerprints("toast.exportSuccess"))
     } catch (error: any) {
-      toast.error(error.message || "导出失败")
+      toast.error(error.message || tFingerprints("toast.exportFailed"))
     }
   }
 
@@ -85,10 +111,10 @@ export function EholeFingerprintView() {
     try {
       const ids = selectedFingerprints.map((f) => f.id)
       const result = await bulkDeleteMutation.mutateAsync(ids)
-      toast.success(`删除成功：${result.deleted} 条`)
+      toast.success(tFingerprints("toast.deleteSuccess", { count: result.deleted }))
       setSelectedFingerprints([])
     } catch (error: any) {
-      toast.error(error.message || "删除失败")
+      toast.error(error.message || tFingerprints("toast.deleteFailed"))
     }
   }
 
@@ -96,16 +122,16 @@ export function EholeFingerprintView() {
   const handleDeleteAll = async () => {
     try {
       const result = await deleteAllMutation.mutateAsync()
-      toast.success(`删除成功：${result.deleted} 条`)
+      toast.success(tFingerprints("toast.deleteSuccess", { count: result.deleted }))
     } catch (error: any) {
-      toast.error(error.message || "删除失败")
+      toast.error(error.message || tFingerprints("toast.deleteFailed"))
     }
   }
 
   // 列定义
   const columns = useMemo(
-    () => createEholeFingerprintColumns({ formatDate }),
-    []
+    () => createEholeFingerprintColumns({ formatDate, t: translations }),
+    [translations]
   )
 
   // 转换数据
@@ -134,15 +160,15 @@ export function EholeFingerprintView() {
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tFingerprints("loadFailed")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载指纹数据时出现错误"}
+          {error.message || tFingerprints("loadError")}
         </p>
         <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
-          重新加载
+          {tFingerprints("reload")}
         </button>
       </div>
     )

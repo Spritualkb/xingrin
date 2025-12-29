@@ -2,11 +2,13 @@
 
 import React, { useCallback, useMemo, useState } from "react"
 import { AlertTriangle } from "lucide-react"
+import { useTranslations, useLocale } from "next-intl"
 import { IPAddressesDataTable } from "./ip-addresses-data-table"
 import { createIPAddressColumns } from "./ip-addresses-columns"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
 import { Button } from "@/components/ui/button"
 import { useTargetIPAddresses, useScanIPAddresses } from "@/hooks/use-ip-addresses"
+import { getDateLocale } from "@/lib/date-utils"
 import type { IPAddress } from "@/types/ip-address.types"
 import { IPAddressService } from "@/services/ip-address.service"
 import { toast } from "sonner"
@@ -24,6 +26,32 @@ export function IPAddressesView({
   })
   const [selectedIPAddresses, setSelectedIPAddresses] = useState<IPAddress[]>([])
   const [filterQuery, setFilterQuery] = useState("")
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tTooltips = useTranslations("tooltips")
+  const tToast = useTranslations("toast")
+  const tStatus = useTranslations("common.status")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      ipAddress: tColumns("ipAddress.ipAddress"),
+      hosts: tColumns("ipAddress.hosts"),
+      createdAt: tColumns("common.createdAt"),
+      openPorts: tColumns("ipAddress.openPorts"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+    tooltips: {
+      allHosts: tTooltips("allHosts"),
+      allOpenPorts: tTooltips("allOpenPorts"),
+    },
+  }), [tColumns, tCommon, tTooltips])
 
   const handleFilterChange = (value: string) => {
     setFilterQuery(value)
@@ -54,7 +82,7 @@ export function IPAddressesView({
   const { data, isLoading, error, refetch } = activeQuery
 
   const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -63,14 +91,15 @@ export function IPAddressesView({
       second: "2-digit",
       hour12: false,
     })
-  }, [])
+  }, [locale])
 
   const columns = useMemo(
     () =>
       createIPAddressColumns({
         formatDate,
+        t: translations,
       }),
-    [formatDate]
+    [formatDate, translations]
   )
 
   const ipAddresses: IPAddress[] = useMemo(() => {
@@ -120,7 +149,7 @@ export function IPAddressesView({
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error("下载 IP 地址列表失败", error)
-      toast.error("下载 IP 地址列表失败，请稍后重试")
+      toast.error(tToast("downloadFailed"))
     }
   }
 
@@ -192,11 +221,11 @@ export function IPAddressesView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tStatus("error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载 IP 地址数据时出现错误，请重试"}
+          {error.message || tStatus("error")}
         </p>
-        <Button onClick={() => refetch()}>重新加载</Button>
+        <Button onClick={() => refetch()}>{tCommon("actions.retry")}</Button>
       </div>
     )
   }

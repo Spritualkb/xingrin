@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react"
 import { AlertTriangle } from "lucide-react"
+import { useTranslations, useLocale } from "next-intl"
 import { useTargetEndpoints, useTarget } from "@/hooks/use-targets"
 import { useDeleteEndpoint, useScanEndpoints } from "@/hooks/use-endpoints"
 import { EndpointsDataTable } from "./endpoints-data-table"
@@ -9,6 +10,7 @@ import { createEndpointColumns } from "./endpoints-columns"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
 import { BulkAddUrlsDialog } from "@/components/common/bulk-add-urls-dialog"
+import { getDateLocale } from "@/lib/date-utils"
 import type { TargetType } from "@/lib/url-validator"
 import {
   AlertDialog,
@@ -48,6 +50,36 @@ export function EndpointsDetailView({
 
   const [filterQuery, setFilterQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+
+  // 国际化
+  const tColumns = useTranslations("columns")
+  const tCommon = useTranslations("common")
+  const tToast = useTranslations("toast")
+  const tConfirm = useTranslations("common.confirm")
+  const locale = useLocale()
+
+  // 构建翻译对象
+  const translations = useMemo(() => ({
+    columns: {
+      url: tColumns("common.url"),
+      title: tColumns("endpoint.title"),
+      status: tColumns("common.status"),
+      contentLength: tColumns("endpoint.contentLength"),
+      location: tColumns("endpoint.location"),
+      webServer: tColumns("endpoint.webServer"),
+      contentType: tColumns("endpoint.contentType"),
+      technologies: tColumns("endpoint.technologies"),
+      bodyPreview: tColumns("endpoint.bodyPreview"),
+      vhost: tColumns("endpoint.vhost"),
+      gfPatterns: tColumns("endpoint.gfPatterns"),
+      responseTime: tColumns("endpoint.responseTime"),
+      createdAt: tColumns("common.createdAt"),
+    },
+    actions: {
+      selectAll: tCommon("actions.selectAll"),
+      selectRow: tCommon("actions.selectRow"),
+    },
+  }), [tColumns, tCommon])
 
   // 获取目标信息（用于 URL 匹配校验）
   const { data: target } = useTarget(targetId || 0, { enabled: !!targetId })
@@ -94,7 +126,7 @@ export function EndpointsDetailView({
 
   // 辅助函数 - 格式化日期
   const formatDate = React.useCallback((dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
+    return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
       month: "numeric",
       day: "numeric",
@@ -103,7 +135,7 @@ export function EndpointsDetailView({
       second: "2-digit",
       hour12: false,
     })
-  }, [])
+  }, [locale])
 
 
   // 确认删除端点
@@ -130,8 +162,9 @@ export function EndpointsDetailView({
     () =>
       createEndpointColumns({
         formatDate,
+        t: translations,
       }),
-    [formatDate]
+    [formatDate, translations]
   )
 
   // 格式化日期为 YYYY-MM-DD HH:MM:SS（与后端一致）
@@ -184,7 +217,6 @@ export function EndpointsDetailView({
       escapeCSV(formatArrayForCSV(item.tech)),
       escapeCSV(item.bodyPreview),
       escapeCSV(item.vhost),
-      escapeCSV(formatArrayForCSV(item.tags ?? undefined)),
       escapeCSV(formatDateForCSV(item.createdAt ?? ''))
     ].join(','))
     
@@ -224,7 +256,7 @@ export function EndpointsDetailView({
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error("下载端点列表失败", error)
-      toast.error("下载端点列表失败，请稍后重试")
+      toast.error(tToast("downloadFailed"))
     }
   }
 
@@ -253,15 +285,15 @@ export function EndpointsDetailView({
         <div className="rounded-full bg-destructive/10 p-3 mb-4">
           <AlertTriangle className="h-10 w-10 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold mb-2">{tCommon("status.error")}</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error.message || "加载端点数据时出现错误，请重试"}
+          {error.message || tCommon("status.error")}
         </p>
         <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
-          重新加载
+          {tCommon("actions.retry")}
         </button>
       </div>
     )
@@ -313,13 +345,13 @@ export function EndpointsDetailView({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{tConfirm("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作无法撤销。这将永久删除该端点及其相关数据。
+              {tConfirm("deleteMessage")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -328,10 +360,10 @@ export function EndpointsDetailView({
               {deleteEndpoint.isPending ? (
                 <>
                   <LoadingSpinner />
-                  删除中...
+                  {tCommon("status.loading")}
                 </>
               ) : (
-                "删除"
+                tCommon("actions.delete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

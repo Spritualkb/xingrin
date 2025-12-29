@@ -2,8 +2,8 @@ import validator from 'validator'
 import { parse as parseDomain } from 'tldts'
 
 /**
- * 域名验证工具类
- * 使用 validator.js 进行可靠的域名验证
+ * Domain validation utility class
+ * Uses validator.js for reliable domain validation
  */
 
 export interface DomainValidationResult {
@@ -13,47 +13,47 @@ export interface DomainValidationResult {
 
 export class DomainValidator {
   /**
-   * 验证域名格式（如 example.com）
-   * @param domain - 要验证的域名字符串
-   * @returns 验证结果
+   * Validate domain format (e.g. example.com)
+   * @param domain - Domain string to validate
+   * @returns Validation result
    */
   static validateDomain(domain: string): DomainValidationResult {
-    // 1. 检查是否为空
+    // 1. Check if empty
     if (!domain || domain.trim().length === 0) {
       return {
         isValid: false,
-        error: '域名不能为空'
+        error: 'Domain cannot be empty'
       }
     }
 
     const trimmedDomain = domain.trim()
 
-    // 2. 检查是否包含空格
+    // 2. Check if contains spaces
     if (trimmedDomain.includes(' ')) {
       return {
         isValid: false,
-        error: '域名不能包含空格'
+        error: 'Domain cannot contain spaces'
       }
     }
 
-    // 3. 检查长度（使用 validator 包）
+    // 3. Check length (using validator package)
     if (!validator.isLength(trimmedDomain, { min: 1, max: 253 })) {
       return {
         isValid: false,
-        error: '域名长度不能超过 253 个字符'
+        error: 'Domain length cannot exceed 253 characters'
       }
     }
 
-    // 4. 使用 tldts 做域名语义校验（优先）
+    // 4. Use tldts for domain semantic validation (priority)
     const info = parseDomain(trimmedDomain)
     if (!info.domain || info.isIp === true) {
       return {
         isValid: false,
-        error: '域名格式无效'
+        error: 'Invalid domain format'
       }
     }
 
-    // 5. 使用 validator.js 的 isFQDN 兜底，确保严格性
+    // 5. Use validator.js isFQDN as fallback to ensure strictness
     if (!validator.isFQDN(trimmedDomain, {
       require_tld: true,
       allow_underscores: false,
@@ -63,7 +63,7 @@ export class DomainValidator {
     })) {
       return {
         isValid: false,
-        error: '域名格式无效'
+        error: 'Invalid domain format'
       }
     }
 
@@ -71,23 +71,23 @@ export class DomainValidator {
   }
 
   /**
-   * 验证子域名格式（如 www.example.com, api.test.org）
-   * @param subdomain - 要验证的子域名字符串
-   * @returns 验证结果
+   * Validate subdomain format (e.g. www.example.com, api.test.org)
+   * @param subdomain - Subdomain string to validate
+   * @returns Validation result
    */
   static validateSubdomain(subdomain: string): DomainValidationResult {
-    // 先进行基本域名验证
+    // First perform basic domain validation
     const basicValidation = this.validateDomain(subdomain)
     if (!basicValidation.isValid) {
       return basicValidation
     }
 
-    // 子域名必须至少包含 3 个部分（如 www.example.com）
+    // Subdomain must contain at least 3 parts (e.g. www.example.com)
     const labels = subdomain.trim().split('.')
     if (labels.length < 3) {
       return {
         isValid: false,
-        error: '子域名必须至少包含 3 个部分（如 www.example.com）'
+        error: 'Subdomain must contain at least 3 parts (e.g. www.example.com)'
       }
     }
 
@@ -97,9 +97,9 @@ export class DomainValidator {
   }
 
   /**
-   * 批量验证域名列表
-   * @param domains - 域名字符串数组
-   * @returns 验证结果数组
+   * Batch validate domain list
+   * @param domains - Array of domain strings
+   * @returns Array of validation results
    */
   static validateDomainBatch(domains: string[]): Array<DomainValidationResult & { index: number; originalDomain: string }> {
     return domains.map((domain, index) => ({
@@ -110,9 +110,9 @@ export class DomainValidator {
   }
 
   /**
-   * 批量验证子域名列表
-   * @param subdomains - 子域名字符串数组
-   * @returns 验证结果数组
+   * Batch validate subdomain list
+   * @param subdomains - Array of subdomain strings
+   * @returns Array of validation results
    */
   static validateSubdomainBatch(subdomains: string[]): Array<DomainValidationResult & { index: number; originalDomain: string }> {
     return subdomains.map((subdomain, index) => ({
@@ -123,7 +123,7 @@ export class DomainValidator {
   }
 
   /**
-   * 规范化域名（转换为小写）
+   * Normalize domain (convert to lowercase)
    */
   static normalize(domain: string): string | null {
     const result = this.validateDomain(domain)
@@ -134,21 +134,21 @@ export class DomainValidator {
   }
 
   /**
-   * 从子域名中提取根域名（使用 PSL - Public Suffix List）
-   * @param subdomain - 子域名（如 www.example.com, blog.github.io）
-   * @returns 根域名（如 example.com, blog.github.io）或 null
+   * Extract root domain from subdomain (using PSL - Public Suffix List)
+   * @param subdomain - Subdomain (e.g. www.example.com, blog.github.io)
+   * @returns Root domain (e.g. example.com, blog.github.io) or null
    * 
-   * 示例：
+   * Examples:
    * - www.example.com → example.com
    * - api.test.example.com → example.com
-   * - blog.github.io → blog.github.io (正确处理公共后缀)
-   * - www.bbc.co.uk → bbc.co.uk (正确处理多级 TLD)
+   * - blog.github.io → blog.github.io (correctly handles public suffix)
+   * - www.bbc.co.uk → bbc.co.uk (correctly handles multi-level TLD)
    */
   static extractRootDomain(subdomain: string): string | null {
     const trimmed = subdomain.trim().toLowerCase()
     if (!trimmed) return null
 
-    // 使用 tldts 解析域名
+    // Use tldts to parse domain
     const parsed = parseDomain(trimmed)
     if (!parsed.domain) {
       return null
@@ -157,9 +157,9 @@ export class DomainValidator {
   }
 
   /**
-   * 将子域名列表按根域名分组
-   * @param subdomains - 子域名列表
-   * @returns { grouped: Map<根域名, 子域名[]>, invalid: 无效的子域名[] }
+   * Group subdomain list by root domain
+   * @param subdomains - Subdomain list
+   * @returns { grouped: Map<root domain, subdomain[]>, invalid: invalid subdomains[] }
    */
   static groupSubdomainsByRootDomain(subdomains: string[]): {
     grouped: Map<string, string[]>
@@ -187,12 +187,12 @@ export class DomainValidator {
   }
 
   /**
-   * 检查子域名是否属于指定的根域名
-   * @param subdomain - 子域名（如 www.example.com, api.example.com）
-   * @param rootDomain - 根域名（如 example.com）
-   * @returns 是否属于该根域名
+   * Check if subdomain belongs to specified root domain
+   * @param subdomain - Subdomain (e.g. www.example.com, api.example.com)
+   * @param rootDomain - Root domain (e.g. example.com)
+   * @returns Whether it belongs to that root domain
    * 
-   * 示例：
+   * Examples:
    * - isSubdomainOf('www.example.com', 'example.com') → true
    * - isSubdomainOf('api.test.example.com', 'example.com') → true
    * - isSubdomainOf('www.test.com', 'example.com') → false
@@ -205,10 +205,10 @@ export class DomainValidator {
       return false
     }
     
-    // 提取子域名的根域名
+    // Extract root domain from subdomain
     const extractedRoot = this.extractRootDomain(trimmedSubdomain)
     
-    // 比较提取的根域名与目标根域名
+    // Compare extracted root domain with target root domain
     return extractedRoot === trimmedRootDomain
   }
 }

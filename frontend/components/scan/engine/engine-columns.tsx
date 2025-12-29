@@ -22,15 +22,34 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import * as yaml from "js-yaml"
 import type { ScanEngine } from "@/types/engine.types"
 
+// 翻译类型定义
+export interface EngineTranslations {
+  columns: {
+    engineName: string
+    subdomainDiscovery: string
+    portScan: string
+    siteScan: string
+    directoryScan: string
+    urlFetch: string
+    osint: string
+    vulnerabilityScan: string
+    wafDetection: string
+    screenshot: string
+  }
+  actions: {
+    editEngine: string
+    delete: string
+    openMenu: string
+  }
+  tooltips: {
+    editEngine: string
+  }
+}
+
 /**
  * 解析引擎的 YAML 配置并检测功能是否启用
- * 
- * 判断逻辑：
- * - 如果 YAML 中存在该配置项（即使是空对象 {}），则认为启用了该功能
- * - 空对象表示使用默认配置启用该功能
  */
 function parseEngineFeatures(engine: ScanEngine) {
-  // 如果引擎有 configuration 字段，解析 YAML
   if (engine.configuration) {
     try {
       const config = yaml.load(engine.configuration) as any
@@ -39,7 +58,7 @@ function parseEngineFeatures(engine: ScanEngine) {
         port_scan: !!config?.port_scan,
         site_scan: !!config?.site_scan,
         directory_scan: !!config?.directory_scan,
-        url_fetch: !!config?.url_fetch || !!config?.fetch_url, // 兼容 fetch_url
+        url_fetch: !!config?.url_fetch || !!config?.fetch_url,
         osint: !!config?.osint,
         vulnerability_scan: !!config?.vulnerability_scan,
         waf_detection: !!config?.waf_detection,
@@ -50,7 +69,6 @@ function parseEngineFeatures(engine: ScanEngine) {
     }
   }
   
-  // 无配置时，所有功能默认为禁用
   return {
     subdomain_discovery: false,
     port_scan: false,
@@ -82,10 +100,10 @@ function FeatureStatus({ enabled }: { enabled?: boolean }) {
   )
 }
 
-// 列创建函数的参数类型
 interface CreateColumnsProps {
   handleEdit: (engine: ScanEngine) => void
   handleDelete: (engine: ScanEngine) => void
+  t: EngineTranslations
 }
 
 /**
@@ -94,9 +112,11 @@ interface CreateColumnsProps {
 function EngineRowActions({
   onEdit,
   onDelete,
+  t,
 }: {
   onEdit: () => void
   onDelete: () => void
+  t: EngineTranslations
 }) {
   return (
     <DropdownMenu>
@@ -106,13 +126,13 @@ function EngineRowActions({
           className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
         >
           <MoreHorizontal />
-          <span className="sr-only">打开菜单</span>
+          <span className="sr-only">{t.actions.openMenu}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onEdit}>
           <Edit />
-          编辑引擎
+          {t.actions.editEngine}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -120,7 +140,7 @@ function EngineRowActions({
           className="text-destructive focus:text-destructive"
         >
           <Trash2 />
-          删除
+          {t.actions.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -133,16 +153,16 @@ function EngineRowActions({
 export const createEngineColumns = ({
   handleEdit,
   handleDelete,
+  t,
 }: CreateColumnsProps): ColumnDef<ScanEngine>[] => [
-  // 引擎名称列 - 可点击编辑
   {
     accessorKey: "name",
     size: 200,
     minSize: 150,
     maxSize: 350,
-    meta: { title: "Engine Name" },
+    meta: { title: t.columns.engineName },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Engine Name" />
+      <DataTableColumnHeader column={column} title={t.columns.engineName} />
     ),
     cell: ({ row }) => {
       const name = row.getValue("name") as string
@@ -156,18 +176,16 @@ export const createEngineColumns = ({
               {name}
             </button>
           </TooltipTrigger>
-          <TooltipContent>编辑引擎</TooltipContent>
+          <TooltipContent>{t.tooltips.editEngine}</TooltipContent>
         </Tooltip>
       )
     },
   },
-
-  // Subdomain Discovery
   {
     id: "subdomain_discovery",
-    meta: { title: "Subdomain Discovery" },
+    meta: { title: t.columns.subdomainDiscovery },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Subdomain Discovery" />
+      <DataTableColumnHeader column={column} title={t.columns.subdomainDiscovery} />
     ),
     size: 80,
     minSize: 60,
@@ -179,13 +197,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // Port Scan
   {
     id: "port_scan",
-    meta: { title: "Port Scan" },
+    meta: { title: t.columns.portScan },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Port Scan" />
+      <DataTableColumnHeader column={column} title={t.columns.portScan} />
     ),
     size: 80,
     minSize: 60,
@@ -197,13 +213,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // Site Scan (原 HTTP Crawl)
   {
     id: "site_scan",
-    meta: { title: "Site Scan" },
+    meta: { title: t.columns.siteScan },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Site Scan" />
+      <DataTableColumnHeader column={column} title={t.columns.siteScan} />
     ),
     size: 80,
     minSize: 60,
@@ -215,13 +229,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // Directory Scan
   {
     id: "directory_scan",
-    meta: { title: "Directory Scan" },
+    meta: { title: t.columns.directoryScan },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Directory Scan" />
+      <DataTableColumnHeader column={column} title={t.columns.directoryScan} />
     ),
     size: 80,
     minSize: 60,
@@ -233,13 +245,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // URL Fetch
   {
     id: "url_fetch",
-    meta: { title: "URL Fetch" },
+    meta: { title: t.columns.urlFetch },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="URL Fetch" />
+      <DataTableColumnHeader column={column} title={t.columns.urlFetch} />
     ),
     size: 80,
     minSize: 60,
@@ -251,13 +261,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // OSINT
   {
     id: "osint",
-    meta: { title: "OSINT" },
+    meta: { title: t.columns.osint },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="OSINT" />
+      <DataTableColumnHeader column={column} title={t.columns.osint} />
     ),
     size: 80,
     minSize: 60,
@@ -269,13 +277,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // Vulnerability Scan
   {
     id: "vulnerability_scan",
-    meta: { title: "Vulnerability Scan" },
+    meta: { title: t.columns.vulnerabilityScan },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vulnerability Scan" />
+      <DataTableColumnHeader column={column} title={t.columns.vulnerabilityScan} />
     ),
     size: 80,
     minSize: 60,
@@ -287,13 +293,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // WAF Detection
   {
     id: "waf_detection",
-    meta: { title: "WAF Detection" },
+    meta: { title: t.columns.wafDetection },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="WAF Detection" />
+      <DataTableColumnHeader column={column} title={t.columns.wafDetection} />
     ),
     size: 80,
     minSize: 60,
@@ -305,13 +309,11 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // Screenshot
   {
     id: "screenshot",
-    meta: { title: "Screenshot" },
+    meta: { title: t.columns.screenshot },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Screenshot" />
+      <DataTableColumnHeader column={column} title={t.columns.screenshot} />
     ),
     size: 80,
     minSize: 60,
@@ -323,8 +325,6 @@ export const createEngineColumns = ({
     },
     enableSorting: false,
   },
-
-  // 操作列
   {
     id: "actions",
     size: 60,
@@ -335,10 +335,10 @@ export const createEngineColumns = ({
       <EngineRowActions
         onEdit={() => handleEdit(row.original)}
         onDelete={() => handleDelete(row.original)}
+        t={t}
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
 ]
-

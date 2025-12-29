@@ -1,5 +1,5 @@
 /**
- * 指纹管理 API 服务
+ * Fingerprint management API service
  */
 
 import apiClient from "@/lib/api-client"
@@ -13,7 +13,7 @@ import type {
   FingerprintStats 
 } from "@/types/fingerprint.types"
 
-// 分页查询参数
+// Paginated query parameters
 interface QueryParams {
   page?: number
   pageSize?: number
@@ -24,7 +24,7 @@ export const FingerprintService = {
   // ==================== EHole ====================
   
   /**
-   * 获取 EHole 指纹列表
+   * Get EHole fingerprint list
    */
   async getEholeFingerprints(params: QueryParams = {}): Promise<PaginatedResponse<EholeFingerprint>> {
     const response = await apiClient.get("/fingerprints/ehole/", { params })
@@ -32,7 +32,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 获取 EHole 指纹详情
+   * Get EHole fingerprint details
    */
   async getEholeFingerprint(id: number): Promise<EholeFingerprint> {
     const response = await apiClient.get(`/fingerprints/ehole/${id}/`)
@@ -40,7 +40,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 创建单条 EHole 指纹
+   * Create single EHole fingerprint
    */
   async createEholeFingerprint(data: Omit<EholeFingerprint, 'id' | 'createdAt'>): Promise<EholeFingerprint> {
     const response = await apiClient.post("/fingerprints/ehole/", data)
@@ -48,7 +48,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 更新 EHole 指纹
+   * Update EHole fingerprint
    */
   async updateEholeFingerprint(id: number, data: Partial<EholeFingerprint>): Promise<EholeFingerprint> {
     const response = await apiClient.put(`/fingerprints/ehole/${id}/`, data)
@@ -56,14 +56,14 @@ export const FingerprintService = {
   },
 
   /**
-   * 删除单条 EHole 指纹
+   * Delete single EHole fingerprint
    */
   async deleteEholeFingerprint(id: number): Promise<void> {
     await apiClient.delete(`/fingerprints/ehole/${id}/`)
   },
 
   /**
-   * 批量创建 EHole 指纹
+   * Batch create EHole fingerprints
    */
   async batchCreateEholeFingerprints(fingerprints: Omit<EholeFingerprint, 'id' | 'createdAt'>[]): Promise<BatchCreateResponse> {
     const response = await apiClient.post("/fingerprints/ehole/batch_create/", { fingerprints })
@@ -71,7 +71,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 文件导入 EHole 指纹
+   * File import EHole fingerprints
    */
   async importEholeFingerprints(file: File): Promise<BatchCreateResponse> {
     const formData = new FormData()
@@ -83,7 +83,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 批量删除 EHole 指纹
+   * Bulk delete EHole fingerprints
    */
   async bulkDeleteEholeFingerprints(ids: number[]): Promise<BulkDeleteResponse> {
     const response = await apiClient.post("/fingerprints/ehole/bulk-delete/", { ids })
@@ -91,7 +91,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 删除所有 EHole 指纹
+   * Delete all EHole fingerprints
    */
   async deleteAllEholeFingerprints(): Promise<BulkDeleteResponse> {
     const response = await apiClient.post("/fingerprints/ehole/delete-all/")
@@ -99,7 +99,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 导出 EHole 指纹
+   * Export EHole fingerprints
    */
   async exportEholeFingerprints(): Promise<Blob> {
     const response = await apiClient.get("/fingerprints/ehole/export/", {
@@ -109,7 +109,7 @@ export const FingerprintService = {
   },
 
   /**
-   * 获取 EHole 指纹数量
+   * Get EHole fingerprint count
    */
   async getEholeCount(): Promise<number> {
     const response = await apiClient.get("/fingerprints/ehole/", { params: { pageSize: 1 } })
@@ -119,7 +119,7 @@ export const FingerprintService = {
   // ==================== Goby ====================
   
   /**
-   * 获取 Goby 指纹列表
+   * Get Goby fingerprint list
    */
   async getGobyFingerprints(params: QueryParams = {}): Promise<PaginatedResponse<GobyFingerprint>> {
     const response = await apiClient.get("/fingerprints/goby/", { params })

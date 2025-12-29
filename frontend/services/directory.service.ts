@@ -1,15 +1,15 @@
 import { api } from "@/lib/api-client"
 
-// 批量创建目录响应类型
+// Bulk create directories response type
 export interface BulkCreateDirectoriesResponse {
   message: string
   createdCount: number
 }
 
-/** 目录相关 API 服务 */
+/** Directory related API service */
 export class DirectoryService {
   /**
-   * 批量创建目录（绑定到目标）
+   * Bulk create directories (bind to target)
    * POST /api/targets/{target_id}/directories/bulk-create/
    */
   static async bulkCreateDirectories(
@@ -23,7 +23,7 @@ export class DirectoryService {
     return response.data
   }
 
-  /** 按目标导出所有目录 URL（文本文件，一行一个） */
+  /** Export all directory URLs by target (text file, one per line) */
   static async exportDirectoriesByTargetId(targetId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/targets/${targetId}/directories/export/`, {
       responseType: "blob",
@@ -31,7 +31,7 @@ export class DirectoryService {
     return response.data
   }
 
-  /** 按扫描任务导出所有目录 URL（文本文件，一行一个） */
+  /** Export all directory URLs by scan task (text file, one per line) */
   static async exportDirectoriesByScanId(scanId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/scans/${scanId}/directories/export/`, {
       responseType: "blob",

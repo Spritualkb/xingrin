@@ -19,10 +19,10 @@ export function useUpdateNucleiGitSettings() {
     mutationFn: (data: UpdateNucleiGitSettingsRequest) => NucleiGitService.updateSettings(data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["nuclei", "git", "settings"] })
-      toast.success(res?.message || "Git 仓库配置已保存")
+      toast.success(res?.message || "Git repository configuration saved")
     },
     onError: () => {
-      toast.error("保存 Git 仓库配置失败，请重试")
+      toast.error("Failed to save Git repository configuration, please try again")
     },
   })
 }

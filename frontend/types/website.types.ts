@@ -1,5 +1,5 @@
 /**
- * WebSite 相关类型定义
+ * WebSite related type definitions
  */
 
 export interface WebSite {

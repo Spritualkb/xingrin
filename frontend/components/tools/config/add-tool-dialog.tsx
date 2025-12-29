@@ -6,6 +6,7 @@ import { IconPlus } from "@tabler/icons-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useTranslations } from "next-intl"
 
 // 导入 UI 组件
 import { Button } from "@/components/ui/button"
@@ -40,22 +41,6 @@ import { useCreateTool, useUpdateTool } from "@/hooks/use-tools"
 import type { Tool } from "@/types/tool.types"
 import { CategoryNameMap } from "@/types/tool.types"
 
-// 表单验证 Schema
-const formSchema = z.object({
-  name: z.string()
-    .min(2, { message: "工具名称至少需要 2 个字符" })
-    .max(255, { message: "工具名称不能超过 255 个字符" }),
-  repoUrl: z.string().optional().or(z.literal("")),
-  version: z.string().max(100).optional().or(z.literal("")),
-  description: z.string().max(1000).optional().or(z.literal("")),
-  categoryNames: z.array(z.string()),
-  installCommand: z.string().min(1, { message: "安装命令不能为空" }),
-  updateCommand: z.string().min(1, { message: "更新命令不能为空" }),
-  versionCommand: z.string().min(1, { message: "版本查询命令不能为空" }),
-})
-
-type FormValues = z.infer<typeof formSchema>
-
 // 组件属性类型定义
 interface AddToolDialogProps {
   tool?: Tool                   // 要编辑的工具数据（可选，有值时为编辑模式）
@@ -89,13 +74,6 @@ function generateVersionCommand(toolName: string, installCommand: string): strin
 
 /**
  * 添加工具对话框组件（使用 React Query）
- * 
- * 功能特性：
- * 1. 自动管理提交状态
- * 2. 自动错误处理和成功提示
- * 3. 自动刷新相关数据
- * 4. 支持多分类标签选择
- * 5. 支持安装、更新、版本命令配置
  */
 export function AddToolDialog({
   tool,
@@ -103,6 +81,8 @@ export function AddToolDialog({
   open: externalOpen,
   onOpenChange: externalOnOpenChange
 }: AddToolDialogProps) {
+  const t = useTranslations("tools.config")
+  
   // 判断是编辑模式还是添加模式
   const isEditMode = !!tool
 
@@ -117,6 +97,22 @@ export function AddToolDialog({
   // 使用 React Query 的创建和更新工具 mutation
   const createTool = useCreateTool()
   const updateTool = useUpdateTool()
+
+  // 表单验证 Schema
+  const formSchema = z.object({
+    name: z.string()
+      .min(2, { message: t("toolNameMin") })
+      .max(255, { message: t("toolNameMax") }),
+    repoUrl: z.string().optional().or(z.literal("")),
+    version: z.string().max(100).optional().or(z.literal("")),
+    description: z.string().max(1000).optional().or(z.literal("")),
+    categoryNames: z.array(z.string()),
+    installCommand: z.string().min(1, { message: t("installCommandRequired") }),
+    updateCommand: z.string().min(1, { message: t("updateCommandRequired") }),
+    versionCommand: z.string().min(1, { message: t("versionCommandRequired") }),
+  })
+
+  type FormValues = z.infer<typeof formSchema>
 
   // 初始化表单
   const form = useForm<FormValues>({
@@ -178,19 +174,13 @@ export function AddToolDialog({
     }
 
     const onSuccessCallback = (response: { tool?: Tool }) => {
-      // 重置表单
       form.reset()
-
-      // 关闭对话框
       setOpen(false)
-
-      // 调用外部回调
       if (onAdd && response?.tool) {
         onAdd(response.tool)
       }
     }
 
-    // 根据模式选择创建或更新
     if (isEditMode && tool?.id) {
       updateTool.mutate(
         { id: tool.id, data: toolData },
@@ -231,68 +221,62 @@ export function AddToolDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {/* 触发按钮 - 仅在非外部控制时显示 */}
       {externalOpen === undefined && (
         <DialogTrigger asChild>
           <Button>
             <IconPlus className="h-5 w-5" />
-            添加工具
+            {t("addTool")}
           </Button>
         </DialogTrigger>
       )}
 
-      {/* 对话框内容 */}
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Wrench />
-            <span>{isEditMode ? "编辑工具" : "添加新工具"}</span>
+            <span>{isEditMode ? t("editTool") : t("addNewTool")}</span>
           </DialogTitle>
           <DialogDescription>
-            配置扫描工具的基本信息和执行命令。标有 * 的字段为必填项。
+            {t("dialogDesc")}
           </DialogDescription>
         </DialogHeader>
 
-        {/* 表单 */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid gap-6 py-4">
-              {/* 基本信息部分 */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground">基本信息</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground">{t("basicInfo")}</h3>
 
-                {/* 工具名称 */}
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>工具名称 <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("toolName")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="例如: Nuclei, Subfinder, HTTPX"
+                          placeholder={t("toolNamePlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           maxLength={255}
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>{field.value.length}/255 字符</FormDescription>
+                      <FormDescription>{t("characters", { count: field.value.length, max: 255 })}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* 仓库地址 */}
                 <FormField
                   control={form.control}
                   name="repoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>仓库地址</FormLabel>
+                      <FormLabel>{t("repoUrl")}</FormLabel>
                       <FormControl>
                         <Input
                           type="url"
-                          placeholder="https://github.com/projectdiscovery/nuclei"
+                          placeholder={t("repoUrlPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           maxLength={512}
                           {...field}
@@ -303,16 +287,15 @@ export function AddToolDialog({
                   )}
                 />
 
-                {/* 版本号 */}
                 <FormField
                   control={form.control}
                   name="version"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>当前版本</FormLabel>
+                      <FormLabel>{t("currentVersion")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="v3.0.0"
+                          placeholder={t("versionPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           maxLength={100}
                           {...field}
@@ -323,33 +306,30 @@ export function AddToolDialog({
                   )}
                 />
 
-                {/* 工具描述 */}
                 <FormField
                   control={form.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>工具描述</FormLabel>
+                      <FormLabel>{t("toolDesc")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="描述工具的功能、特点和使用场景..."
+                          placeholder={t("toolDescPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           rows={3}
                           maxLength={1000}
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>{(field.value || "").length}/1000 字符</FormDescription>
+                      <FormDescription>{t("characters", { count: (field.value || "").length, max: 1000 })}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* 分类标签 */}
                 <div className="grid gap-2">
-                  <FormLabel>分类标签</FormLabel>
+                  <FormLabel>{t("categoryTags")}</FormLabel>
 
-                  {/* 已选择的标签 */}
                   {watchCategoryNames.length > 0 && (
                     <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/50">
                       {watchCategoryNames.map((categoryName) => (
@@ -372,7 +352,6 @@ export function AddToolDialog({
                     </div>
                   )}
 
-                  {/* 可选择的标签 */}
                   <div className="flex flex-wrap gap-2 p-3 border rounded-md">
                     {availableCategories.length > 0 ? (
                       availableCategories.map((categoryName) => {
@@ -389,26 +368,24 @@ export function AddToolDialog({
                         )
                       })
                     ) : (
-                      <p className="text-sm text-muted-foreground">暂无可用分类</p>
+                      <p className="text-sm text-muted-foreground">{t("noCategories")}</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* 命令配置部分 */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground">命令配置</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground">{t("commandConfig")}</h3>
 
-                {/* 安装命令 */}
                 <FormField
                   control={form.control}
                   name="installCommand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>安装命令 <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("installCommand")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="git clone https://github.com/user/tool&#10;或&#10;go install -v github.com/tool@latest"
+                          placeholder={t("installCommandPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           rows={3}
                           className="font-mono text-sm"
@@ -416,12 +393,12 @@ export function AddToolDialog({
                         />
                       </FormControl>
                       <FormDescription className="space-y-1">
-                        <span className="block"><strong>示例：</strong></span>
-                        <span className="block">• 使用 git: <code className="bg-muted px-1 py-0.5 rounded">git clone https://github.com/user/tool</code></span>
-                        <span className="block">• 使用 go: <code className="bg-muted px-1 py-0.5 rounded">go install -v github.com/tool@latest</code></span>
+                        <span className="block"><strong>{t("installCommandHint")}</strong></span>
+                        <span className="block">• {t("installCommandGit")} <code className="bg-muted px-1 py-0.5 rounded">git clone https://github.com/user/tool</code></span>
+                        <span className="block">• {t("installCommandGo")} <code className="bg-muted px-1 py-0.5 rounded">go install -v github.com/tool@latest</code></span>
                         <span className="flex items-center gap-1 text-amber-600">
                           <AlertTriangle className="h-3.5 w-3.5" />
-                          注意：go get 已不再支持，请使用 go install
+                          {t("installCommandNote")}
                         </span>
                       </FormDescription>
                       <FormMessage />
@@ -429,16 +406,15 @@ export function AddToolDialog({
                   )}
                 />
 
-                {/* 更新命令 */}
                 <FormField
                   control={form.control}
                   name="updateCommand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>更新命令 <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("updateCommand")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="git pull&#10;或&#10;go install -v github.com/tool@latest"
+                          placeholder={t("updateCommandPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           rows={2}
                           className="font-mono text-sm"
@@ -446,31 +422,30 @@ export function AddToolDialog({
                         />
                       </FormControl>
                       <FormDescription className="space-y-1">
-                        <span className="block">• 使用 git clone 安装的工具，推荐使用 <code className="bg-muted px-1 py-0.5 rounded">git pull</code></span>
-                        <span className="block">• 使用 go install 安装的工具，推荐使用相同的安装命令</span>
+                        <span className="block">• {t("updateCommandGitHint")} <code className="bg-muted px-1 py-0.5 rounded">git pull</code></span>
+                        <span className="block">• {t("updateCommandGoHint")}</span>
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* 版本查询命令 */}
                 <FormField
                   control={form.control}
                   name="versionCommand"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        版本查询命令 <span className="text-destructive">*</span>
+                        {t("versionCommand")} <span className="text-destructive">*</span>
                         {field.value && (
                           <span className="ml-2 text-xs text-muted-foreground font-normal">
-                            已自动生成
+                            {t("versionCommandAutoGenerated")}
                           </span>
                         )}
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="toolname --version"
+                          placeholder={t("versionCommandPlaceholder")}
                           disabled={createTool.isPending || updateTool.isPending}
                           maxLength={500}
                           className="font-mono text-sm"
@@ -478,7 +453,7 @@ export function AddToolDialog({
                         />
                       </FormControl>
                       <FormDescription className="space-y-1">
-                        <span className="block">系统会使用此命令检查工具版本并提示更新。常见格式：</span>
+                        <span className="block">{t("versionCommandHint")}</span>
                         <span className="block">• <code className="bg-muted px-1 py-0.5 rounded">toolname -v</code></span>
                         <span className="block">• <code className="bg-muted px-1 py-0.5 rounded">toolname -V</code></span>
                         <span className="block">• <code className="bg-muted px-1 py-0.5 rounded">toolname --version</code></span>
@@ -491,7 +466,6 @@ export function AddToolDialog({
               </div>
             </div>
 
-            {/* 对话框底部按钮 */}
             <DialogFooter>
               <Button
                 type="button"
@@ -499,7 +473,7 @@ export function AddToolDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={createTool.isPending || updateTool.isPending}
               >
-                取消
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -508,12 +482,12 @@ export function AddToolDialog({
                 {(createTool.isPending || updateTool.isPending) ? (
                   <>
                     <LoadingSpinner />
-                    {isEditMode ? "保存中..." : "创建中..."}
+                    {isEditMode ? t("saving") : t("creating")}
                   </>
                 ) : (
                   <>
                     <IconPlus className="h-5 w-5" />
-                    {isEditMode ? "保存修改" : "创建工具"}
+                    {isEditMode ? t("saveChanges") : t("createTool")}
                   </>
                 )}
               </Button>

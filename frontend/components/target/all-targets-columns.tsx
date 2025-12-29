@@ -23,6 +23,29 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ExpandableBadgeList } from "@/components/ui/data-table/expandable-cell"
 import type { Target } from "@/types/target.types"
 
+// 翻译类型定义
+export interface AllTargetsTranslations {
+  columns: {
+    target: string
+    organization: string
+    addedOn: string
+    lastScanned: string
+  }
+  actions: {
+    scheduleScan: string
+    delete: string
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    targetDetails: string
+    targetSummary: string
+    initiateScan: string
+    clickToCopy: string
+    copied: string
+  }
+}
+
 /**
  * 复制到剪贴板（兼容 HTTP 环境）
  */
@@ -31,7 +54,6 @@ async function copyToClipboard(text: string): Promise<boolean> {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text)
     } else {
-      // Fallback: 使用临时 textarea
       const textArea = document.createElement('textarea')
       textArea.value = text
       textArea.style.position = 'fixed'
@@ -49,17 +71,28 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+interface CreateColumnsProps {
+  formatDate: (dateString: string) => string
+  navigate: (path: string) => void
+  handleDelete: (target: Target) => void
+  handleInitiateScan: (target: Target) => void
+  handleScheduleScan: (target: Target) => void
+  t: AllTargetsTranslations
+}
+
 /**
  * 目标名称单元格组件
  */
 function TargetNameCell({ 
   name, 
   targetId, 
-  navigate 
+  navigate,
+  t,
 }: { 
   name: string
   targetId: number
-  navigate: (path: string) => void 
+  navigate: (path: string) => void
+  t: AllTargetsTranslations
 }) {
   const [copied, setCopied] = React.useState(false)
   
@@ -68,10 +101,8 @@ function TargetNameCell({
     const success = await copyToClipboard(name)
     if (success) {
       setCopied(true)
-      toast.success("已复制目标名称")
+      toast.success(t.tooltips.copied)
       setTimeout(() => setCopied(false), 2000)
-    } else {
-      toast.error("复制失败")
     }
   }
   
@@ -86,7 +117,7 @@ function TargetNameCell({
             {name}
           </span>
         </TooltipTrigger>
-        <TooltipContent>目标详情</TooltipContent>
+        <TooltipContent>{t.tooltips.targetDetails}</TooltipContent>
       </Tooltip>
       <TooltipProvider delayDuration={300}>
         <Tooltip>
@@ -107,21 +138,12 @@ function TargetNameCell({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-xs">{copied ? '已复制!' : '点击复制'}</p>
+            <p className="text-xs">{copied ? t.tooltips.copied : t.tooltips.clickToCopy}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>
   )
-}
-
-// 列创建函数的参数类型
-interface CreateColumnsProps {
-  formatDate: (dateString: string) => string
-  navigate: (path: string) => void
-  handleDelete: (target: Target) => void
-  handleInitiateScan: (target: Target) => void
-  handleScheduleScan: (target: Target) => void
 }
 
 /**
@@ -133,16 +155,17 @@ function TargetRowActions({
   onInitiateScan,
   onScheduleScan,
   onDelete,
+  t,
 }: {
   target: Target
   onView: () => void
   onInitiateScan: () => void
   onScheduleScan: () => void
   onDelete: () => void
+  t: AllTargetsTranslations
 }) {
   return (
     <div className="flex items-center gap-1">
-      {/* Target Summary 按钮 */}
       <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -156,12 +179,11 @@ function TargetRowActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-xs">Target Summary</p>
+            <p className="text-xs">{t.tooltips.targetSummary}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      {/* Initiate Scan 按钮 */}
       <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -175,12 +197,11 @@ function TargetRowActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-xs">Initiate Scan</p>
+            <p className="text-xs">{t.tooltips.initiateScan}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      {/* 更多操作菜单 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -188,13 +209,12 @@ function TargetRowActions({
             className="h-8 w-8 p-0 data-[state=open]:bg-muted"
           >
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">更多操作</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={onScheduleScan}>
             <Calendar />
-            Schedule Scan
+            {t.actions.scheduleScan}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -202,7 +222,7 @@ function TargetRowActions({
             className="text-destructive focus:text-destructive"
           >
             <Trash2 />
-            Delete
+            {t.actions.delete}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -219,8 +239,8 @@ export const createAllTargetsColumns = ({
   handleDelete,
   handleInitiateScan,
   handleScheduleScan,
+  t,
 }: CreateColumnsProps): ColumnDef<Target>[] => [
-  // 选择列
   {
     id: "select",
     size: 40,
@@ -234,47 +254,44 @@ export const createAllTargetsColumns = ({
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={t.actions.selectAll}
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label={t.actions.selectRow}
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
-
-  // 目标名称列
   {
     accessorKey: "name",
     size: 350,
     minSize: 250,
-    meta: { title: "Target" },
+    meta: { title: t.columns.target },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Target" />
+      <DataTableColumnHeader column={column} title={t.columns.target} />
     ),
     cell: ({ row }) => (
       <TargetNameCell
         name={row.getValue("name") as string}
         targetId={row.original.id}
         navigate={navigate}
+        t={t}
       />
     ),
   },
-
-  // 所属组织列
   {
     accessorKey: "organizations",
     size: 200,
     minSize: 150,
     maxSize: 350,
-    meta: { title: "Organization" },
+    meta: { title: t.columns.organization },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Organization" />
+      <DataTableColumnHeader column={column} title={t.columns.organization} />
     ),
     cell: ({ row }) => {
       const organizations = row.getValue("organizations") as Array<{ id: number; name: string }> | undefined
@@ -288,16 +305,14 @@ export const createAllTargetsColumns = ({
     },
     enableSorting: false,
   },
-
-  // 创建时间列
   {
     accessorKey: "createdAt",
     size: 150,
     minSize: 120,
     maxSize: 200,
-    meta: { title: "Added On" },
+    meta: { title: t.columns.addedOn },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Added On" />
+      <DataTableColumnHeader column={column} title={t.columns.addedOn} />
     ),
     cell: ({ row }) => {
       const createdAt = row.getValue("createdAt") as string
@@ -308,16 +323,14 @@ export const createAllTargetsColumns = ({
       )
     },
   },
-
-  // 最后扫描时间列
   {
     accessorKey: "lastScannedAt",
     size: 150,
     minSize: 120,
     maxSize: 200,
-    meta: { title: "Last Scanned" },
+    meta: { title: t.columns.lastScanned },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Scanned" />
+      <DataTableColumnHeader column={column} title={t.columns.lastScanned} />
     ),
     cell: ({ row }) => {
       const lastScannedAt = row.original.lastScannedAt
@@ -331,8 +344,6 @@ export const createAllTargetsColumns = ({
       )
     },
   },
-
-  // 操作列
   {
     id: "actions",
     size: 120,
@@ -346,6 +357,7 @@ export const createAllTargetsColumns = ({
         onInitiateScan={() => handleInitiateScan(row.original)}
         onScheduleScan={() => handleScheduleScan(row.original)}
         onDelete={() => handleDelete(row.original)}
+        t={t}
       />
     ),
     enableSorting: false,

@@ -39,7 +39,7 @@ interface LoadingStateProps {
  * 用于页面级别的加载状态显示
  */
 export function LoadingState({ 
-  message = "加载中...", 
+  message, 
   size = "md", 
   className 
 }: LoadingStateProps) {
@@ -73,7 +73,7 @@ interface LoadingOverlayProps {
  */
 export function LoadingOverlay({ 
   isLoading, 
-  message = "加载中...", 
+  message, 
   children 
 }: LoadingOverlayProps) {
   return (

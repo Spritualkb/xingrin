@@ -1,5 +1,5 @@
 /**
- * 通知相关的 React Query hooks
+ * Notification-related React Query hooks
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -10,7 +10,7 @@ import type {
 import { toast } from 'sonner'
 
 /**
- * 获取通知列表
+ * Get notification list
  */
 export function useNotifications(params?: GetNotificationsRequest) {
   return useQuery({
@@ -20,18 +20,18 @@ export function useNotifications(params?: GetNotificationsRequest) {
 }
 
 /**
- * 获取未读通知数量
+ * Get unread notification count
  */
 export function useUnreadCount() {
   return useQuery({
     queryKey: ['notifications', 'unread-count'],
     queryFn: () => NotificationService.getUnreadCount(),
-    refetchInterval: 30000, // 每 30 秒自动刷新
+    refetchInterval: 30000, // Auto refresh every 30 seconds
   })
 }
 
 /**
- * 标记所有通知为已读
+ * Mark all notifications as read
  */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient()
@@ -42,7 +42,7 @@ export function useMarkAllAsRead() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
     onError: (error: any) => {
-      console.error('标记全部已读失败:', error)
+      console.error('Failed to mark all as read:', error)
     },
   })
 }

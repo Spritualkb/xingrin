@@ -3,6 +3,7 @@
 import { type Icon } from "@tabler/icons-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import {
   SidebarGroup,
@@ -22,12 +23,13 @@ export function NavSystem({
   }[]
 }) {
   const pathname = usePathname()
+  const tNav = useTranslations("navigation")
   const normalize = (p: string) => (p !== "/" && p.endsWith("/") ? p.slice(0, -1) : p)
   const current = normalize(pathname)
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>系统设置</SidebarGroupLabel>
+      <SidebarGroupLabel>{tNav("settings")}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const navUrl = normalize(item.url)

@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { IconPalette, IconCheck } from "@tabler/icons-react"
+import { useTranslations } from "next-intl"
 
 /**
  * 颜色主题切换器
  */
 export function ColorThemeSwitcher() {
   const { theme, setTheme, mounted } = useColorTheme()
+  const t = useTranslations("common.theme")
 
   if (!mounted) {
     return (
@@ -29,7 +31,7 @@ export function ColorThemeSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <IconPalette className="h-4 w-4" />
-          <span className="sr-only">切换主题色</span>
+          <span className="sr-only">{t("switchColor")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

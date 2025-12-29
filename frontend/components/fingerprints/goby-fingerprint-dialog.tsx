@@ -28,6 +28,7 @@ import {
   useUpdateGobyFingerprint,
 } from "@/hooks/use-fingerprints"
 import type { GobyFingerprint, GobyRule } from "@/types/fingerprint.types"
+import { useTranslations } from "next-intl"
 
 interface GobyFingerprintDialogProps {
   open: boolean
@@ -60,6 +61,9 @@ export function GobyFingerprintDialog({
   onSuccess,
 }: GobyFingerprintDialogProps) {
   const isEdit = !!fingerprint
+  const t = useTranslations("tools.fingerprints")
+  const tCommon = useTranslations("common.actions")
+  const tColumns = useTranslations("columns.fingerprint")
 
   const createMutation = useCreateGobyFingerprint()
   const updateMutation = useUpdateGobyFingerprint()
@@ -76,7 +80,7 @@ export function GobyFingerprintDialog({
     defaultValues: {
       name: "",
       logic: "a",
-      rule: [{ label: "title", feature: "", isEqual: true }],
+      rule: [{ label: "title", feature: "", is_equal: true }],
     },
   })
 
@@ -92,20 +96,20 @@ export function GobyFingerprintDialog({
         logic: fingerprint.logic,
         rule: fingerprint.rule.length > 0 
           ? fingerprint.rule 
-          : [{ label: "title", feature: "", isEqual: true }],
+          : [{ label: "title", feature: "", is_equal: true }],
       })
     } else {
       reset({
         name: "",
         logic: "a",
-        rule: [{ label: "title", feature: "", isEqual: true }],
+        rule: [{ label: "title", feature: "", is_equal: true }],
       })
     }
   }, [fingerprint, reset])
 
   const onSubmit = async (data: FormData) => {
     if (data.rule.length === 0) {
-      toast.error("至少需要一条规则")
+      toast.error(t("form.logicRequired"))
       return
     }
 
@@ -118,21 +122,21 @@ export function GobyFingerprintDialog({
     try {
       if (isEdit && fingerprint) {
         await updateMutation.mutateAsync({ id: fingerprint.id, data: payload })
-        toast.success("更新成功")
+        toast.success(t("toast.updateSuccess"))
       } else {
         await createMutation.mutateAsync(payload)
-        toast.success("创建成功")
+        toast.success(t("toast.createSuccess"))
       }
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      toast.error(error.message || (isEdit ? "更新失败" : "创建失败"))
+      toast.error(error.message || (isEdit ? t("toast.updateFailed") : t("toast.createFailed")))
     }
   }
 
   const addRule = () => {
     const nextLabel = String.fromCharCode(97 + fields.length)
-    append({ label: "title", feature: "", isEqual: true })
+    append({ label: "title", feature: "", is_equal: true })
   }
 
   const watchedRules = watch("rule")
@@ -141,9 +145,9 @@ export function GobyFingerprintDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "编辑 Goby 指纹" : "添加 Goby 指纹"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("goby.editTitle") : t("goby.addTitle")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "修改指纹规则配置" : "添加新的指纹规则"}
+            {isEdit ? t("goby.editDesc") : t("goby.addDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -151,11 +155,11 @@ export function GobyFingerprintDialog({
           {/* 产品名称 & 逻辑表达式 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">产品名称 *</Label>
+              <Label htmlFor="name">{tColumns("name") || "Name"} *</Label>
               <Input
                 id="name"
-                placeholder="如：Apache、Nginx"
-                {...register("name", { required: "产品名称不能为空" })}
+                placeholder={t("form.namePlaceholder")}
+                {...register("name", { required: t("form.nameRequired") })}
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -163,11 +167,11 @@ export function GobyFingerprintDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="logic">逻辑表达式 *</Label>
+              <Label htmlFor="logic">{tColumns("logic")} *</Label>
               <Input
                 id="logic"
-                placeholder="如：a||b、(a&&b)||c"
-                {...register("logic", { required: "逻辑表达式不能为空" })}
+                placeholder={t("form.logicPlaceholder")}
+                {...register("logic", { required: t("form.logicRequired") })}
               />
               {errors.logic && (
                 <p className="text-sm text-destructive">{errors.logic.message}</p>
@@ -175,17 +179,13 @@ export function GobyFingerprintDialog({
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            逻辑表达式：&& 表示 AND，|| 表示 OR，支持括号分组
-          </p>
-
           {/* 规则列表 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>规则列表 *</Label>
+              <Label>{tColumns("rules")} *</Label>
               <Button type="button" variant="outline" size="sm" onClick={addRule}>
                 <IconPlus className="h-4 w-4" />
-                添加规则
+                {tCommon("add")}
               </Button>
             </div>
             
@@ -212,16 +212,16 @@ export function GobyFingerprintDialog({
                   <div className="flex-1">
                     <Input
                       {...register(`rule.${index}.feature` as const, { required: true })}
-                      placeholder="匹配特征"
+                      placeholder={t("form.featurePlaceholder")}
                       className="h-8"
                     />
                   </div>
                   <div className="flex items-center gap-1">
                     <Checkbox
-                      checked={watchedRules[index]?.isEqual ?? true}
-                      onCheckedChange={(checked) => setValue(`rule.${index}.isEqual`, !!checked)}
+                      checked={watchedRules[index]?.is_equal ?? true}
+                      onCheckedChange={(checked) => setValue(`rule.${index}.is_equal`, !!checked)}
                     />
-                    <span className="text-xs text-muted-foreground">匹配</span>
+                    <span className="text-xs text-muted-foreground">Match</span>
                   </div>
                   <Button
                     type="button"
@@ -240,10 +240,10 @@ export function GobyFingerprintDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "保存中..." : isEdit ? "更新" : "创建"}
+              {isSubmitting ? "..." : isEdit ? tCommon("save") : tCommon("create")}
             </Button>
           </DialogFooter>
         </form>

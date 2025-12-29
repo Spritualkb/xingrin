@@ -9,7 +9,7 @@ import type {
   BatchDeleteEndpointsResponse
 } from "@/types/endpoint.types"
 
-// 批量创建端点响应类型
+// Bulk create endpoints response type
 export interface BulkCreateEndpointsResponse {
   message: string
   createdCount: number
@@ -18,7 +18,7 @@ export interface BulkCreateEndpointsResponse {
 export class EndpointService {
 
   /**
-   * 批量创建端点（绑定到目标）
+   * Bulk create endpoints (bind to target)
    * POST /api/targets/{target_id}/endpoints/bulk-create/
    */
   static async bulkCreateEndpoints(
@@ -33,7 +33,7 @@ export class EndpointService {
   }
 
   /**
-   * 获取单个 Endpoint 详情
+   * Get single Endpoint details
    * @param id - Endpoint ID
    * @returns Promise<Endpoint>
    */
@@ -43,12 +43,12 @@ export class EndpointService {
   }
 
   /**
-   * 获取 Endpoint 列表
-   * @param params - 查询参数
+   * Get Endpoint list
+   * @param params - Query parameters
    * @returns Promise<GetEndpointsResponse>
    */
   static async getEndpoints(params: GetEndpointsRequest): Promise<GetEndpointsResponse> {
-    // api-client.ts 会自动将 params 对象的驼峰转换为下划线
+    // api-client.ts automatically converts camelCase params to snake_case
     const response = await api.get<GetEndpointsResponse>('/endpoints/', {
       params
     })
@@ -56,14 +56,14 @@ export class EndpointService {
   }
 
   /**
-   * 根据目标ID获取 Endpoint 列表（专用路由）
-   * @param targetId - 目标ID
-   * @param params - 其他查询参数
-   * @param filter - 智能过滤查询字符串
+   * Get Endpoint list by target ID (dedicated route)
+   * @param targetId - Target ID
+   * @param params - Other query parameters
+   * @param filter - Smart filter query string
    * @returns Promise<GetEndpointsResponse>
    */
   static async getEndpointsByTargetId(targetId: number, params: GetEndpointsRequest, filter?: string): Promise<GetEndpointsResponse> {
-    // api-client.ts 会自动将 params 对象的驼峰转换为下划线
+    // api-client.ts automatically converts camelCase params to snake_case
     const response = await api.get<GetEndpointsResponse>(`/targets/${targetId}/endpoints/`, {
       params: { ...params, filter }
     })
@@ -71,10 +71,10 @@ export class EndpointService {
   }
 
   /**
-   * 根据扫描ID获取 Endpoint 列表（历史快照）
-   * @param scanId - 扫描任务 ID
-   * @param params - 分页等查询参数
-   * @param filter - 智能过滤查询字符串
+   * Get Endpoint list by scan ID (historical snapshot)
+   * @param scanId - Scan task ID
+   * @param params - Pagination and other query parameters
+   * @param filter - Smart filter query string
    */
   static async getEndpointsByScanId(
     scanId: number,
@@ -88,19 +88,19 @@ export class EndpointService {
   }
 
   /**
-   * 批量创建 Endpoint
-   * @param data - 创建请求对象
-   * @param data.endpoints - Endpoint 数据数组
+   * Batch create Endpoints
+   * @param data - Create request object
+   * @param data.endpoints - Endpoint data array
    * @returns Promise<CreateEndpointsResponse>
    */
   static async createEndpoints(data: { endpoints: Array<CreateEndpointRequest> }): Promise<any> {
-    // api-client.ts 会自动将请求体的驼峰转换为下划线
+    // api-client.ts automatically converts camelCase request body to snake_case
     const response = await api.post('/endpoints/create/', data)
     return response.data
   }
 
   /**
-   * 删除 Endpoint
+   * Delete Endpoint
    * @param id - Endpoint ID
    * @returns Promise<void>
    */
@@ -109,18 +109,18 @@ export class EndpointService {
   }
 
   /**
-   * 批量删除 Endpoint
-   * @param data - 批量删除请求对象
-   * @param data.endpointIds - Endpoint ID 列表
+   * Batch delete Endpoints
+   * @param data - Batch delete request object
+   * @param data.endpointIds - Endpoint ID list
    * @returns Promise<BatchDeleteEndpointsResponse>
    */
   static async batchDeleteEndpoints(data: BatchDeleteEndpointsRequest): Promise<BatchDeleteEndpointsResponse> {
-    // api-client.ts 会自动将请求体的驼峰转换为下划线
+    // api-client.ts automatically converts camelCase request body to snake_case
     const response = await api.post<BatchDeleteEndpointsResponse>('/endpoints/batch-delete/', data)
     return response.data
   }
 
-  /** 按目标导出所有端点 URL（文本文件，一行一个） */
+  /** Export all endpoint URLs by target (text file, one per line) */
   static async exportEndpointsByTargetId(targetId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/targets/${targetId}/endpoints/export/`, {
       responseType: 'blob',
@@ -128,7 +128,7 @@ export class EndpointService {
     return response.data
   }
 
-  /** 按扫描任务导出所有端点 URL（文本文件，一行一个） */
+  /** Export all endpoint URLs by scan task (text file, one per line) */
   static async exportEndpointsByScanId(scanId: number): Promise<Blob> {
     const response = await api.get<Blob>(`/scans/${scanId}/endpoints/export/`, {
       responseType: 'blob',

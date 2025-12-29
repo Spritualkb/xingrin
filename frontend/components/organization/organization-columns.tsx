@@ -1,6 +1,5 @@
-"use client" // 标记为客户端组件，可以使用浏览器 API 和交互功能
+"use client"
 
-// 导入表格相关类型和组件
 import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -12,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-// 导入图标组件
 import { MoreHorizontal, Play, Calendar, Edit, Trash2, Eye } from "lucide-react"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ExpandableCell } from "@/components/ui/data-table/expandable-cell"
@@ -22,34 +20,56 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-// 导入 Next.js Link 组件
 import Link from "next/link"
 
-// 导入类型定义
 import type { Organization } from "@/types/organization.types"
+
+// 翻译类型定义
+export interface OrganizationTranslations {
+  columns: {
+    organization: string
+    description: string
+    totalTargets: string
+    added: string
+  }
+  actions: {
+    scheduleScan: string
+    editOrganization: string
+    delete: string
+    openMenu: string
+    selectAll: string
+    selectRow: string
+  }
+  tooltips: {
+    targetSummary: string
+    initiateScan: string
+  }
+}
 
 // 列创建函数的参数类型
 interface CreateColumnsProps {
-  formatDate: (dateString: string) => string      // 日期格式化函数
-  navigate: (path: string) => void                // 导航函数
-  handleEdit: (org: Organization) => void         // 编辑处理函数
-  handleDelete: (org: Organization) => void       // 删除处理函数
-  handleInitiateScan: (org: Organization) => void // 发起扫描处理函数
-  handleScheduleScan: (org: Organization) => void // 计划扫描处理函数
+  formatDate: (dateString: string) => string
+  navigate: (path: string) => void
+  handleEdit: (org: Organization) => void
+  handleDelete: (org: Organization) => void
+  handleInitiateScan: (org: Organization) => void
+  handleScheduleScan: (org: Organization) => void
+  t: OrganizationTranslations
 }
 
 /**
  * 组织行操作组件
- * 提供计划扫描、编辑、删除等操作
  */
 function OrganizationRowActions({ 
   onScheduleScan,
   onEdit, 
-  onDelete 
+  onDelete,
+  t,
 }: {
   onScheduleScan: () => void
   onEdit: () => void
   onDelete: () => void
+  t: OrganizationTranslations
 }) {
   return (
     <DropdownMenu>
@@ -59,25 +79,25 @@ function OrganizationRowActions({
           className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
         >
           <MoreHorizontal />
-          <span className="sr-only">打开菜单</span>
+          <span className="sr-only">{t.actions.openMenu}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onScheduleScan}>
           <Calendar />
-          Schedule Scan
+          {t.actions.scheduleScan}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onEdit}>
           <Edit />
-          Edit Organization
+          {t.actions.editOrganization}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={onDelete}
           className="text-destructive focus:text-destructive"
         >
           <Trash2 />
-          Delete
+          {t.actions.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -86,12 +106,6 @@ function OrganizationRowActions({
 
 /**
  * 创建组织表格列定义
- * 
- * @param formatDate - 日期格式化函数
- * @param navigate - 页面导航函数
- * @param handleEdit - 编辑处理函数
- * @param handleDelete - 删除处理函数
- * @returns 表格列定义数组
  */
 export const createOrganizationColumns = ({
   formatDate,
@@ -100,8 +114,8 @@ export const createOrganizationColumns = ({
   handleDelete,
   handleInitiateScan,
   handleScheduleScan,
+  t,
 }: CreateColumnsProps): ColumnDef<Organization>[] => [
-  // 选择列 - 支持单选和全选
   {
     id: "select",
     size: 40,
@@ -115,28 +129,26 @@ export const createOrganizationColumns = ({
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={t.actions.selectAll}
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label={t.actions.selectRow}
       />
     ),
-    enableSorting: false,  // 禁用排序
-    enableHiding: false,   // 禁用隐藏
+    enableSorting: false,
+    enableHiding: false,
   },
-  
-  // 组织名称列
   {
     accessorKey: "name",
     size: 200,
     minSize: 150,
-    meta: { title: "Organization" },
+    meta: { title: t.columns.organization },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Organization" />
+      <DataTableColumnHeader column={column} title={t.columns.organization} />
     ),
     cell: ({ row }) => {
       const organization = row.original
@@ -152,29 +164,25 @@ export const createOrganizationColumns = ({
       )
     },
   },
-  
-  // 组织描述列
   {
     accessorKey: "description",
     size: 300,
     minSize: 200,
-    meta: { title: "Description" },
+    meta: { title: t.columns.description },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
+      <DataTableColumnHeader column={column} title={t.columns.description} />
     ),
     cell: ({ row }) => (
       <ExpandableCell value={row.getValue("description")} variant="muted" />
     ),
   },
-  
-  // Total Targets 列
   {
     accessorKey: "targetCount",
     size: 120,
     minSize: 80,
-    meta: { title: "Total Targets" },
+    meta: { title: t.columns.totalTargets },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Targets" />
+      <DataTableColumnHeader column={column} title={t.columns.totalTargets} />
     ),
     cell: ({ row }) => {
       const targetCount = row.original.targetCount ?? 0
@@ -187,19 +195,16 @@ export const createOrganizationColumns = ({
       )
     },
   },
-
-  // Added 列（创建时间）
   {
     accessorKey: "createdAt",
     size: 150,
     minSize: 120,
-    meta: { title: "Added" },
+    meta: { title: t.columns.added },
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Added" />
+      <DataTableColumnHeader column={column} title={t.columns.added} />
     ),
     cell: ({ row }) => {
       const createdAt = row.getValue("createdAt") as string | undefined
-      // 检查是否为零值时间
       const isZeroTime = createdAt && (
         createdAt === "0001-01-01T00:00:00Z" ||
         createdAt.startsWith("0001-01-01")
@@ -214,8 +219,6 @@ export const createOrganizationColumns = ({
       )
     },
   },
-  
-  // 操作列
   {
     id: "actions",
     size: 120,
@@ -224,7 +227,6 @@ export const createOrganizationColumns = ({
     enableResizing: false,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        {/* Target Summary 按钮 */}
         <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -238,12 +240,11 @@ export const createOrganizationColumns = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p className="text-xs">Target Summary</p>
+              <p className="text-xs">{t.tooltips.targetSummary}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        {/* Initiate Scan 按钮 */}
         <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -257,20 +258,20 @@ export const createOrganizationColumns = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p className="text-xs">Initiate Scan</p>
+              <p className="text-xs">{t.tooltips.initiateScan}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        {/* 更多操作菜单 */}
         <OrganizationRowActions
           onScheduleScan={() => handleScheduleScan(row.original)}
           onEdit={() => handleEdit(row.original)}
           onDelete={() => handleDelete(row.original)}
+          t={t}
         />
       </div>
     ),
-    enableSorting: false,  // 禁用排序
-    enableHiding: false,   // 禁用隐藏
+    enableSorting: false,
+    enableHiding: false,
   },
 ]

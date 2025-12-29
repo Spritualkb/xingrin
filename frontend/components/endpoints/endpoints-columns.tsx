@@ -8,8 +8,32 @@ import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import type { Endpoint } from "@/types/endpoint.types"
 import { ExpandableCell, ExpandableTagList } from "@/components/ui/data-table/expandable-cell"
 
+// 翻译类型定义
+export interface EndpointTranslations {
+  columns: {
+    url: string
+    title: string
+    status: string
+    contentLength: string
+    location: string
+    webServer: string
+    contentType: string
+    technologies: string
+    bodyPreview: string
+    vhost: string
+    gfPatterns: string
+    responseTime: string
+    createdAt: string
+  }
+  actions: {
+    selectAll: string
+    selectRow: string
+  }
+}
+
 interface CreateColumnsProps {
   formatDate: (dateString: string) => string
+  t: EndpointTranslations
 }
 
 function HttpStatusBadge({ statusCode }: { statusCode: number | null | undefined }) {
@@ -46,6 +70,7 @@ function HttpStatusBadge({ statusCode }: { statusCode: number | null | undefined
 
 export function createEndpointColumns({
   formatDate,
+  t,
 }: CreateColumnsProps): ColumnDef<Endpoint>[] {
   return [
     {
@@ -61,14 +86,14 @@ export function createEndpointColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t.actions.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t.actions.selectRow}
         />
       ),
       enableSorting: false,
@@ -76,9 +101,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "url",
-      meta: { title: "URL" },
+      meta: { title: t.columns.url },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="URL" />
+        <DataTableColumnHeader column={column} title={t.columns.url} />
       ),
       size: 400,
       minSize: 200,
@@ -89,9 +114,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "title",
-      meta: { title: "Title" },
+      meta: { title: t.columns.title },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Title" />
+        <DataTableColumnHeader column={column} title={t.columns.title} />
       ),
       size: 150,
       minSize: 100,
@@ -102,9 +127,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "statusCode",
-      meta: { title: "Status" },
+      meta: { title: t.columns.status },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t.columns.status} />
       ),
       size: 80,
       minSize: 60,
@@ -116,9 +141,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "contentLength",
-      meta: { title: "Content Length" },
+      meta: { title: t.columns.contentLength },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Content Length" />
+        <DataTableColumnHeader column={column} title={t.columns.contentLength} />
       ),
       size: 100,
       minSize: 80,
@@ -133,9 +158,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "location",
-      meta: { title: "Location" },
+      meta: { title: t.columns.location },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Location" />
+        <DataTableColumnHeader column={column} title={t.columns.location} />
       ),
       size: 150,
       minSize: 100,
@@ -146,9 +171,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "webserver",
-      meta: { title: "Web Server" },
+      meta: { title: t.columns.webServer },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Web Server" />
+        <DataTableColumnHeader column={column} title={t.columns.webServer} />
       ),
       size: 120,
       minSize: 80,
@@ -159,9 +184,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "contentType",
-      meta: { title: "Content Type" },
+      meta: { title: t.columns.contentType },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Content Type" />
+        <DataTableColumnHeader column={column} title={t.columns.contentType} />
       ),
       size: 120,
       minSize: 80,
@@ -172,9 +197,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "tech",
-      meta: { title: "Technologies" },
+      meta: { title: t.columns.technologies },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Technologies" />
+        <DataTableColumnHeader column={column} title={t.columns.technologies} />
       ),
       size: 200,
       minSize: 150,
@@ -191,9 +216,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "bodyPreview",
-      meta: { title: "Body Preview" },
+      meta: { title: t.columns.bodyPreview },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Body Preview" />
+        <DataTableColumnHeader column={column} title={t.columns.bodyPreview} />
       ),
       size: 350,
       minSize: 250,
@@ -203,9 +228,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "vhost",
-      meta: { title: "VHost" },
+      meta: { title: t.columns.vhost },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="VHost" />
+        <DataTableColumnHeader column={column} title={t.columns.vhost} />
       ),
       size: 80,
       minSize: 60,
@@ -218,9 +243,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "gfPatterns",
-      meta: { title: "GF Patterns" },
+      meta: { title: t.columns.gfPatterns },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="GF Patterns" />
+        <DataTableColumnHeader column={column} title={t.columns.gfPatterns} />
       ),
       size: 150,
       minSize: 100,
@@ -239,9 +264,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "responseTime",
-      meta: { title: "Response Time" },
+      meta: { title: t.columns.responseTime },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Response Time" />
+        <DataTableColumnHeader column={column} title={t.columns.responseTime} />
       ),
       size: 100,
       minSize: 80,
@@ -257,9 +282,9 @@ export function createEndpointColumns({
     },
     {
       accessorKey: "createdAt",
-      meta: { title: "Created At" },
+      meta: { title: t.columns.createdAt },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created At" />
+        <DataTableColumnHeader column={column} title={t.columns.createdAt} />
       ),
       size: 150,
       minSize: 120,

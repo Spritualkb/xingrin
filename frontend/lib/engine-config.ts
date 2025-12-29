@@ -13,33 +13,33 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
-/** 统一的能力标签颜色（使用全局 CSS 变量） */
+/** Unified capability tag color (using global CSS variables) */
 const CAPABILITY_COLOR = "bg-primary/10 text-primary border-primary/20"
 
 /**
- * 引擎能力配置（使用全局 CSS 颜色）
- * 用于发起扫描、快速扫描等引擎选择界面
+ * Engine capability configuration (using global CSS colors)
+ * Used for scan initiation, quick scan and other engine selection interfaces
  */
 export const CAPABILITY_CONFIG: Record<string, { 
   label: string
   color: string
   icon: LucideIcon 
 }> = {
-  subdomain_discovery: { label: "子域名发现", color: CAPABILITY_COLOR, icon: Globe },
-  port_scan: { label: "端口扫描", color: CAPABILITY_COLOR, icon: Network },
-  site_scan: { label: "站点扫描", color: CAPABILITY_COLOR, icon: Monitor },
-  fingerprint_detect: { label: "指纹识别", color: CAPABILITY_COLOR, icon: Fingerprint },
-  directory_scan: { label: "目录扫描", color: CAPABILITY_COLOR, icon: FolderSearch },
-  url_fetch: { label: "URL 抓取", color: CAPABILITY_COLOR, icon: Link },
-  vuln_scan: { label: "漏洞扫描", color: CAPABILITY_COLOR, icon: ShieldAlert },
-  waf_detection: { label: "WAF 检测", color: CAPABILITY_COLOR, icon: Shield },
-  screenshot: { label: "截图", color: CAPABILITY_COLOR, icon: Camera },
+  subdomain_discovery: { label: "Subdomain Discovery", color: CAPABILITY_COLOR, icon: Globe },
+  port_scan: { label: "Port Scan", color: CAPABILITY_COLOR, icon: Network },
+  site_scan: { label: "Site Scan", color: CAPABILITY_COLOR, icon: Monitor },
+  fingerprint_detect: { label: "Fingerprint Detection", color: CAPABILITY_COLOR, icon: Fingerprint },
+  directory_scan: { label: "Directory Scan", color: CAPABILITY_COLOR, icon: FolderSearch },
+  url_fetch: { label: "URL Fetch", color: CAPABILITY_COLOR, icon: Link },
+  vuln_scan: { label: "Vulnerability Scan", color: CAPABILITY_COLOR, icon: ShieldAlert },
+  waf_detection: { label: "WAF Detection", color: CAPABILITY_COLOR, icon: Shield },
+  screenshot: { label: "Screenshot", color: CAPABILITY_COLOR, icon: Camera },
   osint: { label: "OSINT", color: CAPABILITY_COLOR, icon: Search },
 }
 
 /**
- * 根据引擎能力获取主图标
- * 按优先级返回第一个匹配的能力图标
+ * Get main icon based on engine capabilities
+ * Returns the first matching capability icon by priority
  */
 export function getEngineIcon(capabilities: string[]): LucideIcon {
   const priorityOrder = [
@@ -63,7 +63,7 @@ export function getEngineIcon(capabilities: string[]): LucideIcon {
 }
 
 /**
- * 解析引擎配置以获取能力列表
+ * Parse engine configuration to get capability list
  */
 export function parseEngineCapabilities(configuration: string): string[] {
   if (!configuration) return []

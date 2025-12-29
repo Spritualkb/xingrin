@@ -1,8 +1,8 @@
 /**
- * URL 验证工具类
+ * URL validation utility class
  * 
- * 提供 URL 的解析和验证功能，用于批量添加 URL 时的前端验证。
- * 支持 Endpoints、Websites、Directories 三种资产类型。
+ * Provides URL parsing and validation functionality for frontend validation when adding URLs in batch.
+ * Supports three asset types: Endpoints, Websites, Directories.
  */
 
 export type TargetType = 'domain' | 'ip' | 'cidr'
@@ -12,7 +12,7 @@ export interface URLValidationResult {
   url: string
   error?: string
   index: number
-  isMatched?: boolean  // 是否匹配目标（仅当提供 targetName 时有效）
+  isMatched?: boolean  // Whether it matches the target (only valid when targetName is provided)
 }
 
 export interface ParseResult {
@@ -20,20 +20,20 @@ export interface ParseResult {
   validCount: number
   invalidCount: number
   duplicateCount: number
-  mismatchedCount: number  // 不匹配目标的 URL 数量
+  mismatchedCount: number  // Number of URLs that don't match the target
   invalidItems: URLValidationResult[]
-  mismatchedItems: URLValidationResult[]  // 不匹配目标的 URL 列表
+  mismatchedItems: URLValidationResult[]  // List of URLs that don't match the target
 }
 
-// URL 最大长度
+// Maximum URL length
 const MAX_URL_LENGTH = 2000
 
-// URL 格式正则：必须以 http:// 或 https:// 开头
+// URL format regex: must start with http:// or https://
 const URL_PROTOCOL_REGEX = /^https?:\/\//i
 
 export class URLValidator {
   /**
-   * 解析输入文本，仅支持换行分隔（每行一个 URL）
+   * Parse input text, only supports newline separation (one URL per line)
    */
   static parse(input: string): string[] {
     if (!input || typeof input !== 'string') {
@@ -47,15 +47,15 @@ export class URLValidator {
   }
 
   /**
-   * 检查 URL 的 hostname 是否匹配目标
+   * Check if URL hostname matches the target
    * 
-   * 匹配规则（简单前端校验，仅做提示，不阻止提交）：
-   * - 域名类型：hostname === targetName 或 hostname.endsWith('.'+targetName)
-   * - IP 类型：hostname === targetName
-   * - CIDR 类型：跳过校验（前端无法判断 IP 是否在 CIDR 范围内）
+   * Matching rules (simple frontend validation, for hints only, does not block submission):
+   * - Domain type: hostname === targetName or hostname.endsWith('.'+targetName)
+   * - IP type: hostname === targetName
+   * - CIDR type: skip validation (frontend cannot determine if IP is within CIDR range)
    */
   static checkMatch(url: string, targetName: string, targetType: TargetType): boolean {
-    // CIDR 类型跳过前端校验
+    // Skip frontend validation for CIDR type
     if (targetType === 'cidr') {
       return true
     }
@@ -66,10 +66,10 @@ export class URLValidator {
       const target = targetName.toLowerCase()
       
       if (targetType === 'domain') {
-        // 域名类型：hostname 等于 target 或以 .target 结尾
+        // Domain type: hostname equals target or ends with .target
         return hostname === target || hostname.endsWith('.' + target)
       } else if (targetType === 'ip') {
-        // IP 类型：hostname 必须完全等于 target
+        // IP type: hostname must exactly equal target
         return hostname === target
       }
       
@@ -80,54 +80,54 @@ export class URLValidator {
   }
 
   /**
-   * 验证单个 URL 格式
+   * Validate single URL format
    */
   static validate(url: string, index: number = 0, targetName?: string, targetType?: TargetType): URLValidationResult {
     const trimmed = url.trim()
     
-    // 空值检查
+    // Empty value check
     if (!trimmed) {
       return {
         isValid: false,
         url: url,
-        error: 'URL 不能为空',
+        error: 'URL cannot be empty',
         index,
       }
     }
     
-    // 长度检查
+    // Length check
     if (trimmed.length > MAX_URL_LENGTH) {
       return {
         isValid: false,
         url: trimmed,
-        error: `URL 长度不能超过 ${MAX_URL_LENGTH} 个字符`,
+        error: `URL length cannot exceed ${MAX_URL_LENGTH} characters`,
         index,
       }
     }
     
-    // 协议检查
+    // Protocol check
     if (!URL_PROTOCOL_REGEX.test(trimmed)) {
       return {
         isValid: false,
         url: trimmed,
-        error: 'URL 必须以 http:// 或 https:// 开头',
+        error: 'URL must start with http:// or https://',
         index,
       }
     }
     
-    // 尝试解析 URL
+    // Try to parse URL
     try {
       const parsed = new URL(trimmed)
       if (!parsed.hostname) {
         return {
           isValid: false,
           url: trimmed,
-          error: 'URL 必须包含主机名',
+          error: 'URL must contain hostname',
           index,
         }
       }
       
-      // 检查是否匹配目标
+      // Check if it matches the target
       let isMatched = true
       if (targetName && targetType) {
         isMatched = this.checkMatch(trimmed, targetName, targetType)
@@ -143,14 +143,14 @@ export class URLValidator {
       return {
         isValid: false,
         url: trimmed,
-        error: 'URL 格式无效',
+        error: 'Invalid URL format',
         index,
       }
     }
   }
 
   /**
-   * 批量验证并去重
+   * Batch validation with deduplication
    */
   static validateBatch(urls: string[], targetName?: string, targetType?: TargetType): ParseResult {
     const seen = new Set<string>()
@@ -167,7 +167,7 @@ export class URLValidator {
         return
       }
       
-      // 去重检查
+      // Deduplication check
       if (seen.has(result.url)) {
         duplicateCount++
         return
@@ -176,7 +176,7 @@ export class URLValidator {
       seen.add(result.url)
       validUrls.push(result.url)
       
-      // 记录不匹配的 URL（但仍然添加到有效列表）
+      // Record mismatched URLs (but still add to valid list)
       if (result.isMatched === false) {
         mismatchedItems.push(result)
       }

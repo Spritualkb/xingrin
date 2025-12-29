@@ -9,7 +9,7 @@ import type {
 } from "@/types/command.types"
 import { toast } from "sonner"
 
-// 假数据
+// Mock data
 const MOCK_COMMANDS: Command[] = [
   {
     id: 1,
@@ -32,8 +32,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "subfinder -version",
     },
     name: "subdomain_scan",
-    displayName: "子域名扫描",
-    description: "使用 subfinder 进行子域名扫描",
+    displayName: "Subdomain Scan",
+    description: "Subdomain scanning using subfinder",
     commandTemplate: "subfinder -d {{domain}} -o {{output}}",
   },
   {
@@ -57,8 +57,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "nmap --version",
     },
     name: "port_scan",
-    displayName: "端口扫描",
-    description: "使用 nmap 进行端口扫描",
+    displayName: "Port Scan",
+    description: "Port scanning using nmap",
     commandTemplate: "nmap -sV -p- {{target}} -oX {{output}}",
   },
   {
@@ -82,8 +82,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "subfinder -version",
     },
     name: "fast_subdomain_scan",
-    displayName: "快速子域名扫描",
-    description: "使用 subfinder 快速扫描常见子域名",
+    displayName: "Fast Subdomain Scan",
+    description: "Fast scanning of common subdomains using subfinder",
     commandTemplate: "subfinder -d {{domain}} -silent -o {{output}}",
   },
   {
@@ -107,8 +107,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "nuclei -version",
     },
     name: "vulnerability_scan",
-    displayName: "漏洞扫描",
-    description: "使用 nuclei 进行漏洞扫描",
+    displayName: "Vulnerability Scan",
+    description: "Vulnerability scanning using nuclei",
     commandTemplate: "nuclei -u {{target}} -severity critical,high,medium -o {{output}}",
   },
   {
@@ -132,8 +132,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "katana -version",
     },
     name: "web_crawl",
-    displayName: "网页爬取",
-    description: "使用 katana 爬取网页链接",
+    displayName: "Web Crawling",
+    description: "Web link crawling using katana",
     commandTemplate: "katana -u {{target}} -d 3 -o {{output}}",
   },
   {
@@ -157,8 +157,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "nmap --version",
     },
     name: "service_detect",
-    displayName: "服务识别",
-    description: "使用 nmap 进行服务版本识别",
+    displayName: "Service Detection",
+    description: "Service version detection using nmap",
     commandTemplate: "nmap -sV {{target}} -oX {{output}}",
   },
   {
@@ -182,8 +182,8 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "dirsearch --version",
     },
     name: "dir_scan",
-    displayName: "目录扫描",
-    description: "使用 dirsearch 进行目录扫描",
+    displayName: "Directory Scan",
+    description: "Directory scanning using dirsearch",
     commandTemplate: "dirsearch -u {{target}} -e php,html,js -o {{output}}",
   },
   {
@@ -207,26 +207,26 @@ const MOCK_COMMANDS: Command[] = [
       versionCommand: "nuclei -version",
     },
     name: "full_vulnerability_scan",
-    displayName: "完整漏洞扫描",
-    description: "使用 nuclei 进行全面漏洞扫描",
+    displayName: "Full Vulnerability Scan",
+    description: "Comprehensive vulnerability scanning using nuclei",
     commandTemplate: "nuclei -u {{target}} -t nuclei-templates/ -o {{output}}",
   },
 ]
 
 /**
- * 获取命令列表（使用假数据）
+ * Get command list (using mock data)
  */
 export function useCommands(params: GetCommandsRequest = {}) {
   return useQuery({
     queryKey: ["commands", params],
     queryFn: async (): Promise<GetCommandsResponse> => {
-      // 模拟网络延迟
+      // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500))
       
       const page = params.page || 1
       const pageSize = params.pageSize || 10
       
-      // 如果有 toolId 过滤
+      // If there's toolId filter
       let filteredCommands = MOCK_COMMANDS
       if (params.toolId) {
         filteredCommands = MOCK_COMMANDS.filter(cmd => cmd.toolId === params.toolId)
@@ -244,7 +244,7 @@ export function useCommands(params: GetCommandsRequest = {}) {
         pageSize,
         total: totalCount,
         totalPages,
-        // 兼容字段（向后兼容）
+        // Compatible fields (backward compatibility)
         page_size: pageSize,
         total_count: totalCount,
         total_pages: totalPages,
@@ -254,13 +254,13 @@ export function useCommands(params: GetCommandsRequest = {}) {
 }
 
 /**
- * 获取单个命令（使用假数据）
+ * Get single command (using mock data)
  */
 export function useCommand(id: number) {
   return useQuery({
     queryKey: ["command", id],
     queryFn: async (): Promise<Command | undefined> => {
-      // 模拟网络延迟
+      // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 300))
       return MOCK_COMMANDS.find(cmd => cmd.id === id)
     },
@@ -269,7 +269,7 @@ export function useCommand(id: number) {
 }
 
 /**
- * 创建命令
+ * Create command
  */
 export function useCreateCommand() {
   const queryClient = useQueryClient()
@@ -277,18 +277,18 @@ export function useCreateCommand() {
   return useMutation({
     mutationFn: (data: CreateCommandRequest) => CommandService.createCommand(data),
     onSuccess: () => {
-      toast.success("命令创建成功")
+      toast.success("Command created successfully")
       queryClient.invalidateQueries({ queryKey: ["commands"] })
     },
     onError: (error: any) => {
-      console.error("创建命令失败:", error)
-      toast.error("命令创建失败")
+      console.error("Failed to create command:", error)
+      toast.error("Failed to create command")
     },
   })
 }
 
 /**
- * 更新命令
+ * Update command
  */
 export function useUpdateCommand() {
   const queryClient = useQueryClient()
@@ -297,19 +297,19 @@ export function useUpdateCommand() {
     mutationFn: ({ id, data }: { id: number; data: UpdateCommandRequest }) =>
       CommandService.updateCommand(id, data),
     onSuccess: () => {
-      toast.success("命令更新成功")
+      toast.success("Command updated successfully")
       queryClient.invalidateQueries({ queryKey: ["commands"] })
       queryClient.invalidateQueries({ queryKey: ["command"] })
     },
     onError: (error: any) => {
-      console.error("更新命令失败:", error)
-      toast.error("命令更新失败")
+      console.error("Failed to update command:", error)
+      toast.error("Failed to update command")
     },
   })
 }
 
 /**
- * 删除命令
+ * Delete command
  */
 export function useDeleteCommand() {
   const queryClient = useQueryClient()
@@ -317,33 +317,33 @@ export function useDeleteCommand() {
   return useMutation({
     mutationFn: (id: number) => CommandService.deleteCommand(id),
     onSuccess: () => {
-      toast.success("命令删除成功")
+      toast.success("Command deleted successfully")
       queryClient.invalidateQueries({ queryKey: ["commands"] })
     },
     onError: (error: any) => {
-      console.error("删除命令失败:", error)
-      toast.error("命令删除失败")
+      console.error("Failed to delete command:", error)
+      toast.error("Failed to delete command")
     },
   })
 }
 
 /**
- * 批量删除命令（使用假数据）
+ * Batch delete commands (using mock data)
  */
 export function useBatchDeleteCommands() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (ids: number[]) => {
-      // 模拟网络延迟
+      // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 800))
       
-      // 从假数据中过滤掉被删除的命令
+      // Filter out deleted commands from mock data
       const deletedCount = ids.filter(id => 
         MOCK_COMMANDS.some(cmd => cmd.id === id)
       ).length
       
-      // 模拟删除（实际上不会真的删除假数据）
+      // Simulate deletion (won't actually delete mock data)
       return {
         data: {
           deletedCount: deletedCount
@@ -351,12 +351,12 @@ export function useBatchDeleteCommands() {
       }
     },
     onSuccess: (response) => {
-      toast.success(`成功删除 ${response.data?.deletedCount} 个命令`)
+      toast.success(`Successfully deleted ${response.data?.deletedCount} commands`)
       queryClient.invalidateQueries({ queryKey: ["commands"] })
     },
     onError: (error: any) => {
-      console.error("批量删除命令失败:", error)
-      toast.error("批量删除命令失败")
+      console.error("Failed to batch delete commands:", error)
+      toast.error("Failed to batch delete commands")
     },
   })
 }
