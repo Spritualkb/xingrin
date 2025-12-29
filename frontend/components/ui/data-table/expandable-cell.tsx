@@ -6,30 +6,30 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
 export interface ExpandableCellProps {
-  /** 要显示的值 */
+  /** Value to display */
   value: string | null | undefined
-  /** 显示变体 */
+  /** Display variant */
   variant?: "text" | "url" | "mono" | "muted"
-  /** 最大显示行数，默认 3 */
+  /** Maximum display lines, default 3 */
   maxLines?: number
-  /** 额外的 CSS 类名 */
+  /** Additional CSS class name */
   className?: string
-  /** 空值时显示的占位符 */
+  /** Placeholder when value is empty */
   placeholder?: string
-  /** 展开按钮文本 */
+  /** Expand button text */
   expandLabel?: string
-  /** 收起按钮文本 */
+  /** Collapse button text */
   collapseLabel?: string
 }
 
 /**
- * 统一的可展开单元格组件
+ * Unified expandable cell component
  * 
- * 特性：
- * - 默认显示最多 3 行（可配置）
- * - 自动检测内容是否溢出
- * - 只在内容超出时显示展开/收起按钮
- * - 支持 text、url、mono、muted 四种变体
+ * Features:
+ * - Default display up to 3 lines (configurable)
+ * - Auto-detect content overflow
+ * - Show expand/collapse button only when content overflows
+ * - Supports text, url, mono, muted variants
  */
 export function ExpandableCell({
   value,
@@ -44,19 +44,19 @@ export function ExpandableCell({
   const [isOverflowing, setIsOverflowing] = React.useState(false)
   const contentRef = React.useRef<HTMLDivElement>(null)
 
-  // 检测内容是否溢出
+  // Detect content overflow
   React.useEffect(() => {
     const el = contentRef.current
     if (!el) return
 
     const checkOverflow = () => {
-      // 比较 scrollHeight 和 clientHeight 来判断是否溢出
+      // Compare scrollHeight and clientHeight to determine overflow
       setIsOverflowing(el.scrollHeight > el.clientHeight + 1)
     }
 
     checkOverflow()
 
-    // 监听窗口大小变化
+    // Listen for window size changes
     const resizeObserver = new ResizeObserver(checkOverflow)
     resizeObserver.observe(el)
 
