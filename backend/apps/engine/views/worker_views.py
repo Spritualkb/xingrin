@@ -397,5 +397,7 @@ class WorkerNodeViewSet(viewsets.ModelViewSet):
                 'level': os.getenv('LOG_LEVEL', 'INFO'),
                 'enableCommandLogging': os.getenv('ENABLE_COMMAND_LOGGING', 'true').lower() == 'true',
             },
-            'debug': settings.DEBUG
+            'debug': settings.DEBUG,
+            # Xget 加速配置（用于 Git clone 加速，如 Nuclei 模板仓库）
+            'xgetMirror': os.getenv('XGET_MIRROR', ''),
         })

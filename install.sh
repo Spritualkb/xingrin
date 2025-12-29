@@ -12,6 +12,7 @@ set -e
 # 解析参数
 START_ARGS=""
 DEV_MODE=false
+XGET_MIRROR=""
 for arg in "$@"; do
     case $arg in
         --dev) 
@@ -20,6 +21,12 @@ for arg in "$@"; do
             ;;
         --no-frontend) 
             START_ARGS="$START_ARGS --no-frontend" 
+            ;;
+        --mirror)
+            XGET_MIRROR="https://xget.xi-xu.me"
+            ;;
+        --mirror=*)
+            XGET_MIRROR="${arg#*=}"
             ;;
     esac
 done
@@ -117,6 +124,9 @@ header "XingRin 一键安装脚本 (Ubuntu)"
 info "当前用户: ${BOLD}$REAL_USER${RESET}"
 info "项目路径: ${BOLD}$ROOT_DIR${RESET}"
 info "安装版本: ${BOLD}$APP_VERSION${RESET}"
+if [ -n "$XGET_MIRROR" ]; then
+    info "Xget 加速: ${BOLD}${GREEN}已启用${RESET} - $XGET_MIRROR"
+fi
 
 # ==============================================================================
 # 工具函数
@@ -196,6 +206,56 @@ auto_fill_docker_env_secrets() {
     success "密钥生成完成"
 }
 
+# 配置 Docker 镜像加速
+configure_docker_mirror() {
+    local xget_mirror="$1"
+    local daemon_json="/etc/docker/daemon.json"
+    local registry_mirror="${xget_mirror}/cr/docker"
+    
+    info "正在配置 Docker 镜像加速..."
+    
+    # 确保 /etc/docker 目录存在
+    mkdir -p /etc/docker
+    
+    if [ ! -f "$daemon_json" ]; then
+        # 文件不存在，直接创建
+        info "创建新的 daemon.json..."
+        cat > "$daemon_json" << EOF
+{
+    "registry-mirrors": ["$registry_mirror"]
+}
+EOF
+    else
+        # 文件存在，用 jq 合并配置（保留现有设置）
+        info "合并配置到现有 daemon.json..."
+        local temp_file=$(mktemp)
+        
+        # 检查是否已有 registry-mirrors
+        if jq -e '.["registry-mirrors"]' "$daemon_json" >/dev/null 2>&1; then
+            # 已有 registry-mirrors，添加新的镜像地址（如果不存在）
+            if ! jq -e --arg mirror "$registry_mirror" '.["registry-mirrors"] | index($mirror)' "$daemon_json" >/dev/null 2>&1; then
+                jq --arg mirror "$registry_mirror" '.["registry-mirrors"] = [$mirror] + .["registry-mirrors"]' "$daemon_json" > "$temp_file"
+                mv "$temp_file" "$daemon_json"
+            else
+                info "镜像地址已存在于配置中，跳过添加"
+                rm -f "$temp_file"
+            fi
+        else
+            # 没有 registry-mirrors，添加新的
+            jq --arg mirror "$registry_mirror" '. + {"registry-mirrors": [$mirror]}' "$daemon_json" > "$temp_file"
+            mv "$temp_file" "$daemon_json"
+        fi
+    fi
+    
+    # 重启 Docker 使配置生效
+    info "重启 Docker 服务以应用配置..."
+    if systemctl restart docker; then
+        success "Docker 镜像加速配置完成: $registry_mirror"
+    else
+        warn "Docker 服务重启失败，请手动重启 Docker"
+    fi
+}
+
 # 显示安装总结信息
 show_summary() {
     echo
@@ -259,7 +319,7 @@ show_summary() {
 
 step "[1/3] 检查基础命令"
 MISSING_CMDS=()
-for cmd in git curl; do
+for cmd in git curl jq; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         MISSING_CMDS+=("$cmd")
         warn "未安装: $cmd"
@@ -280,9 +340,37 @@ if command -v docker >/dev/null 2>&1; then
     success "已安装: docker"
 else
     info "正在安装 Docker..."
-    curl -fsSL https://get.docker.com | sh
+    
+    # 根据是否启用 Xget 加速选择下载方式
+    if [ -n "$XGET_MIRROR" ]; then
+        # 通过 Xget 代理下载 Docker 安装脚本
+        DOCKER_INSTALL_URL="${XGET_MIRROR}/gh/https://get.docker.com"
+        info "使用 Xget 加速下载 Docker 安装脚本..."
+        if curl -fsSL "$DOCKER_INSTALL_URL" | sh; then
+            success "Docker 安装完成（通过 Xget 加速）"
+        else
+            error "通过 Xget 加速下载 Docker 安装脚本失败"
+            error "请检查 Xget 镜像地址是否正确: $XGET_MIRROR"
+            error "或尝试不使用 --mirror 参数重新安装"
+            exit 1
+        fi
+    else
+        # 默认从官方源下载
+        if curl -fsSL https://get.docker.com | sh; then
+            success "Docker 安装完成"
+        else
+            error "Docker 安装脚本下载失败"
+            error "如果您在中国大陆，建议使用 --mirror 参数启用加速"
+            exit 1
+        fi
+    fi
+    
     usermod -aG docker "$REAL_USER"
-    success "Docker 安装完成"
+fi
+
+# 配置 Docker 镜像加速（仅当 XGET_MIRROR 非空时）
+if [ -n "$XGET_MIRROR" ]; then
+    configure_docker_mirror "$XGET_MIRROR"
 fi
 
 # 检查 docker compose
@@ -356,6 +444,12 @@ if [ -f "$DOCKER_DIR/.env.example" ]; then
     # 写入版本号（锁定安装时的版本）
     update_env_var "$DOCKER_DIR/.env" "IMAGE_TAG" "$APP_VERSION"
     success "已锁定版本: IMAGE_TAG=$APP_VERSION"
+    
+    # 写入 XGET_MIRROR 环境变量（供后端服务使用）
+    if [ -n "$XGET_MIRROR" ]; then
+        update_env_var "$DOCKER_DIR/.env" "XGET_MIRROR" "$XGET_MIRROR"
+        success "已配置 Xget 加速: XGET_MIRROR=$XGET_MIRROR"
+    fi
     
     # 开发模式：开启调试日志
     if [ "$DEV_MODE" = true ]; then
@@ -491,12 +585,31 @@ if [ "$DEV_MODE" = true ]; then
     fi
 else
     info "正在拉取: $WORKER_IMAGE"
+    # 显示加速状态提示
+    if [ -n "$XGET_MIRROR" ]; then
+        info "使用 Xget 加速拉取镜像（通过 registry-mirror）"
+    else
+        info "使用默认方式拉取镜像（未启用加速）"
+    fi
+    
     if docker pull "$WORKER_IMAGE"; then
-        success "Worker 镜像拉取完成"
+        if [ -n "$XGET_MIRROR" ]; then
+            success "Worker 镜像拉取完成（通过 Xget 加速）"
+        else
+            success "Worker 镜像拉取完成"
+        fi
     else
         error "Worker 镜像拉取失败，无法继续安装"
-        error "请检查网络连接或 Docker Hub 访问权限"
         error "镜像地址: $WORKER_IMAGE"
+        if [ -z "$XGET_MIRROR" ]; then
+            echo
+            warn "如果您在中国大陆，建议使用 --mirror 参数启用加速："
+            echo -e "   ${BOLD}sudo ./install.sh --mirror${RESET}"
+            echo
+        else
+            error "请检查 Xget 镜像地址是否正确: $XGET_MIRROR"
+            error "或检查网络连接是否正常"
+        fi
         exit 1
     fi
 fi
