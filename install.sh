@@ -206,19 +206,62 @@ auto_fill_docker_env_secrets() {
     success "密钥生成完成"
 }
 
-# 获取加速后的 Docker 镜像地址
-# 用法: get_accelerated_image "yyhuni/xingrin-worker:v1.0.0"
-# 返回: xget.xi-xu.me/cr/docker/yyhuni/xingrin-worker:v1.0.0（如果启用加速）
-#       或原始镜像地址（如果未启用加速）
+# 配置 Docker 镜像加速
+# 使用国内公共镜像源，无需注册
+configure_docker_mirror() {
+    local daemon_json="/etc/docker/daemon.json"
+    
+    # 国内可用的 Docker 镜像源（按优先级排序）
+    local mirrors='[
+        "https://docker.1ms.run",
+        "https://docker.xuanyuan.me"
+    ]'
+    
+    info "配置 Docker 镜像加速..."
+    
+    # 确保 Docker 配置目录存在
+    mkdir -p /etc/docker
+    
+    if [ ! -f "$daemon_json" ]; then
+        # 文件不存在，直接创建
+        echo "{\"registry-mirrors\": $mirrors}" | jq '.' > "$daemon_json"
+        success "Docker 镜像加速配置完成"
+    else
+        # 文件存在，用 jq 合并配置
+        if jq -e '.' "$daemon_json" >/dev/null 2>&1; then
+            # 有效的 JSON，合并配置
+            local temp_file=$(mktemp)
+            jq --argjson mirrors "$mirrors" '. + {"registry-mirrors": $mirrors}' "$daemon_json" > "$temp_file"
+            mv "$temp_file" "$daemon_json"
+            success "Docker 镜像加速配置已合并到现有配置"
+        else
+            # 无效的 JSON，备份后重新创建
+            warn "现有 daemon.json 格式无效，已备份为 daemon.json.bak"
+            cp "$daemon_json" "${daemon_json}.bak"
+            echo "{\"registry-mirrors\": $mirrors}" | jq '.' > "$daemon_json"
+            success "Docker 镜像加速配置完成"
+        fi
+    fi
+    
+    # 重启 Docker 使配置生效
+    if systemctl is-active --quiet docker; then
+        info "重启 Docker 服务..."
+        systemctl restart docker
+        sleep 2
+        if systemctl is-active --quiet docker; then
+            success "Docker 服务重启完成"
+        else
+            warn "Docker 服务重启失败，请手动检查"
+        fi
+    fi
+}
+
+# 获取加速后的 Docker 镜像地址（保留函数以兼容现有代码）
 get_accelerated_image() {
     local image="$1"
-    if [ -n "$XGET_MIRROR" ]; then
-        # 移除末尾斜杠
-        local mirror="${XGET_MIRROR%/}"
-        echo "${mirror}/cr/docker/${image}"
-    else
-        echo "$image"
-    fi
+    # 镜像加速通过 daemon.json 的 registry-mirrors 实现
+    # 这里直接返回原始地址
+    echo "$image"
 }
 
 # 显示安装总结信息
@@ -331,6 +374,19 @@ else
     fi
     
     usermod -aG docker "$REAL_USER"
+    
+    # 配置 Docker 镜像加速（仅当启用 --mirror 时）
+    if [ -n "$XGET_MIRROR" ]; then
+        configure_docker_mirror
+    fi
+fi
+
+# 如果 Docker 已安装但启用了 --mirror，也配置镜像加速
+if [ -n "$XGET_MIRROR" ] && command -v docker &>/dev/null; then
+    # 检查是否已配置镜像加速
+    if [ ! -f "/etc/docker/daemon.json" ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json 2>/dev/null; then
+        configure_docker_mirror
+    fi
 fi
 
 # 检查 docker compose
@@ -546,39 +602,29 @@ if [ "$DEV_MODE" = true ]; then
 else
     info "正在拉取: $WORKER_IMAGE"
     
-    # 获取加速后的镜像地址
-    PULL_IMAGE=$(get_accelerated_image "$WORKER_IMAGE")
+    # 镜像加速通过 daemon.json 的 registry-mirrors 实现
+    PULL_IMAGE="$WORKER_IMAGE"
     
-    # 显示加速状态提示
     if [ -n "$XGET_MIRROR" ]; then
-        info "使用 Xget 加速拉取: $PULL_IMAGE"
+        info "已配置 Docker 镜像加速，拉取将自动走加速通道"
     fi
     
     if docker pull "$PULL_IMAGE"; then
-        # 如果使用了加速，需要重新打标签为原始镜像名
-        if [ "$PULL_IMAGE" != "$WORKER_IMAGE" ]; then
-            docker tag "$PULL_IMAGE" "$WORKER_IMAGE"
-            # 删除加速镜像标签（可选，保持镜像列表整洁）
-            docker rmi "$PULL_IMAGE" 2>/dev/null || true
-        fi
-        
-        if [ -n "$XGET_MIRROR" ]; then
-            success "Worker 镜像拉取完成（通过 Xget 加速）"
-        else
-            success "Worker 镜像拉取完成"
-        fi
+        success "Worker 镜像拉取完成"
     else
         error "Worker 镜像拉取失败，无法继续安装"
         error "镜像地址: $WORKER_IMAGE"
+        echo
         if [ -z "$XGET_MIRROR" ]; then
-            echo
             warn "如果您在中国大陆，建议使用 --mirror 参数启用加速："
             echo -e "   ${BOLD}sudo ./install.sh --mirror${RESET}"
-            echo
         else
-            error "请检查 Xget 镜像地址是否正确: $XGET_MIRROR"
-            error "或检查网络连接是否正常"
+            warn "镜像加速已配置，但拉取仍然失败，可能原因："
+            echo -e "   1. 镜像源暂时不可用，请稍后重试"
+            echo -e "   2. 网络连接问题"
+            echo -e "   3. 镜像不存在或版本错误"
         fi
+        echo
         exit 1
     fi
 fi
