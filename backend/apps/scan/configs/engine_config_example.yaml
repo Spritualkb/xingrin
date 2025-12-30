@@ -53,7 +53,7 @@ subdomain_discovery:
   resolve:
     enabled: true
     subdomain_resolve:
-      # timeout: auto    # 自动根据候选子域数量计算
+      timeout: auto    # 自动根据候选子域数量计算
 
 # ==================== 端口扫描 ====================
 port_scan:

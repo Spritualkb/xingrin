@@ -36,7 +36,14 @@ def _normalize_config_keys(config: Dict[str, Any]) -> Dict[str, Any]:
         
     Returns:
         key 已转换的新字典
+        
+    Raises:
+        ValueError: 配置为 None 或非字典类型时抛出
     """
+    if config is None:
+        raise ValueError("配置不能为空（None），请检查 YAML 格式，确保冒号后有配置内容或使用 {} 表示空配置")
+    if not isinstance(config, dict):
+        raise ValueError(f"配置格式错误：期望 dict，实际 {type(config).__name__}")
     return {
         k.replace('-', '_') if isinstance(k, str) else k: v
         for k, v in config.items()
