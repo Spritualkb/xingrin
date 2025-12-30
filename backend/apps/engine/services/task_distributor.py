@@ -274,7 +274,7 @@ class TaskDistributor:
             network_arg = ""
             server_url = f"https://{settings.PUBLIC_HOST}:{settings.PUBLIC_PORT}"
         
-        # 挂载路径（统一挂载 /opt/xingrin，工具已移到 /usr/local/bin 不受影响）
+        # 挂载路径（统一挂载 /opt/xingrin，扫描工具在 /opt/xingrin-tools/bin 不受影响）
         host_xingrin_dir = "/opt/xingrin"
         
         # 环境变量：SERVER_URL + IS_LOCAL，其他配置容器启动时从配置中心获取

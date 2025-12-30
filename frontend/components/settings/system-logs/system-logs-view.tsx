@@ -41,7 +41,7 @@ export function SystemLogsView() {
 
   const content = useMemo(() => logsData?.content ?? "", [logsData?.content])
 
-  const editorRef = useRef<Parameters<Parameters<typeof Editor>[0]['onMount']>[0] | null>(null)
+  const editorRef = useRef<any>(null)
 
   // 自动滚动到底部
   useEffect(() => {

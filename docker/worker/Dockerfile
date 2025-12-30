@@ -71,19 +71,26 @@ RUN pipx install uro && \
     pipx install waymore && \
     pipx install dnsgen
 
-# 3. 安装 Sublist3r（放在 /usr/local/share 下，避免被挂载覆盖）
+# 3. 安装 Sublist3r（Python 脚本工具，放在 /usr/local/share 标准目录）
 RUN git clone https://github.com/aboul3la/Sublist3r.git /usr/local/share/Sublist3r && \
     pip3 install --no-cache-dir -r /usr/local/share/Sublist3r/requirements.txt --break-system-packages
 
 # 4. 从 go-builder 阶段复制 Go 环境和编译好的工具
-# 扫描工具放在 /usr/local/bin，避免被 /opt/xingrin 挂载覆盖
+# 创建项目专用工具目录（符合 FHS 标准，/opt 用于独立软件包）
+# 避免与系统工具或 Python 包冲突，避免被 /opt/xingrin 挂载覆盖
+RUN mkdir -p /opt/xingrin-tools/bin
+
 ENV GOPATH=/root/go
-ENV PATH=/usr/local/go/bin:/usr/local/bin:$PATH:$GOPATH/bin
 ENV GOPROXY=https://goproxy.cn,direct
 
 COPY --from=go-builder /usr/local/go /usr/local/go
-COPY --from=go-builder /go/bin/* /usr/local/bin/
-COPY --from=go-builder /usr/local/bin/massdns /usr/local/bin/massdns
+
+# 从 go-builder 复制扫描工具到专用目录（避免与系统工具或 Python 包冲突）
+COPY --from=go-builder /go/bin/* /opt/xingrin-tools/bin/
+COPY --from=go-builder /usr/local/bin/massdns /opt/xingrin-tools/bin/massdns
+
+# 将专用工具目录添加到 PATH（优先级高于 /usr/local/bin，避免冲突）
+ENV PATH=/opt/xingrin-tools/bin:/usr/local/go/bin:/usr/local/bin:$PATH:$GOPATH/bin
 
 # 5. 安装 uv（ Python 包管理器）并安装 Python 依赖
 COPY backend/requirements.txt .
