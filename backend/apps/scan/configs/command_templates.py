@@ -239,6 +239,9 @@ FINGERPRINT_DETECT_COMMANDS = {
             'ehole': '--ehole {ehole}',
             'goby': '--goby {goby}',
             'wappalyzer': '--wappalyzer {wappalyzer}',
+            'fingers': '--fingers {fingers}',
+            'fingerprinthub': '--fingerprint {fingerprinthub}',
+            'arl': '--arl {arl}',
         }
     },
 }

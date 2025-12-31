@@ -3,6 +3,9 @@
 - EHole 指纹: ehole.json -> 导入到数据库
 - Goby 指纹: goby.json -> 导入到数据库
 - Wappalyzer 指纹: wappalyzer.json -> 导入到数据库
+- Fingers 指纹: fingers_http.json -> 导入到数据库
+- FingerPrintHub 指纹: fingerprinthub_web.json -> 导入到数据库
+- ARL 指纹: ARL.yaml -> 导入到数据库
 
 可重复执行：如果数据库已有数据则跳过，只在空库时导入。
 """
@@ -11,14 +14,25 @@ import json
 import logging
 from pathlib import Path
 
+import yaml
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from apps.engine.models import EholeFingerprint, GobyFingerprint, WappalyzerFingerprint
+from apps.engine.models import (
+    EholeFingerprint,
+    GobyFingerprint,
+    WappalyzerFingerprint,
+    FingersFingerprint,
+    FingerPrintHubFingerprint,
+    ARLFingerprint,
+)
 from apps.engine.services.fingerprints import (
     EholeFingerprintService,
     GobyFingerprintService,
     WappalyzerFingerprintService,
+    FingersFingerprintService,
+    FingerPrintHubFingerprintService,
+    ARLFingerprintService,
 )
 
 
@@ -33,6 +47,7 @@ DEFAULT_FINGERPRINTS = [
         "model": EholeFingerprint,
         "service": EholeFingerprintService,
         "data_key": "fingerprint",  # JSON 中指纹数组的 key
+        "file_format": "json",
     },
     {
         "type": "goby",
@@ -40,6 +55,7 @@ DEFAULT_FINGERPRINTS = [
         "model": GobyFingerprint,
         "service": GobyFingerprintService,
         "data_key": None,  # Goby 是数组格式，直接使用整个 JSON
+        "file_format": "json",
     },
     {
         "type": "wappalyzer",
@@ -47,6 +63,31 @@ DEFAULT_FINGERPRINTS = [
         "model": WappalyzerFingerprint,
         "service": WappalyzerFingerprintService,
         "data_key": "apps",  # Wappalyzer 使用 apps 对象
+        "file_format": "json",
+    },
+    {
+        "type": "fingers",
+        "filename": "fingers_http.json",
+        "model": FingersFingerprint,
+        "service": FingersFingerprintService,
+        "data_key": None,  # Fingers 是数组格式
+        "file_format": "json",
+    },
+    {
+        "type": "fingerprinthub",
+        "filename": "fingerprinthub_web.json",
+        "model": FingerPrintHubFingerprint,
+        "service": FingerPrintHubFingerprintService,
+        "data_key": None,  # FingerPrintHub 是数组格式
+        "file_format": "json",
+    },
+    {
+        "type": "arl",
+        "filename": "ARL.yaml",
+        "model": ARLFingerprint,
+        "service": ARLFingerprintService,
+        "data_key": None,  # ARL 是 YAML 数组格式
+        "file_format": "yaml",
     },
 ]
 
@@ -68,6 +109,7 @@ class Command(BaseCommand):
             model = item["model"]
             service_class = item["service"]
             data_key = item["data_key"]
+            file_format = item.get("file_format", "json")
 
             # 检查数据库是否已有数据
             existing_count = model.objects.count()
@@ -87,11 +129,14 @@ class Command(BaseCommand):
                 failed += 1
                 continue
 
-            # 读取并解析 JSON
+            # 读取并解析文件（支持 JSON 和 YAML）
             try:
                 with open(src_path, "r", encoding="utf-8") as f:
-                    json_data = json.load(f)
-            except (json.JSONDecodeError, OSError) as exc:
+                    if file_format == "yaml":
+                        file_data = yaml.safe_load(f)
+                    else:
+                        file_data = json.load(f)
+            except (json.JSONDecodeError, yaml.YAMLError, OSError) as exc:
                 self.stdout.write(self.style.ERROR(
                     f"[{fp_type}] 读取指纹文件失败: {exc}"
                 ))
@@ -99,7 +144,7 @@ class Command(BaseCommand):
                 continue
 
             # 提取指纹数据（根据不同格式处理）
-            fingerprints = self._extract_fingerprints(json_data, data_key, fp_type)
+            fingerprints = self._extract_fingerprints(file_data, data_key, fp_type)
             if not fingerprints:
                 self.stdout.write(self.style.WARNING(
                     f"[{fp_type}] 指纹文件中没有有效数据，跳过"

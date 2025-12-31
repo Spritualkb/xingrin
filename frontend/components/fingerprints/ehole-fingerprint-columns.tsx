@@ -6,36 +6,18 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
-
-// Translation type definitions
-export interface EholeFingerprintTranslations {
-  columns: {
-    cms: string
-    method: string
-    location: string
-    keyword: string
-    type: string
-    important: string
-    created: string
-  }
-  actions: {
-    selectAll: string
-    selectRow: string
-    expand: string
-    collapse: string
-  }
-}
 
 interface ColumnOptions {
   formatDate: (date: string) => string
-  t: EholeFingerprintTranslations
 }
 
 /**
  * Keyword list cell - displays 3 by default, expandable for more
  */
-function KeywordListCell({ keywords, t }: { keywords: string[]; t: EholeFingerprintTranslations }) {
+function KeywordListCell({ keywords }: { keywords: string[] }) {
+  const t = useTranslations("tooltips")
   const [expanded, setExpanded] = React.useState(false)
   
   if (!keywords || keywords.length === 0) return <span className="text-muted-foreground">-</span>
@@ -60,12 +42,12 @@ function KeywordListCell({ keywords, t }: { keywords: string[]; t: EholeFingerpr
           {expanded ? (
             <>
               <ChevronUp className="h-3 w-3" />
-              {t.actions.collapse}
+              {t("collapse")}
             </>
           ) : (
             <>
               <ChevronDown className="h-3 w-3" />
-              {t.actions.expand}
+              {t("expand")}
             </>
           )}
         </button>
@@ -79,7 +61,6 @@ function KeywordListCell({ keywords, t }: { keywords: string[]; t: EholeFingerpr
  */
 export function createEholeFingerprintColumns({
   formatDate,
-  t,
 }: ColumnOptions): ColumnDef<EholeFingerprint>[] {
   return [
     {
@@ -91,14 +72,14 @@ export function createEholeFingerprintColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label={t.actions.selectAll}
+          aria-label="Select all"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label={t.actions.selectRow}
+          aria-label="Select row"
         />
       ),
       enableSorting: false,
@@ -108,9 +89,9 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "cms",
-      meta: { title: t.columns.cms },
+      meta: { title: "CMS" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.cms} />
+        <DataTableColumnHeader column={column} title="CMS" />
       ),
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("cms")}</div>
@@ -120,9 +101,9 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "method",
-      meta: { title: t.columns.method },
+      meta: { title: "Method" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.method} />
+        <DataTableColumnHeader column={column} title="Method" />
       ),
       cell: ({ row }) => {
         const method = row.getValue("method") as string
@@ -137,9 +118,9 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "location",
-      meta: { title: t.columns.location },
+      meta: { title: "Location" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.location} />
+        <DataTableColumnHeader column={column} title="Location" />
       ),
       cell: ({ row }) => {
         const location = row.getValue("location") as string
@@ -154,19 +135,19 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "keyword",
-      meta: { title: t.columns.keyword },
+      meta: { title: "Keyword" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.keyword} />
+        <DataTableColumnHeader column={column} title="Keyword" />
       ),
-      cell: ({ row }) => <KeywordListCell keywords={row.getValue("keyword") || []} t={t} />,
+      cell: ({ row }) => <KeywordListCell keywords={row.getValue("keyword") || []} />,
       enableResizing: true,
       size: 300,
     },
     {
       accessorKey: "type",
-      meta: { title: t.columns.type },
+      meta: { title: "Type" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.type} />
+        <DataTableColumnHeader column={column} title="Type" />
       ),
       cell: ({ row }) => {
         const type = row.getValue("type") as string
@@ -178,9 +159,9 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "isImportant",
-      meta: { title: t.columns.important },
+      meta: { title: "Important" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.important} />
+        <DataTableColumnHeader column={column} title="Important" />
       ),
       cell: ({ row }) => {
         const isImportant = row.getValue("isImportant")
@@ -191,9 +172,9 @@ export function createEholeFingerprintColumns({
     },
     {
       accessorKey: "createdAt",
-      meta: { title: t.columns.created },
+      meta: { title: "Created" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.created} />
+        <DataTableColumnHeader column={column} title="Created" />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

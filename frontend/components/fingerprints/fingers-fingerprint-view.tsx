@@ -5,40 +5,40 @@ import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslations, useLocale } from "next-intl"
 import {
-  useWappalyzerFingerprints,
-  useBulkDeleteWappalyzerFingerprints,
-  useDeleteAllWappalyzerFingerprints,
+  useFingersFingerprints,
+  useBulkDeleteFingersFingerprints,
+  useDeleteAllFingersFingerprints,
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
-import { WappalyzerFingerprintDataTable } from "./wappalyzer-fingerprint-data-table"
-import { createWappalyzerFingerprintColumns } from "./wappalyzer-fingerprint-columns"
-import { WappalyzerFingerprintDialog } from "./wappalyzer-fingerprint-dialog"
+import { FingersFingerprintDataTable } from "./fingers-fingerprint-data-table"
+import { createFingersFingerprintColumns } from "./fingers-fingerprint-columns"
+import { FingersFingerprintDialog } from "./fingers-fingerprint-dialog"
 import { ImportFingerprintDialog } from "./import-fingerprint-dialog"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
 import { getDateLocale } from "@/lib/date-utils"
-import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
+import type { FingersFingerprint } from "@/types/fingerprint.types"
 
-export function WappalyzerFingerprintView() {
-  const [selectedFingerprints, setSelectedFingerprints] = useState<WappalyzerFingerprint[]>([])
+export function FingersFingerprintView() {
+  const tFingerprints = useTranslations("tools.fingerprints")
+  const locale = useLocale()
+  
+  const [selectedFingerprints, setSelectedFingerprints] = useState<FingersFingerprint[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [filterQuery, setFilterQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
 
-  const tFingerprints = useTranslations("tools.fingerprints")
-  const locale = useLocale()
-
   // Query data
-  const { data, isLoading, isFetching, error, refetch } = useWappalyzerFingerprints({
+  const { data, isLoading, isFetching, error, refetch } = useFingersFingerprints({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     filter: filterQuery || undefined,
   })
 
   // Mutations
-  const bulkDeleteMutation = useBulkDeleteWappalyzerFingerprints()
-  const deleteAllMutation = useDeleteAllWappalyzerFingerprints()
+  const bulkDeleteMutation = useBulkDeleteFingersFingerprints()
+  const deleteAllMutation = useDeleteAllFingersFingerprints()
 
   // Search state
   React.useEffect(() => {
@@ -68,11 +68,11 @@ export function WappalyzerFingerprintView() {
   // Export
   const handleExport = async () => {
     try {
-      const blob = await FingerprintService.exportWappalyzerFingerprints()
+      const blob = await FingerprintService.exportFingersFingerprints()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `wappalyzer-fingerprints-${Date.now()}.json`
+      a.download = `fingers-fingerprints-${Date.now()}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -109,17 +109,17 @@ export function WappalyzerFingerprintView() {
 
   // Column definitions
   const columns = useMemo(
-    () => createWappalyzerFingerprintColumns({ formatDate }),
+    () => createFingersFingerprintColumns({ formatDate }),
     []
   )
 
   // Transform data
-  const fingerprints: WappalyzerFingerprint[] = useMemo(() => {
+  const fingerprints: FingersFingerprint[] = useMemo(() => {
     if (!data?.results) return []
     return data.results
   }, [data])
 
-  // Stabilize paginationInfo reference to avoid unnecessary re-renders
+  // Stabilize paginationInfo reference
   const total = data?.total ?? 0
   const page = data?.page ?? 1
   const serverPageSize = data?.pageSize ?? 10
@@ -160,7 +160,7 @@ export function WappalyzerFingerprintView() {
 
   return (
     <>
-      <WappalyzerFingerprintDataTable
+      <FingersFingerprintDataTable
         data={fingerprints}
         columns={columns}
         onSelectionChange={setSelectedFingerprints}
@@ -179,7 +179,7 @@ export function WappalyzerFingerprintView() {
       />
 
       {/* Add fingerprint dialog */}
-      <WappalyzerFingerprintDialog
+      <FingersFingerprintDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => refetch()}
@@ -189,8 +189,8 @@ export function WappalyzerFingerprintView() {
       <ImportFingerprintDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+        fingerprintType="fingers"
         onSuccess={() => refetch()}
-        fingerprintType="wappalyzer"
       />
     </>
   )

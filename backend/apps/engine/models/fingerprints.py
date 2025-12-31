@@ -106,3 +106,88 @@ class WappalyzerFingerprint(models.Model):
     
     def __str__(self) -> str:
         return f"{self.name}"
+
+
+class FingersFingerprint(models.Model):
+    """Fingers 格式指纹规则 (fingers_http.json)
+    
+    使用正则表达式和标签进行匹配，支持 favicon hash、header、body 等多种检测方式
+    """
+    
+    name = models.CharField(max_length=300, unique=True, help_text='指纹名称')
+    link = models.URLField(max_length=500, blank=True, default='', help_text='相关链接')
+    rule = models.JSONField(default=list, help_text='匹配规则数组')
+    tag = models.JSONField(default=list, help_text='标签数组')
+    focus = models.BooleanField(default=False, help_text='是否重点关注')
+    default_port = models.JSONField(default=list, blank=True, help_text='默认端口数组')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'fingers_fingerprint'
+        verbose_name = 'Fingers 指纹'
+        verbose_name_plural = 'Fingers 指纹'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['focus']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
+class FingerPrintHubFingerprint(models.Model):
+    """FingerPrintHub 格式指纹规则 (fingerprinthub_web.json)
+    
+    基于 nuclei 模板格式，使用 HTTP 请求和响应特征进行匹配
+    """
+    
+    fp_id = models.CharField(max_length=200, unique=True, help_text='指纹ID')
+    name = models.CharField(max_length=300, help_text='指纹名称')
+    author = models.CharField(max_length=200, blank=True, default='', help_text='作者')
+    tags = models.CharField(max_length=500, blank=True, default='', help_text='标签')
+    severity = models.CharField(max_length=50, blank=True, default='info', help_text='严重程度')
+    metadata = models.JSONField(default=dict, blank=True, help_text='元数据')
+    http = models.JSONField(default=list, help_text='HTTP 匹配规则')
+    source_file = models.CharField(max_length=500, blank=True, default='', help_text='来源文件')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'fingerprinthub_fingerprint'
+        verbose_name = 'FingerPrintHub 指纹'
+        verbose_name_plural = 'FingerPrintHub 指纹'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['fp_id']),
+            models.Index(fields=['name']),
+            models.Index(fields=['severity']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.name} ({self.fp_id})"
+
+
+class ARLFingerprint(models.Model):
+    """ARL 格式指纹规则 (ARL.yaml)
+    
+    使用简单的 name + rule 表达式格式
+    """
+    
+    name = models.CharField(max_length=300, unique=True, help_text='指纹名称')
+    rule = models.TextField(help_text='匹配规则表达式')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'arl_fingerprint'
+        verbose_name = 'ARL 指纹'
+        verbose_name_plural = 'ARL 指纹'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.name}"

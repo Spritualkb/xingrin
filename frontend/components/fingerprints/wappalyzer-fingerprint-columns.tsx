@@ -5,31 +5,12 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ExpandableCell } from "@/components/ui/data-table/expandable-cell"
+import { ChevronDown, ChevronUp } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
-
-// Translation type definitions
-export interface WappalyzerFingerprintTranslations {
-  columns: {
-    name: string
-    cats: string
-    rules: string
-    implies: string
-    description: string
-    website: string
-    cpe: string
-    created: string
-  }
-  actions: {
-    selectAll: string
-    selectRow: string
-    expand: string
-    collapse: string
-  }
-}
 
 interface ColumnOptions {
   formatDate: (date: string) => string
-  t: WappalyzerFingerprintTranslations
 }
 
 interface RuleItem {
@@ -57,7 +38,8 @@ function extractRules(fp: WappalyzerFingerprint): RuleItem[] {
 /**
  * Rules list cell - displays raw JSON format
  */
-function RulesCell({ fp, t }: { fp: WappalyzerFingerprint; t: WappalyzerFingerprintTranslations }) {
+function RulesCell({ fp }: { fp: WappalyzerFingerprint }) {
+  const t = useTranslations("tooltips")
   const [expanded, setExpanded] = React.useState(false)
   const rules = extractRules(fp)
   
@@ -80,9 +62,19 @@ function RulesCell({ fp, t }: { fp: WappalyzerFingerprint; t: WappalyzerFingerpr
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-primary hover:underline self-start"
+          className="text-xs text-primary hover:underline self-start inline-flex items-center gap-0.5"
         >
-          {expanded ? t.actions.collapse : t.actions.expand}
+          {expanded ? (
+            <>
+              <ChevronUp className="h-3 w-3" />
+              <span>{t("collapse")}</span>
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-3 w-3" />
+              <span>{t("expand")}</span>
+            </>
+          )}
         </button>
       )}
     </div>
@@ -94,7 +86,6 @@ function RulesCell({ fp, t }: { fp: WappalyzerFingerprint; t: WappalyzerFingerpr
  */
 export function createWappalyzerFingerprintColumns({
   formatDate,
-  t,
 }: ColumnOptions): ColumnDef<WappalyzerFingerprint>[] {
   return [
     {
@@ -106,14 +97,14 @@ export function createWappalyzerFingerprintColumns({
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label={t.actions.selectAll}
+          aria-label="Select all"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label={t.actions.selectRow}
+          aria-label="Select row"
         />
       ),
       enableSorting: false,
@@ -123,9 +114,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "name",
-      meta: { title: t.columns.name },
+      meta: { title: "Name" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.name} />
+        <DataTableColumnHeader column={column} title="Name" />
       ),
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue("name")}</div>
@@ -135,9 +126,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "cats",
-      meta: { title: t.columns.cats },
+      meta: { title: "Categories" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.cats} />
+        <DataTableColumnHeader column={column} title="Categories" />
       ),
       cell: ({ row }) => {
         const cats = row.getValue("cats") as number[]
@@ -149,19 +140,19 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       id: "rules",
-      meta: { title: t.columns.rules },
+      meta: { title: "Rules" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.rules} />
+        <DataTableColumnHeader column={column} title="Rules" />
       ),
-      cell: ({ row }) => <RulesCell fp={row.original} t={t} />,
+      cell: ({ row }) => <RulesCell fp={row.original} />,
       enableResizing: true,
       size: 350,
     },
     {
       accessorKey: "implies",
-      meta: { title: t.columns.implies },
+      meta: { title: "Implies" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.implies} />
+        <DataTableColumnHeader column={column} title="Implies" />
       ),
       cell: ({ row }) => {
         const implies = row.getValue("implies") as string[]
@@ -173,9 +164,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "description",
-      meta: { title: t.columns.description },
+      meta: { title: "Description" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.description} />
+        <DataTableColumnHeader column={column} title="Description" />
       ),
       cell: ({ row }) => <ExpandableCell value={row.getValue("description")} maxLines={2} />,
       enableResizing: true,
@@ -183,9 +174,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "website",
-      meta: { title: t.columns.website },
+      meta: { title: "Website" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.website} />
+        <DataTableColumnHeader column={column} title="Website" />
       ),
       cell: ({ row }) => <ExpandableCell value={row.getValue("website")} variant="url" maxLines={1} />,
       enableResizing: true,
@@ -193,9 +184,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "cpe",
-      meta: { title: t.columns.cpe },
+      meta: { title: "CPE" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.cpe} />
+        <DataTableColumnHeader column={column} title="CPE" />
       ),
       cell: ({ row }) => {
         const cpe = row.getValue("cpe") as string
@@ -206,9 +197,9 @@ export function createWappalyzerFingerprintColumns({
     },
     {
       accessorKey: "createdAt",
-      meta: { title: t.columns.created },
+      meta: { title: "Created" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.created} />
+        <DataTableColumnHeader column={column} title="Created" />
       ),
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string

@@ -18,6 +18,9 @@ FINGERPRINT_LIB_MAP = {
     'ehole': 'ensure_ehole_fingerprint_local',
     'goby': 'ensure_goby_fingerprint_local',
     'wappalyzer': 'ensure_wappalyzer_fingerprint_local',
+    'fingers': 'ensure_fingers_fingerprint_local',
+    'fingerprinthub': 'ensure_fingerprinthub_fingerprint_local',
+    'arl': 'ensure_arl_fingerprint_local',
 }
 
 
@@ -221,10 +224,170 @@ def get_fingerprint_paths(lib_names: list) -> dict:
     return paths
 
 
+def ensure_fingers_fingerprint_local() -> str:
+    """
+    确保本地存在最新的 Fingers 指纹文件（带缓存）
+    
+    Returns:
+        str: 本地指纹文件路径
+    """
+    from apps.engine.services.fingerprints import FingersFingerprintService
+    
+    service = FingersFingerprintService()
+    current_version = service.get_fingerprint_version()
+    
+    # 缓存目录和文件
+    base_dir = getattr(settings, 'FINGERPRINTS_BASE_PATH', '/opt/xingrin/fingerprints')
+    os.makedirs(base_dir, exist_ok=True)
+    cache_file = os.path.join(base_dir, 'fingers.json')
+    version_file = os.path.join(base_dir, 'fingers.version')
+    
+    # 检查缓存版本
+    cached_version = None
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, 'r') as f:
+                cached_version = f.read().strip()
+        except OSError as e:
+            logger.warning("读取 Fingers 版本文件失败: %s", e)
+    
+    # 版本匹配，直接返回缓存
+    if cached_version == current_version and os.path.exists(cache_file):
+        logger.info("Fingers 指纹文件缓存有效（版本匹配）: %s", cache_file)
+        return cache_file
+    
+    # 版本不匹配，重新导出
+    logger.info(
+        "Fingers 指纹文件需要更新: cached=%s, current=%s",
+        cached_version, current_version
+    )
+    data = service.get_export_data()
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    
+    # 写入版本文件
+    try:
+        with open(version_file, 'w') as f:
+            f.write(current_version)
+    except OSError as e:
+        logger.warning("写入 Fingers 版本文件失败: %s", e)
+    
+    logger.info("Fingers 指纹文件已更新: %s", cache_file)
+    return cache_file
+
+
+def ensure_fingerprinthub_fingerprint_local() -> str:
+    """
+    确保本地存在最新的 FingerPrintHub 指纹文件（带缓存）
+    
+    Returns:
+        str: 本地指纹文件路径
+    """
+    from apps.engine.services.fingerprints import FingerPrintHubFingerprintService
+    
+    service = FingerPrintHubFingerprintService()
+    current_version = service.get_fingerprint_version()
+    
+    # 缓存目录和文件
+    base_dir = getattr(settings, 'FINGERPRINTS_BASE_PATH', '/opt/xingrin/fingerprints')
+    os.makedirs(base_dir, exist_ok=True)
+    cache_file = os.path.join(base_dir, 'fingerprinthub.json')
+    version_file = os.path.join(base_dir, 'fingerprinthub.version')
+    
+    # 检查缓存版本
+    cached_version = None
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, 'r') as f:
+                cached_version = f.read().strip()
+        except OSError as e:
+            logger.warning("读取 FingerPrintHub 版本文件失败: %s", e)
+    
+    # 版本匹配，直接返回缓存
+    if cached_version == current_version and os.path.exists(cache_file):
+        logger.info("FingerPrintHub 指纹文件缓存有效（版本匹配）: %s", cache_file)
+        return cache_file
+    
+    # 版本不匹配，重新导出
+    logger.info(
+        "FingerPrintHub 指纹文件需要更新: cached=%s, current=%s",
+        cached_version, current_version
+    )
+    data = service.get_export_data()
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    
+    # 写入版本文件
+    try:
+        with open(version_file, 'w') as f:
+            f.write(current_version)
+    except OSError as e:
+        logger.warning("写入 FingerPrintHub 版本文件失败: %s", e)
+    
+    logger.info("FingerPrintHub 指纹文件已更新: %s", cache_file)
+    return cache_file
+
+
+def ensure_arl_fingerprint_local() -> str:
+    """
+    确保本地存在最新的 ARL 指纹文件（带缓存）
+    
+    Returns:
+        str: 本地指纹文件路径（YAML 格式）
+    """
+    import yaml
+    from apps.engine.services.fingerprints import ARLFingerprintService
+    
+    service = ARLFingerprintService()
+    current_version = service.get_fingerprint_version()
+    
+    # 缓存目录和文件
+    base_dir = getattr(settings, 'FINGERPRINTS_BASE_PATH', '/opt/xingrin/fingerprints')
+    os.makedirs(base_dir, exist_ok=True)
+    cache_file = os.path.join(base_dir, 'arl.yaml')
+    version_file = os.path.join(base_dir, 'arl.version')
+    
+    # 检查缓存版本
+    cached_version = None
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, 'r') as f:
+                cached_version = f.read().strip()
+        except OSError as e:
+            logger.warning("读取 ARL 版本文件失败: %s", e)
+    
+    # 版本匹配，直接返回缓存
+    if cached_version == current_version and os.path.exists(cache_file):
+        logger.info("ARL 指纹文件缓存有效（版本匹配）: %s", cache_file)
+        return cache_file
+    
+    # 版本不匹配，重新导出
+    logger.info(
+        "ARL 指纹文件需要更新: cached=%s, current=%s",
+        cached_version, current_version
+    )
+    data = service.get_export_data()
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
+    
+    # 写入版本文件
+    try:
+        with open(version_file, 'w') as f:
+            f.write(current_version)
+    except OSError as e:
+        logger.warning("写入 ARL 版本文件失败: %s", e)
+    
+    logger.info("ARL 指纹文件已更新: %s", cache_file)
+    return cache_file
+
+
 __all__ = [
     "ensure_ehole_fingerprint_local",
     "ensure_goby_fingerprint_local",
     "ensure_wappalyzer_fingerprint_local",
+    "ensure_fingers_fingerprint_local",
+    "ensure_fingerprinthub_fingerprint_local",
+    "ensure_arl_fingerprint_local",
     "get_fingerprint_paths",
     "FINGERPRINT_LIB_MAP",
 ]

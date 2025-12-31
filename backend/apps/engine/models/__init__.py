@@ -4,7 +4,14 @@
 """
 
 from .engine import WorkerNode, ScanEngine, Wordlist, NucleiTemplateRepo
-from .fingerprints import EholeFingerprint, GobyFingerprint, WappalyzerFingerprint
+from .fingerprints import (
+    EholeFingerprint,
+    GobyFingerprint,
+    WappalyzerFingerprint,
+    FingersFingerprint,
+    FingerPrintHubFingerprint,
+    ARLFingerprint,
+)
 
 __all__ = [
     # 核心 Models
@@ -16,4 +23,7 @@ __all__ = [
     "EholeFingerprint",
     "GobyFingerprint",
     "WappalyzerFingerprint",
+    "FingersFingerprint",
+    "FingerPrintHubFingerprint",
+    "ARLFingerprint",
 ]

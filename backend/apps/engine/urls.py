@@ -11,6 +11,9 @@ from .views.fingerprints import (
     EholeFingerprintViewSet,
     GobyFingerprintViewSet,
     WappalyzerFingerprintViewSet,
+    FingersFingerprintViewSet,
+    FingerPrintHubFingerprintViewSet,
+    ARLFingerprintViewSet,
 )
 
 
@@ -24,6 +27,9 @@ router.register(r"nuclei/repos", NucleiTemplateRepoViewSet, basename="nuclei-rep
 router.register(r"fingerprints/ehole", EholeFingerprintViewSet, basename="ehole-fingerprint")
 router.register(r"fingerprints/goby", GobyFingerprintViewSet, basename="goby-fingerprint")
 router.register(r"fingerprints/wappalyzer", WappalyzerFingerprintViewSet, basename="wappalyzer-fingerprint")
+router.register(r"fingerprints/fingers", FingersFingerprintViewSet, basename="fingers-fingerprint")
+router.register(r"fingerprints/fingerprinthub", FingerPrintHubFingerprintViewSet, basename="fingerprinthub-fingerprint")
+router.register(r"fingerprints/arl", ARLFingerprintViewSet, basename="arl-fingerprint")
 
 urlpatterns = [
     path("", include(router.urls)),

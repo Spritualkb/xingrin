@@ -165,7 +165,7 @@ main() {
     
     init_engine_config
     init_wordlists
-    # init_fingerprints
+    init_fingerprints
     init_nuclei_templates
     init_admin_user
 

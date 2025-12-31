@@ -5,42 +5,39 @@ import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslations, useLocale } from "next-intl"
 import {
-  useWappalyzerFingerprints,
-  useBulkDeleteWappalyzerFingerprints,
-  useDeleteAllWappalyzerFingerprints,
+  useARLFingerprints,
+  useBulkDeleteARLFingerprints,
+  useDeleteAllARLFingerprints,
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
-import { WappalyzerFingerprintDataTable } from "./wappalyzer-fingerprint-data-table"
-import { createWappalyzerFingerprintColumns } from "./wappalyzer-fingerprint-columns"
-import { WappalyzerFingerprintDialog } from "./wappalyzer-fingerprint-dialog"
+import { ARLFingerprintDataTable } from "./arl-fingerprint-data-table"
+import { createARLFingerprintColumns } from "./arl-fingerprint-columns"
+import { ARLFingerprintDialog } from "./arl-fingerprint-dialog"
 import { ImportFingerprintDialog } from "./import-fingerprint-dialog"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
 import { getDateLocale } from "@/lib/date-utils"
-import type { WappalyzerFingerprint } from "@/types/fingerprint.types"
+import type { ARLFingerprint } from "@/types/fingerprint.types"
 
-export function WappalyzerFingerprintView() {
-  const [selectedFingerprints, setSelectedFingerprints] = useState<WappalyzerFingerprint[]>([])
+export function ARLFingerprintView() {
+  const tFingerprints = useTranslations("tools.fingerprints")
+  const locale = useLocale()
+  
+  const [selectedFingerprints, setSelectedFingerprints] = useState<ARLFingerprint[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [filterQuery, setFilterQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
 
-  const tFingerprints = useTranslations("tools.fingerprints")
-  const locale = useLocale()
-
-  // Query data
-  const { data, isLoading, isFetching, error, refetch } = useWappalyzerFingerprints({
+  const { data, isLoading, isFetching, error, refetch } = useARLFingerprints({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     filter: filterQuery || undefined,
   })
 
-  // Mutations
-  const bulkDeleteMutation = useBulkDeleteWappalyzerFingerprints()
-  const deleteAllMutation = useDeleteAllWappalyzerFingerprints()
+  const bulkDeleteMutation = useBulkDeleteARLFingerprints()
+  const deleteAllMutation = useDeleteAllARLFingerprints()
 
-  // Search state
   React.useEffect(() => {
     if (!isFetching && isSearching) {
       setIsSearching(false)
@@ -53,7 +50,6 @@ export function WappalyzerFingerprintView() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }))
   }
 
-  // Format date
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString(getDateLocale(locale), {
       year: "numeric",
@@ -65,14 +61,13 @@ export function WappalyzerFingerprintView() {
     })
   }
 
-  // Export
   const handleExport = async () => {
     try {
-      const blob = await FingerprintService.exportWappalyzerFingerprints()
+      const blob = await FingerprintService.exportARLFingerprints()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `wappalyzer-fingerprints-${Date.now()}.json`
+      a.download = `arl-fingerprints-${Date.now()}.yaml`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -83,10 +78,8 @@ export function WappalyzerFingerprintView() {
     }
   }
 
-  // Bulk delete
   const handleBulkDelete = async () => {
     if (selectedFingerprints.length === 0) return
-
     try {
       const ids = selectedFingerprints.map((f) => f.id)
       const result = await bulkDeleteMutation.mutateAsync(ids)
@@ -97,7 +90,6 @@ export function WappalyzerFingerprintView() {
     }
   }
 
-  // Delete all
   const handleDeleteAll = async () => {
     try {
       const result = await deleteAllMutation.mutateAsync()
@@ -107,19 +99,16 @@ export function WappalyzerFingerprintView() {
     }
   }
 
-  // Column definitions
   const columns = useMemo(
-    () => createWappalyzerFingerprintColumns({ formatDate }),
+    () => createARLFingerprintColumns({ formatDate }),
     []
   )
 
-  // Transform data
-  const fingerprints: WappalyzerFingerprint[] = useMemo(() => {
+  const fingerprints: ARLFingerprint[] = useMemo(() => {
     if (!data?.results) return []
     return data.results
   }, [data])
 
-  // Stabilize paginationInfo reference to avoid unnecessary re-renders
   const total = data?.total ?? 0
   const page = data?.page ?? 1
   const serverPageSize = data?.pageSize ?? 10
@@ -132,7 +121,6 @@ export function WappalyzerFingerprintView() {
     totalPages,
   }), [total, page, serverPageSize, totalPages])
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -153,14 +141,13 @@ export function WappalyzerFingerprintView() {
     )
   }
 
-  // Loading state
   if (isLoading && !data) {
-    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={7} />
+    return <DataTableSkeleton toolbarButtonCount={3} rows={6} columns={4} />
   }
 
   return (
     <>
-      <WappalyzerFingerprintDataTable
+      <ARLFingerprintDataTable
         data={fingerprints}
         columns={columns}
         onSelectionChange={setSelectedFingerprints}
@@ -178,19 +165,18 @@ export function WappalyzerFingerprintView() {
         onPaginationChange={setPagination}
       />
 
-      {/* Add fingerprint dialog */}
-      <WappalyzerFingerprintDialog
+      <ARLFingerprintDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={() => refetch()}
       />
 
-      {/* Import fingerprint dialog */}
       <ImportFingerprintDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+        fingerprintType="arl"
+        acceptedFileTypes=".yaml,.yml,.json"
         onSuccess={() => refetch()}
-        fingerprintType="wappalyzer"
       />
     </>
   )

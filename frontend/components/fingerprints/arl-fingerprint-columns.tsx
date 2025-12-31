@@ -6,34 +6,30 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { useTranslations } from "next-intl"
-import type { GobyFingerprint } from "@/types/fingerprint.types"
+import type { ARLFingerprint } from "@/types/fingerprint.types"
 
 interface ColumnOptions {
   formatDate: (date: string) => string
 }
 
 /**
- * Rule details cell component - displays raw JSON data
+ * Rule cell - displays rule with expand/collapse
  */
-function RuleDetailsCell({ rules }: { rules: any[] }) {
+function RuleCell({ rule }: { rule: string }) {
   const t = useTranslations("tooltips")
   const [expanded, setExpanded] = React.useState(false)
   
-  if (!rules || rules.length === 0) return <span className="text-muted-foreground">-</span>
+  if (!rule) return <span className="text-muted-foreground">-</span>
   
-  const displayRules = expanded ? rules : rules.slice(0, 2)
-  const hasMore = rules.length > 2
+  const isLong = rule.length > 100
+  const displayRule = expanded ? rule : rule.slice(0, 100)
   
   return (
     <div className="flex flex-col gap-1">
-      <div className="font-mono text-xs space-y-0.5">
-        {displayRules.map((r, idx) => (
-          <div key={idx} className={expanded ? "break-all" : "truncate"}>
-            {JSON.stringify(r)}
-          </div>
-        ))}
-      </div>
-      {hasMore && (
+      <code className={`text-xs bg-muted px-2 py-1 rounded ${expanded ? "whitespace-pre-wrap break-all" : "truncate"}`}>
+        {displayRule}{!expanded && isLong && "..."}
+      </code>
+      {isLong && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-xs text-primary hover:underline self-start flex items-center gap-1"
@@ -56,11 +52,11 @@ function RuleDetailsCell({ rules }: { rules: any[] }) {
 }
 
 /**
- * Create Goby fingerprint table column definitions
+ * Create ARL fingerprint table column definitions
  */
-export function createGobyFingerprintColumns({
+export function createARLFingerprintColumns({
   formatDate,
-}: ColumnOptions): ColumnDef<GobyFingerprint>[] {
+}: ColumnOptions): ColumnDef<ARLFingerprint>[] {
   return [
     {
       id: "select",
@@ -96,43 +92,17 @@ export function createGobyFingerprintColumns({
         <div className="font-medium">{row.getValue("name")}</div>
       ),
       enableResizing: true,
-      size: 200,
-    },
-    {
-      accessorKey: "logic",
-      meta: { title: "Logic" },
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Logic" />
-      ),
-      cell: ({ row }) => {
-        const logic = row.getValue("logic") as string
-        return <span className="font-mono text-xs">{logic}</span>
-      },
-      enableResizing: false,
-      size: 100,
+      size: 250,
     },
     {
       accessorKey: "rule",
-      meta: { title: "Rules" },
+      meta: { title: "Rule" },
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rules" />
+        <DataTableColumnHeader column={column} title="Rule" />
       ),
-      cell: ({ row }) => {
-        const rules = row.getValue("rule") as any[]
-        return <span>{rules?.length || 0}</span>
-      },
-      enableResizing: false,
-      size: 80,
-    },
-    {
-      id: "ruleDetails",
-      meta: { title: "Rule Details" },
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Rule Details" />
-      ),
-      cell: ({ row }) => <RuleDetailsCell rules={row.original.rule || []} />,
+      cell: ({ row }) => <RuleCell rule={row.getValue("rule")} />,
       enableResizing: true,
-      size: 300,
+      size: 500,
     },
     {
       accessorKey: "createdAt",

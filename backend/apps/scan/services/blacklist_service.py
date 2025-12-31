@@ -27,9 +27,6 @@ class BlacklistService:
     DEFAULT_PATTERNS = [
         r'\.gov$',           # .gov 结尾
         r'\.gov\.[a-z]{2}$', # .gov.cn, .gov.uk 等
-        r'\.edu$',           # .edu 结尾
-        r'\.edu\.[a-z]{2}$', # .edu.cn 等
-        r'\.mil$',           # .mil 结尾
     ]
     
     def __init__(self, patterns: Optional[List[str]] = None):

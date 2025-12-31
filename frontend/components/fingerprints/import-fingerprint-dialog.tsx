@@ -21,15 +21,19 @@ import {
   useImportEholeFingerprints,
   useImportGobyFingerprints,
   useImportWappalyzerFingerprints,
+  useImportFingersFingerprints,
+  useImportFingerPrintHubFingerprints,
+  useImportARLFingerprints,
 } from "@/hooks/use-fingerprints"
 
-type FingerprintType = "ehole" | "goby" | "wappalyzer"
+type FingerprintType = "ehole" | "goby" | "wappalyzer" | "fingers" | "fingerprinthub" | "arl"
 
 interface ImportFingerprintDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   fingerprintType?: FingerprintType
+  acceptedFileTypes?: string
 }
 
 export function ImportFingerprintDialog({
@@ -37,6 +41,7 @@ export function ImportFingerprintDialog({
   onOpenChange,
   onSuccess,
   fingerprintType = "ehole",
+  acceptedFileTypes = ".json",
 }: ImportFingerprintDialogProps) {
   const [files, setFiles] = useState<File[]>([])
   const t = useTranslations("tools.fingerprints")
@@ -46,6 +51,9 @@ export function ImportFingerprintDialog({
   const eholeImportMutation = useImportEholeFingerprints()
   const gobyImportMutation = useImportGobyFingerprints()
   const wappalyzerImportMutation = useImportWappalyzerFingerprints()
+  const fingersImportMutation = useImportFingersFingerprints()
+  const fingerprinthubImportMutation = useImportFingerPrintHubFingerprints()
+  const arlImportMutation = useImportARLFingerprints()
 
   // Fingerprint type configuration
   const FINGERPRINT_CONFIG: Record<FingerprintType, {
@@ -132,6 +140,61 @@ export function ImportFingerprintDialog({
         return { valid: false, error: t("import.wappalyzerInvalidFormat") }
       },
     },
+    fingers: {
+      title: t("import.fingersTitle"),
+      description: t("import.fingersDesc"),
+      formatHint: t.raw("import.fingersFormatHint") as string,
+      validate: (json) => {
+        if (!Array.isArray(json)) {
+          return { valid: false, error: t("import.fingersInvalidArray") }
+        }
+        if (json.length === 0) {
+          return { valid: false, error: t("import.emptyData") }
+        }
+        const first = json[0]
+        if (!first.name || !first.rule) {
+          return { valid: false, error: t("import.fingersInvalidFields") }
+        }
+        return { valid: true }
+      },
+    },
+    fingerprinthub: {
+      title: t("import.fingerprinthubTitle"),
+      description: t("import.fingerprinthubDesc"),
+      formatHint: t.raw("import.fingerprinthubFormatHint") as string,
+      validate: (json) => {
+        if (!Array.isArray(json)) {
+          return { valid: false, error: t("import.fingerprinthubInvalidArray") }
+        }
+        if (json.length === 0) {
+          return { valid: false, error: t("import.emptyData") }
+        }
+        const first = json[0]
+        if (!first.id || !first.info) {
+          return { valid: false, error: t("import.fingerprinthubInvalidFields") }
+        }
+        return { valid: true }
+      },
+    },
+    arl: {
+      title: t("import.arlTitle"),
+      description: t("import.arlDesc"),
+      formatHint: t.raw("import.arlFormatHint") as string,
+      validate: (json) => {
+        // ARL supports both YAML and JSON, validation is done on backend
+        if (!Array.isArray(json)) {
+          return { valid: false, error: t("import.arlInvalidArray") }
+        }
+        if (json.length === 0) {
+          return { valid: false, error: t("import.emptyData") }
+        }
+        const first = json[0]
+        if (!first.name || !first.rule) {
+          return { valid: false, error: t("import.arlInvalidFields") }
+        }
+        return { valid: true }
+      },
+    },
   }
 
   const config = FINGERPRINT_CONFIG[fingerprintType]
@@ -140,7 +203,22 @@ export function ImportFingerprintDialog({
     ehole: eholeImportMutation,
     goby: gobyImportMutation,
     wappalyzer: wappalyzerImportMutation,
+    fingers: fingersImportMutation,
+    fingerprinthub: fingerprinthubImportMutation,
+    arl: arlImportMutation,
   }[fingerprintType]
+
+  // Determine accepted file types based on fingerprint type
+  const getAcceptConfig = () => {
+    if (fingerprintType === "arl") {
+      return { 
+        "application/json": [".json"],
+        "application/x-yaml": [".yaml", ".yml"],
+        "text/yaml": [".yaml", ".yml"],
+      }
+    }
+    return { "application/json": [".json"] }
+  }
 
   const handleDrop = (acceptedFiles: File[]) => {
     setFiles(acceptedFiles)
@@ -153,20 +231,24 @@ export function ImportFingerprintDialog({
     }
 
     const file = files[0]
+    const isYamlFile = file.name.endsWith('.yaml') || file.name.endsWith('.yml')
 
-    // Frontend basic validation
-    try {
-      const text = await file.text()
-      const json = JSON.parse(text)
+    // Skip frontend validation for YAML files (ARL), let backend handle it
+    if (!isYamlFile) {
+      // Frontend basic validation for JSON files
+      try {
+        const text = await file.text()
+        const json = JSON.parse(text)
 
-      const validation = config.validate(json)
-      if (!validation.valid) {
-        toast.error(validation.error)
+        const validation = config.validate(json)
+        if (!validation.valid) {
+          toast.error(validation.error)
+          return
+        }
+      } catch (e) {
+        toast.error(tToast("invalidJsonFile"))
         return
       }
-    } catch (e) {
-      toast.error(tToast("invalidJsonFile"))
-      return
     }
 
     // Validation passed, submit to backend
@@ -202,7 +284,7 @@ export function ImportFingerprintDialog({
           <Dropzone
             src={files}
             onDrop={handleDrop}
-            accept={{ "application/json": [".json"] }}
+            accept={getAcceptConfig()}
             maxFiles={1}
             maxSize={50 * 1024 * 1024}  // 50MB
             onError={(error) => toast.error(error.message)}

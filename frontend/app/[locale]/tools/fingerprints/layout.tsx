@@ -16,13 +16,6 @@ import {
 import { useFingerprintStats } from "@/hooks/use-fingerprints"
 import { useTranslations } from "next-intl"
 
-// Fingerprint library description
-const FINGERPRINT_HELP = `
-• EHole: Red team key asset identification tool, supports keyword, favicon hash and other identification methods
-• Goby: Attack surface mapping tool, contains a large number of web applications and device fingerprints
-• Wappalyzer: Browser extension that can identify the technology stack used by websites
-`.trim()
-
 /**
  * Fingerprint management layout
  * Provides tab navigation to switch between different fingerprint libraries
@@ -41,6 +34,9 @@ export default function FingerprintsLayout({
     if (pathname.includes("/ehole")) return "ehole"
     if (pathname.includes("/goby")) return "goby"
     if (pathname.includes("/wappalyzer")) return "wappalyzer"
+    if (pathname.includes("/fingers")) return "fingers"
+    if (pathname.includes("/fingerprinthub")) return "fingerprinthub"
+    if (pathname.includes("/arl")) return "arl"
     return "ehole"
   }
 
@@ -50,6 +46,9 @@ export default function FingerprintsLayout({
     ehole: `${basePath}/ehole/`,
     goby: `${basePath}/goby/`,
     wappalyzer: `${basePath}/wappalyzer/`,
+    fingers: `${basePath}/fingers/`,
+    fingerprinthub: `${basePath}/fingerprinthub/`,
+    arl: `${basePath}/arl/`,
   }
 
   // Fingerprint library counts
@@ -57,6 +56,9 @@ export default function FingerprintsLayout({
     ehole: stats?.ehole || 0,
     goby: stats?.goby || 0,
     wappalyzer: stats?.wappalyzer || 0,
+    fingers: stats?.fingers || 0,
+    fingerprinthub: stats?.fingerprinthub || 0,
+    arl: stats?.arl || 0,
   }
 
   if (isLoading) {
@@ -123,6 +125,36 @@ export default function FingerprintsLayout({
                   )}
                 </Link>
               </TabsTrigger>
+              <TabsTrigger value="fingers" asChild>
+                <Link href={tabPaths.fingers} className="flex items-center gap-0.5">
+                  Fingers
+                  {counts.fingers > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">
+                      {counts.fingers}
+                    </Badge>
+                  )}
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="fingerprinthub" asChild>
+                <Link href={tabPaths.fingerprinthub} className="flex items-center gap-0.5">
+                  FingerPrintHub
+                  {counts.fingerprinthub > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">
+                      {counts.fingerprinthub}
+                    </Badge>
+                  )}
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="arl" asChild>
+                <Link href={tabPaths.arl} className="flex items-center gap-0.5">
+                  ARL
+                  {counts.arl > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">
+                      {counts.arl}
+                    </Badge>
+                  )}
+                </Link>
+              </TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -132,7 +164,7 @@ export default function FingerprintsLayout({
                 <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-sm whitespace-pre-line">
-                {FINGERPRINT_HELP}
+                {t("helpText")}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

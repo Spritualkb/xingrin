@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { FingerprintService } from "@/services/fingerprint.service"
-import type { EholeFingerprint, GobyFingerprint, WappalyzerFingerprint, FingerprintStats } from "@/types/fingerprint.types"
+import type { EholeFingerprint, GobyFingerprint, WappalyzerFingerprint, FingersFingerprint, FingerPrintHubFingerprint, ARLFingerprint, FingerprintStats } from "@/types/fingerprint.types"
 
 // Query Keys
 export const fingerprintKeys = {
@@ -24,6 +24,21 @@ export const fingerprintKeys = {
     all: () => [...fingerprintKeys.all, "wappalyzer"] as const,
     list: (params: any) => [...fingerprintKeys.wappalyzer.all(), "list", params] as const,
     detail: (id: number) => [...fingerprintKeys.wappalyzer.all(), "detail", id] as const,
+  },
+  fingers: {
+    all: () => [...fingerprintKeys.all, "fingers"] as const,
+    list: (params: any) => [...fingerprintKeys.fingers.all(), "list", params] as const,
+    detail: (id: number) => [...fingerprintKeys.fingers.all(), "detail", id] as const,
+  },
+  fingerprinthub: {
+    all: () => [...fingerprintKeys.all, "fingerprinthub"] as const,
+    list: (params: any) => [...fingerprintKeys.fingerprinthub.all(), "list", params] as const,
+    detail: (id: number) => [...fingerprintKeys.fingerprinthub.all(), "detail", id] as const,
+  },
+  arl: {
+    all: () => [...fingerprintKeys.all, "arl"] as const,
+    list: (params: any) => [...fingerprintKeys.arl.all(), "list", params] as const,
+    detail: (id: number) => [...fingerprintKeys.arl.all(), "detail", id] as const,
   },
 }
 
@@ -376,6 +391,345 @@ export function useDeleteAllWappalyzerFingerprints() {
     mutationFn: () => FingerprintService.deleteAllWappalyzerFingerprints(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fingerprintKeys.wappalyzer.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+// ==================== Fingers Hooks ====================
+
+/**
+ * 获取 Fingers 指纹列表
+ */
+export function useFingersFingerprints(
+  params: { page?: number; pageSize?: number; filter?: string } = {},
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: fingerprintKeys.fingers.list(params),
+    queryFn: () => FingerprintService.getFingersFingerprints(params),
+    ...options,
+  })
+}
+
+/**
+ * 获取 Fingers 指纹详情
+ */
+export function useFingersFingerprint(id: number, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: fingerprintKeys.fingers.detail(id),
+    queryFn: () => FingerprintService.getFingersFingerprint(id),
+    enabled: id > 0 && options?.enabled !== false,
+  })
+}
+
+/**
+ * 创建 Fingers 指纹
+ */
+export function useCreateFingersFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Omit<FingersFingerprint, 'id' | 'createdAt'>) => 
+      FingerprintService.createFingersFingerprint(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 更新 Fingers 指纹
+ */
+export function useUpdateFingersFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<FingersFingerprint> }) =>
+      FingerprintService.updateFingersFingerprint(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.detail(id) })
+    },
+  })
+}
+
+/**
+ * 删除 Fingers 指纹
+ */
+export function useDeleteFingersFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => FingerprintService.deleteFingersFingerprint(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 文件导入 Fingers 指纹
+ */
+export function useImportFingersFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => FingerprintService.importFingersFingerprints(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 批量删除 Fingers 指纹
+ */
+export function useBulkDeleteFingersFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => FingerprintService.bulkDeleteFingersFingerprints(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 删除所有 Fingers 指纹
+ */
+export function useDeleteAllFingersFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => FingerprintService.deleteAllFingersFingerprints(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingers.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+// ==================== FingerPrintHub Hooks ====================
+
+/**
+ * 获取 FingerPrintHub 指纹列表
+ */
+export function useFingerPrintHubFingerprints(
+  params: { page?: number; pageSize?: number; filter?: string } = {},
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: fingerprintKeys.fingerprinthub.list(params),
+    queryFn: () => FingerprintService.getFingerPrintHubFingerprints(params),
+    ...options,
+  })
+}
+
+/**
+ * 获取 FingerPrintHub 指纹详情
+ */
+export function useFingerPrintHubFingerprint(id: number, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: fingerprintKeys.fingerprinthub.detail(id),
+    queryFn: () => FingerprintService.getFingerPrintHubFingerprint(id),
+    enabled: id > 0 && options?.enabled !== false,
+  })
+}
+
+/**
+ * 创建 FingerPrintHub 指纹
+ */
+export function useCreateFingerPrintHubFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Omit<FingerPrintHubFingerprint, 'id' | 'createdAt'>) => 
+      FingerprintService.createFingerPrintHubFingerprint(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 更新 FingerPrintHub 指纹
+ */
+export function useUpdateFingerPrintHubFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<FingerPrintHubFingerprint> }) =>
+      FingerprintService.updateFingerPrintHubFingerprint(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.detail(id) })
+    },
+  })
+}
+
+/**
+ * 删除 FingerPrintHub 指纹
+ */
+export function useDeleteFingerPrintHubFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => FingerprintService.deleteFingerPrintHubFingerprint(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 文件导入 FingerPrintHub 指纹
+ */
+export function useImportFingerPrintHubFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => FingerprintService.importFingerPrintHubFingerprints(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 批量删除 FingerPrintHub 指纹
+ */
+export function useBulkDeleteFingerPrintHubFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => FingerprintService.bulkDeleteFingerPrintHubFingerprints(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 删除所有 FingerPrintHub 指纹
+ */
+export function useDeleteAllFingerPrintHubFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => FingerprintService.deleteAllFingerPrintHubFingerprints(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.fingerprinthub.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+// ==================== ARL Hooks ====================
+
+/**
+ * 获取 ARL 指纹列表
+ */
+export function useARLFingerprints(
+  params: { page?: number; pageSize?: number; filter?: string } = {},
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: fingerprintKeys.arl.list(params),
+    queryFn: () => FingerprintService.getARLFingerprints(params),
+    ...options,
+  })
+}
+
+/**
+ * 获取 ARL 指纹详情
+ */
+export function useARLFingerprint(id: number, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: fingerprintKeys.arl.detail(id),
+    queryFn: () => FingerprintService.getARLFingerprint(id),
+    enabled: id > 0 && options?.enabled !== false,
+  })
+}
+
+/**
+ * 创建 ARL 指纹
+ */
+export function useCreateARLFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Omit<ARLFingerprint, 'id' | 'createdAt'>) => 
+      FingerprintService.createARLFingerprint(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 更新 ARL 指纹
+ */
+export function useUpdateARLFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<ARLFingerprint> }) =>
+      FingerprintService.updateARLFingerprint(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.detail(id) })
+    },
+  })
+}
+
+/**
+ * 删除 ARL 指纹
+ */
+export function useDeleteARLFingerprint() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => FingerprintService.deleteARLFingerprint(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 文件导入 ARL 指纹
+ */
+export function useImportARLFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => FingerprintService.importARLFingerprints(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 批量删除 ARL 指纹
+ */
+export function useBulkDeleteARLFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => FingerprintService.bulkDeleteARLFingerprints(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
+    },
+  })
+}
+
+/**
+ * 删除所有 ARL 指纹
+ */
+export function useDeleteAllARLFingerprints() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => FingerprintService.deleteAllARLFingerprints(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: fingerprintKeys.arl.all() })
       queryClient.invalidateQueries({ queryKey: fingerprintKeys.stats() })
     },
   })

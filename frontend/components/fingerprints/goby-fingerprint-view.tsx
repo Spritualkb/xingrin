@@ -26,29 +26,8 @@ export function GobyFingerprintView() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
 
-  // Internationalization
-  const tColumns = useTranslations("columns")
-  const tCommon = useTranslations("common")
-  const tTooltips = useTranslations("tooltips")
   const tFingerprints = useTranslations("tools.fingerprints")
   const locale = useLocale()
-
-  // Build translation object
-  const translations = useMemo(() => ({
-    columns: {
-      name: tColumns("common.name"),
-      logic: tColumns("fingerprint.logic"),
-      rules: tColumns("fingerprint.rules"),
-      ruleDetails: tColumns("fingerprint.ruleDetails"),
-      created: tColumns("fingerprint.created"),
-    },
-    actions: {
-      selectAll: tCommon("actions.selectAll"),
-      selectRow: tCommon("actions.selectRow"),
-      expand: tTooltips("expand"),
-      collapse: tTooltips("collapse"),
-    },
-  }), [tColumns, tCommon, tTooltips])
 
   // Query data
   const { data, isLoading, isFetching, error, refetch } = useGobyFingerprints({
@@ -130,8 +109,8 @@ export function GobyFingerprintView() {
 
   // Column definitions
   const columns = useMemo(
-    () => createGobyFingerprintColumns({ formatDate, t: translations }),
-    [translations]
+    () => createGobyFingerprintColumns({ formatDate }),
+    []
   )
 
   // Transform data

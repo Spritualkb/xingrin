@@ -11,7 +11,7 @@ import {
 } from "@/hooks/use-fingerprints"
 import { FingerprintService } from "@/services/fingerprint.service"
 import { EholeFingerprintDataTable } from "./ehole-fingerprint-data-table"
-import { createEholeFingerprintColumns, EholeFingerprintTranslations } from "./ehole-fingerprint-columns"
+import { createEholeFingerprintColumns } from "./ehole-fingerprint-columns"
 import { EholeFingerprintDialog } from "./ehole-fingerprint-dialog"
 import { ImportFingerprintDialog } from "./import-fingerprint-dialog"
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton"
@@ -19,30 +19,9 @@ import { getDateLocale } from "@/lib/date-utils"
 import type { EholeFingerprint } from "@/types/fingerprint.types"
 
 export function EholeFingerprintView() {
-  const tColumns = useTranslations("columns")
-  const tCommon = useTranslations("common")
-  const tTooltips = useTranslations("tooltips")
   const tFingerprints = useTranslations("tools.fingerprints")
   const locale = useLocale()
   
-  // Build translation object
-  const translations: EholeFingerprintTranslations = {
-    columns: {
-      cms: tColumns("fingerprint.cms"),
-      method: tColumns("fingerprint.method"),
-      location: tColumns("endpoint.location"),
-      keyword: tColumns("fingerprint.keyword"),
-      type: tColumns("common.type"),
-      important: tColumns("fingerprint.important"),
-      created: tColumns("fingerprint.created"),
-    },
-    actions: {
-      selectAll: tCommon("actions.selectAll"),
-      selectRow: tCommon("actions.selectRow"),
-      expand: tTooltips("expand"),
-      collapse: tTooltips("collapse"),
-    },
-  }
   const [selectedFingerprints, setSelectedFingerprints] = useState<EholeFingerprint[]>([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [filterQuery, setFilterQuery] = useState("")
@@ -130,8 +109,8 @@ export function EholeFingerprintView() {
 
   // Column definitions
   const columns = useMemo(
-    () => createEholeFingerprintColumns({ formatDate, t: translations }),
-    [translations]
+    () => createEholeFingerprintColumns({ formatDate }),
+    []
   )
 
   // Transform data
