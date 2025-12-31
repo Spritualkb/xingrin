@@ -114,8 +114,8 @@ def bulk_merge_tech_field(
                     
                     # 插入新记录（带冲突处理）
                     insert_sql = f"""
-                        INSERT INTO {table_name} (target_id, url, host, tech, created_at)
-                        VALUES (%s, %s, %s, %s::varchar[], NOW())
+                        INSERT INTO {table_name} (target_id, url, host, location, tech, created_at)
+                        VALUES (%s, %s, %s, '', %s::varchar[], NOW())
                         ON CONFLICT (target_id, url) DO UPDATE SET
                             tech = (
                                 SELECT ARRAY(SELECT DISTINCT unnest(
