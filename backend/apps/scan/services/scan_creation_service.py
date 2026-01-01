@@ -10,7 +10,7 @@
 import uuid
 import logging
 import threading
-from typing import List
+from typing import List, Tuple
 from datetime import datetime
 from pathlib import Path
 from django.conf import settings
@@ -20,6 +20,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from apps.scan.models import Scan
 from apps.scan.repositories import DjangoScanRepository
+from apps.scan.utils.config_merger import merge_engine_configs, ConfigConflictError
 from apps.targets.repositories import DjangoTargetRepository, DjangoOrganizationRepository
 from apps.engine.repositories import DjangoEngineRepository
 from apps.targets.models import Target
@@ -142,6 +143,106 @@ class ScanCreationService:
         
         return targets, engine
     
+    def prepare_initiate_scan_multi_engine(
+        self,
+        organization_id: int | None = None,
+        target_id: int | None = None,
+        engine_ids: List[int] | None = None
+    ) -> Tuple[List[Target], str, List[str], List[int]]:
+        """
+        准备多引擎扫描任务所需的数据
+        
+        职责：
+            1. 参数验证（必填项、互斥参数）
+            2. 资源查询（Engines、Organization、Target）
+            3. 合并引擎配置（检测冲突）
+            4. 返回准备好的目标列表、合并配置和引擎信息
+        
+        Args:
+            organization_id: 组织ID（可选）
+            target_id: 目标ID（可选）
+            engine_ids: 扫描引擎ID列表（必填）
+        
+        Returns:
+            (目标列表, 合并配置, 引擎名称列表, 引擎ID列表) - 供 create_scans 方法使用
+        
+        Raises:
+            ValidationError: 参数验证失败或业务规则不满足
+            ObjectDoesNotExist: 资源不存在（Organization/Target/ScanEngine）
+            ConfigConflictError: 引擎配置存在冲突
+        
+        Note:
+            - organization_id 和 target_id 必须二选一
+            - 如果提供 organization_id，返回该组织下所有目标
+            - 如果提供 target_id，返回单个目标列表
+        """
+        # 1. 参数验证
+        if not engine_ids:
+            raise ValidationError('缺少必填参数: engine_ids')
+        
+        if not organization_id and not target_id:
+            raise ValidationError('必须提供 organization_id 或 target_id 其中之一')
+        
+        if organization_id and target_id:
+            raise ValidationError('organization_id 和 target_id 只能提供其中之一')
+        
+        # 2. 查询所有扫描引擎
+        engines = []
+        for engine_id in engine_ids:
+            engine = self.engine_repo.get_by_id(engine_id)
+            if not engine:
+                logger.error("扫描引擎不存在 - Engine ID: %s", engine_id)
+                raise ObjectDoesNotExist(f'ScanEngine ID {engine_id} 不存在')
+            engines.append(engine)
+        
+        # 3. 合并引擎配置（可能抛出 ConfigConflictError）
+        engine_configs = [(e.name, e.configuration or '') for e in engines]
+        merged_configuration = merge_engine_configs(engine_configs)
+        engine_names = [e.name for e in engines]
+        
+        logger.debug(
+            "引擎配置合并成功 - 引擎: %s",
+            ', '.join(engine_names)
+        )
+        
+        # 4. 根据参数获取目标列表
+        targets = []
+        
+        if organization_id:
+            # 根据组织ID获取所有目标
+            organization = self.organization_repo.get_by_id(organization_id)
+            if not organization:
+                logger.error("组织不存在 - Organization ID: %s", organization_id)
+                raise ObjectDoesNotExist(f'Organization ID {organization_id} 不存在')
+            
+            targets = self.organization_repo.get_targets(organization_id)
+            
+            if not targets:
+                raise ValidationError(f'组织 ID {organization_id} 下没有目标')
+            
+            logger.debug(
+                "准备发起扫描 - 组织: %s, 目标数量: %d, 引擎: %s",
+                organization.name,
+                len(targets),
+                ', '.join(engine_names)
+            )
+        else:
+            # 根据目标ID获取单个目标
+            target = self.target_repo.get_by_id(target_id)
+            if not target:
+                logger.error("目标不存在 - Target ID: %s", target_id)
+                raise ObjectDoesNotExist(f'Target ID {target_id} 不存在')
+            
+            targets = [target]
+            
+            logger.debug(
+                "准备发起扫描 - 目标: %s, 引擎: %s",
+                target.name,
+                ', '.join(engine_names)
+            )
+        
+        return targets, merged_configuration, engine_names, engine_ids
+    
     def _generate_scan_workspace_dir(self) -> str:
         """
         生成 Scan 工作空间目录路径
@@ -179,7 +280,9 @@ class ScanCreationService:
     def create_scans(
         self,
         targets: List[Target],
-        engine: ScanEngine,
+        engine_ids: List[int],
+        engine_names: List[str],
+        merged_configuration: str,
         scheduled_scan_name: str | None = None
     ) -> List[Scan]:
         """
@@ -187,7 +290,9 @@ class ScanCreationService:
         
         Args:
             targets: 目标列表
-            engine: 扫描引擎对象
+            engine_ids: 引擎 ID 列表
+            engine_names: 引擎名称列表
+            merged_configuration: 合并后的 YAML 配置
             scheduled_scan_name: 定时扫描任务名称（可选，用于通知显示）
         
         Returns:
@@ -205,7 +310,9 @@ class ScanCreationService:
                 scan_workspace_dir = self._generate_scan_workspace_dir()
                 scan = Scan(
                     target=target,
-                    engine=engine,
+                    engine_ids=engine_ids,
+                    engine_names=engine_names,
+                    merged_configuration=merged_configuration,
                     results_dir=scan_workspace_dir,
                     status=ScanStatus.INITIATED,
                     container_ids=[],
@@ -236,13 +343,15 @@ class ScanCreationService:
             return []
         
         # 第三步：分发任务到 Workers
+        # 使用第一个引擎名称作为显示名称，或者合并显示
+        display_engine_name = ', '.join(engine_names) if engine_names else ''
         scan_data = [
             {
                 'scan_id': scan.id,
                 'target_name': scan.target.name,
                 'target_id': scan.target.id,
                 'results_dir': scan.results_dir,
-                'engine_name': scan.engine.name,
+                'engine_name': display_engine_name,
                 'scheduled_scan_name': scheduled_scan_name,
             }
             for scan in created_scans

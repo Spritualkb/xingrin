@@ -14,6 +14,7 @@
       "target": "Target",
       "summary": "Summary",
       "engineName": "Engine Name",
+      "workerName": "Worker Node",
       "progress": "Progress",
       "subdomains": "Subdomains",
       "websites": "Websites",
@@ -586,7 +587,8 @@
       "capabilities": "{count} 项能力",
       "noConfig": "无配置",
       "initiating": "发起中...",
-      "startScan": "开始扫描"
+      "startScan": "开始扫描",
+      "selectedCount": "已选择 {count} 个引擎"
     },
     "cron": {
       "everyMinute": "每分钟",
@@ -713,7 +715,8 @@
         "organizationMode": "组织扫描",
         "organizationModeHint": "组织扫描模式下，执行时将动态获取该组织下所有目标",
         "noAvailableTarget": "暂无可用目标",
-        "selected": "已选择"
+        "selected": "已选择",
+        "selectedEngines": "已选择 {count} 个引擎"
       },
       "presets": {
         "everyHour": "每小时",
@@ -1631,14 +1634,19 @@
   },
   "quickScan": {
     "title": "快速扫描",
+    "description": "快速创建扫描任务，批量扫描多个目标",
     "steps": {
       "enterTargets": "输入目标",
       "selectEngine": "选择引擎",
       "confirmScan": "确认扫描"
     },
+    "step1Title": "输入目标",
+    "step2Title": "选择引擎",
+    "step3Title": "确认",
+    "step1Hint": "在左侧输入框中输入扫描目标，每行一个",
     "step": "步骤 {current}/{total} · {title}",
-    "targetPlaceholder": "每行输入一个目标，支持以下格式：\n\n域名: example.com, sub.example.com\nIP地址: 192.168.1.1, 10.0.0.1\nCIDR网段: 192.168.0.0/24, 10.0.0.0/8\nURL: https://example.com/api/v1",
-    "supportedFormats": "支持: 域名、IP、CIDR、URL",
+    "targetPlaceholder": "每行输入一个目标，支持以下格式：\n\n域名: example.com, sub.example.com\nIP地址: 192.168.1.1, 10.0.0.1\nCIDR网段: 192.168.1.0/24, 10.0.0.0/8\nURL: https://example.com/api/v1",
+    "supportedFormats": "支持 域名、IP、CIDR、URL",
     "validTargets": "{count} 个有效目标",
     "invalidTargets": "{count} 个无效",
     "selectEngine": "选择引擎",
@@ -1648,12 +1656,20 @@
     "scanTargets": "扫描目标",
     "totalTargets": "共 {count} 个目标",
     "previous": "上一步",
+    "back": "上一步",
     "next": "下一步",
     "startScan": "开始扫描",
     "creating": "创建中...",
     "selectEngineHint": "选择左侧引擎查看配置详情",
     "moreErrors": "还有 {count} 个错误...",
     "lineError": "行 {lineNumber}: {error}",
+    "loading": "加载中...",
+    "loadFailed": "加载失败",
+    "selectedCount": "已选择 {count} 个",
+    "confirmTargets": "共 {count} 个扫描目标",
+    "andMore": "还有 {count} 个...",
+    "selectedEngines": "已选引擎",
+    "confirmSummary": "将使用 {engineCount} 个引擎扫描 {targetCount} 个目标",
     "toast": {
       "noValidTarget": "请输入至少一个有效目标",
       "hasInvalidInputs": "存在 {count} 个无效输入，请修正后继续",
@@ -1662,7 +1678,8 @@
       "createFailed": "创建扫描任务失败",
       "createSuccess": "已创建 {count} 个扫描任务",
       "createSuccessDesc": "{created} 个目标成功，{failed} 个失败",
-      "targetsFailed": "{count} 个目标处理失败"
+      "targetsFailed": "{count} 个目标处理失败",
+      "configConflict": "引擎配置冲突"
     }
   },
   "notificationDrawer": {

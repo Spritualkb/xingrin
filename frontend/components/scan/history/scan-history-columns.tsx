@@ -44,6 +44,7 @@ export interface ScanHistoryTranslations {
     target: string
     summary: string
     engineName: string
+    workerName: string
     createdAt: string
     status: string
     progress: string
@@ -240,7 +241,7 @@ export const createScanHistoryColumns = ({
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t.columns.summary} />
     ),
-    size: 420,
+    size: 290,
     minSize: 150,
     cell: ({ row }) => {
       const summary = (row.getValue("summary") as {
@@ -391,20 +392,46 @@ export const createScanHistoryColumns = ({
     enableSorting: false,
   },
   {
-    accessorKey: "engineName",
-    size: 120,
-    minSize: 80,
-    maxSize: 180,
+    accessorKey: "engineNames",
+    size: 150,
+    minSize: 100,
+    maxSize: 200,
     enableResizing: false,
     meta: { title: t.columns.engineName },
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t.columns.engineName} />
     ),
     cell: ({ row }) => {
-      const engineName = row.getValue("engineName") as string
+      const engineNames = row.getValue("engineNames") as string[] | undefined
+      if (!engineNames || engineNames.length === 0) {
+        return <span className="text-muted-foreground text-sm">-</span>
+      }
       return (
-        <Badge variant="secondary">
-          {engineName}
+        <div className="flex flex-wrap gap-1">
+          {engineNames.map((name, index) => (
+            <Badge key={index} variant="secondary">
+              {name}
+            </Badge>
+          ))}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "workerName",
+    size: 120,
+    minSize: 80,
+    maxSize: 180,
+    enableResizing: false,
+    meta: { title: t.columns.workerName },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t.columns.workerName} />
+    ),
+    cell: ({ row }) => {
+      const workerName = row.getValue("workerName") as string | null | undefined
+      return (
+        <Badge variant="outline">
+          {workerName || "-"}
         </Badge>
       )
     },

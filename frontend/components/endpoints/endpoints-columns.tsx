@@ -242,6 +242,21 @@ export function createEndpointColumns({
       ),
     },
     {
+      accessorKey: "responseHeaders",
+      meta: { title: t.columns.responseHeaders },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.columns.responseHeaders} />
+      ),
+      size: 250,
+      minSize: 150,
+      maxSize: 400,
+      cell: ({ row }) => {
+        const headers = row.getValue("responseHeaders") as string | null | undefined
+        if (!headers) return <span className="text-muted-foreground text-sm">-</span>
+        return <ExpandableCell value={headers} maxLines={3} />
+      },
+    },
+    {
       accessorKey: "vhost",
       meta: { title: t.columns.vhost },
       header: ({ column }) => (
@@ -276,21 +291,6 @@ export function createEndpointColumns({
         )
       },
       enableSorting: false,
-    },
-    {
-      accessorKey: "responseHeaders",
-      meta: { title: t.columns.responseHeaders },
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.responseHeaders} />
-      ),
-      size: 250,
-      minSize: 150,
-      maxSize: 400,
-      cell: ({ row }) => {
-        const headers = row.getValue("responseHeaders") as string | null | undefined
-        if (!headers) return <span className="text-muted-foreground text-sm">-</span>
-        return <ExpandableCell value={headers} maxLines={3} variant="mono" />
-      },
     },
     {
       accessorKey: "responseTime",

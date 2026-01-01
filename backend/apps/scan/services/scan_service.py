@@ -96,14 +96,34 @@ class ScanService:
             organization_id, target_id, engine_id
         )
     
+    def prepare_initiate_scan_multi_engine(
+        self,
+        organization_id: int | None = None,
+        target_id: int | None = None,
+        engine_ids: List[int] | None = None
+    ) -> tuple[List[Target], str, List[str], List[int]]:
+        """
+        为创建多引擎扫描任务做准备
+        
+        Returns:
+            (目标列表, 合并配置, 引擎名称列表, 引擎ID列表)
+        """
+        return self.creation_service.prepare_initiate_scan_multi_engine(
+            organization_id, target_id, engine_ids
+        )
+    
     def create_scans(
         self,
         targets: List[Target],
-        engine: ScanEngine,
+        engine_ids: List[int],
+        engine_names: List[str],
+        merged_configuration: str,
         scheduled_scan_name: str | None = None
     ) -> List[Scan]:
         """批量创建扫描任务（委托给 ScanCreationService）"""
-        return self.creation_service.create_scans(targets, engine, scheduled_scan_name)
+        return self.creation_service.create_scans(
+            targets, engine_ids, engine_names, merged_configuration, scheduled_scan_name
+        )
     
     # ==================== 状态管理方法（委托给 ScanStateService） ====================
     

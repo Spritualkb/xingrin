@@ -36,6 +36,7 @@ export interface ScanRecord {
   id: number
   target?: number              // Target ID (corresponds to backend target)
   targetName: string           // Target name (corresponds to backend targetName)
+  workerName?: string | null   // Worker node name (corresponds to backend worker_name)
   summary: {
     subdomains: number
     websites: number
@@ -50,8 +51,8 @@ export interface ScanRecord {
       low: number
     }
   }
-  engine?: number              // Engine ID (corresponds to backend engine)
-  engineName: string           // Engine name (corresponds to backend engineName)
+  engineIds: number[]          // Engine ID list (corresponds to backend engine_ids)
+  engineNames: string[]        // Engine name list (corresponds to backend engine_names)
   createdAt: string            // Creation time (corresponds to backend createdAt)
   status: ScanStatus
   errorMessage?: string        // Error message (corresponds to backend errorMessage, has value when failed)
@@ -81,7 +82,7 @@ export interface GetScansResponse {
 export interface InitiateScanRequest {
   organizationId?: number  // Organization ID (choose one)
   targetId?: number        // Target ID (choose one)
-  engineId: number         // Scan engine ID (required)
+  engineIds: number[]      // Scan engine ID list (required)
 }
 
 /**
@@ -89,7 +90,7 @@ export interface InitiateScanRequest {
  */
 export interface QuickScanRequest {
   targets: { name: string }[]  // Target list
-  engineId: number             // Scan engine ID (required)
+  engineIds: number[]          // Scan engine ID list (required)
 }
 
 /**
@@ -116,7 +117,8 @@ export interface QuickScanResponse {
 export interface ScanTask {
   id: number
   target: number           // Target ID
-  engine: number           // Engine ID
+  engineIds: number[]      // Engine ID list
+  engineNames: string[]    // Engine name list
   status: ScanStatus
   createdAt: string
   updatedAt: string

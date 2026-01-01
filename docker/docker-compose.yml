@@ -68,7 +68,7 @@ services:
     restart: always
     environment:
       - SERVER_URL=http://server:8888
-      - WORKER_NAME=本地节点
+      - WORKER_NAME=Local-Worker
       - IS_LOCAL=true
       - IMAGE_TAG=${IMAGE_TAG}
       - WORKER_API_KEY=${WORKER_API_KEY}

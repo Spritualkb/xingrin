@@ -12,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -126,7 +119,7 @@ export function CreateScheduledScanDialog({
   const [currentStep, { goToNextStep, goToPrevStep, reset: resetStep }] = useStep(totalSteps)
 
   const [name, setName] = React.useState("")
-  const [engineId, setEngineId] = React.useState<number | null>(null)
+  const [engineIds, setEngineIds] = React.useState<number[]>([])
   const [selectionMode, setSelectionMode] = React.useState<SelectionMode>("organization")
   const [selectedOrgId, setSelectedOrgId] = React.useState<number | null>(null)
   const [selectedTargetId, setSelectedTargetId] = React.useState<number | null>(null)
@@ -152,12 +145,20 @@ export function CreateScheduledScanDialog({
 
   const resetForm = () => {
     setName("")
-    setEngineId(null)
+    setEngineIds([])
     setSelectionMode("organization")
     setSelectedOrgId(null)
     setSelectedTargetId(null)
     setCronExpression("0 2 * * *")
     resetStep()
+  }
+
+  const handleEngineToggle = (engineId: number, checked: boolean) => {
+    if (checked) {
+      setEngineIds((prev) => [...prev, engineId])
+    } else {
+      setEngineIds((prev) => prev.filter((id) => id !== engineId))
+    }
   }
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -178,7 +179,7 @@ export function CreateScheduledScanDialog({
       switch (currentStep) {
         case 1:
           if (!name.trim()) { toast.error(t("form.taskNameRequired")); return false }
-          if (!engineId) { toast.error(t("form.scanEngineRequired")); return false }
+          if (engineIds.length === 0) { toast.error(t("form.scanEngineRequired")); return false }
           return true
         case 2:
           const parts = cronExpression.trim().split(/\s+/)
@@ -191,7 +192,7 @@ export function CreateScheduledScanDialog({
     switch (currentStep) {
       case 1:
         if (!name.trim()) { toast.error(t("form.taskNameRequired")); return false }
-        if (!engineId) { toast.error(t("form.scanEngineRequired")); return false }
+        if (engineIds.length === 0) { toast.error(t("form.scanEngineRequired")); return false }
         return true
       case 2: return true
       case 3:
@@ -215,7 +216,7 @@ export function CreateScheduledScanDialog({
     if (!validateCurrentStep()) return
     const request: CreateScheduledScanRequest = {
       name: name.trim(),
-      engineId: engineId!,
+      engineIds: engineIds,
       cronExpression: cronExpression.trim(),
     }
     if (selectionMode === "organization" && selectedOrgId) {
@@ -225,6 +226,14 @@ export function CreateScheduledScanDialog({
     }
     createScheduledScan(request, {
       onSuccess: () => { resetForm(); onOpenChange(false); onSuccess?.() },
+      onError: (err: unknown) => {
+        const error = err as { response?: { data?: { error?: { code?: string; message?: string } } } }
+        if (error?.response?.data?.error?.code === 'CONFIG_CONFLICT') {
+          toast.error(t("toast.configConflict"), {
+            description: error.response.data.error.message,
+          })
+        }
+      },
     })
   }
 
@@ -294,14 +303,34 @@ export function CreateScheduledScanDialog({
               </div>
               <div className="space-y-2">
                 <Label>{t("form.scanEngine")} *</Label>
-                <Select value={engineId?.toString() || ""} onValueChange={(v) => setEngineId(Number(v))}>
-                  <SelectTrigger><SelectValue placeholder={t("form.scanEnginePlaceholder")} /></SelectTrigger>
-                  <SelectContent>
-                    {engines.map((engine) => (
-                      <SelectItem key={engine.id} value={engine.id.toString()}>{engine.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {engineIds.length > 0 && (
+                  <p className="text-xs text-muted-foreground">{t("form.selectedEngines", { count: engineIds.length })}</p>
+                )}
+                <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto space-y-2">
+                  {engines.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">{t("form.noEngine")}</p>
+                  ) : (
+                    engines.map((engine) => (
+                      <label
+                        key={engine.id}
+                        htmlFor={`engine-${engine.id}`}
+                        className={cn(
+                          "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all",
+                          engineIds.includes(engine.id)
+                            ? "bg-primary/10 border border-primary/30"
+                            : "hover:bg-muted/50 border border-transparent"
+                        )}
+                      >
+                        <Checkbox
+                          id={`engine-${engine.id}`}
+                          checked={engineIds.includes(engine.id)}
+                          onCheckedChange={(checked) => handleEngineToggle(engine.id, checked as boolean)}
+                        />
+                        <span className="text-sm">{engine.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">{t("form.scanEngineDesc")}</p>
               </div>
             </div>

@@ -13,15 +13,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { IconX, IconLoader2 } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
 import { useUpdateScheduledScan } from "@/hooks/use-scheduled-scans"
 import { useTargets } from "@/hooks/use-targets"
 import { useEngines } from "@/hooks/use-engines"
@@ -61,18 +56,26 @@ export function EditScheduledScanDialog({
   ]
 
   const [name, setName] = React.useState("")
-  const [engineId, setEngineId] = React.useState<number | null>(null)
+  const [engineIds, setEngineIds] = React.useState<number[]>([])
   const [selectedTargetId, setSelectedTargetId] = React.useState<number | null>(null)
   const [cronExpression, setCronExpression] = React.useState("")
 
   React.useEffect(() => {
     if (scheduledScan && open) {
       setName(scheduledScan.name)
-      setEngineId(scheduledScan.engine)
+      setEngineIds(scheduledScan.engineIds || [])
       setSelectedTargetId(scheduledScan.targetId || null)
       setCronExpression(scheduledScan.cronExpression || "0 2 * * *")
     }
   }, [scheduledScan, open])
+
+  const handleEngineToggle = (engineId: number, checked: boolean) => {
+    if (checked) {
+      setEngineIds((prev) => [...prev, engineId])
+    } else {
+      setEngineIds((prev) => prev.filter((id) => id !== engineId))
+    }
+  }
 
   const handleTargetSelect = (targetId: number) => {
     setSelectedTargetId(selectedTargetId === targetId ? null : targetId)
@@ -90,7 +93,7 @@ export function EditScheduledScanDialog({
       toast.error(t("form.taskNameRequired"))
       return
     }
-    if (!engineId) {
+    if (engineIds.length === 0) {
       toast.error(t("form.scanEngineRequired"))
       return
     }
@@ -105,7 +108,7 @@ export function EditScheduledScanDialog({
 
     const request: UpdateScheduledScanRequest = {
       name: name.trim(),
-      engineId: engineId,
+      engineIds: engineIds,
       cronExpression: cronExpression.trim(),
     }
 
@@ -119,6 +122,14 @@ export function EditScheduledScanDialog({
         onSuccess: () => {
           onOpenChange(false)
           onSuccess?.()
+        },
+        onError: (err: unknown) => {
+          const error = err as { response?: { data?: { error?: { code?: string; message?: string } } } }
+          if (error?.response?.data?.error?.code === 'CONFIG_CONFLICT') {
+            toast.error(t("toast.configConflict"), {
+              description: error.response.data.error.message,
+            })
+          }
         },
       }
     )
@@ -152,21 +163,34 @@ export function EditScheduledScanDialog({
 
           <div className="grid gap-2">
             <Label>{t("form.scanEngine")} *</Label>
-            <Select
-              value={engineId?.toString() || ""}
-              onValueChange={(v) => setEngineId(Number(v))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("form.scanEnginePlaceholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {engines.map((engine) => (
-                  <SelectItem key={engine.id} value={engine.id.toString()}>
-                    {engine.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {engineIds.length > 0 && (
+              <p className="text-xs text-muted-foreground">{t("form.selectedEngines", { count: engineIds.length })}</p>
+            )}
+            <div className="border rounded-md p-3 max-h-[150px] overflow-y-auto space-y-2">
+              {engines.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("form.noEngine")}</p>
+              ) : (
+                engines.map((engine) => (
+                  <label
+                    key={engine.id}
+                    htmlFor={`edit-engine-${engine.id}`}
+                    className={cn(
+                      "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all",
+                      engineIds.includes(engine.id)
+                        ? "bg-primary/10 border border-primary/30"
+                        : "hover:bg-muted/50 border border-transparent"
+                    )}
+                  >
+                    <Checkbox
+                      id={`edit-engine-${engine.id}`}
+                      checked={engineIds.includes(engine.id)}
+                      onCheckedChange={(checked) => handleEngineToggle(engine.id, checked as boolean)}
+                    />
+                    <span className="text-sm">{engine.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="grid gap-2">

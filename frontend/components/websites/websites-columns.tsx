@@ -212,6 +212,21 @@ export function createWebSiteColumns({
       ),
     },
     {
+      accessorKey: "responseHeaders",
+      meta: { title: t.columns.responseHeaders },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.columns.responseHeaders} />
+      ),
+      size: 250,
+      minSize: 150,
+      maxSize: 400,
+      cell: ({ row }) => {
+        const headers = row.getValue("responseHeaders") as string | null
+        if (!headers) return "-"
+        return <ExpandableCell value={headers} maxLines={3} />
+      },
+    },
+    {
       accessorKey: "vhost",
       meta: { title: t.columns.vhost },
       header: ({ column }) => (
@@ -229,21 +244,6 @@ export function createWebSiteColumns({
             {vhost ? "true" : "false"}
           </Badge>
         )
-      },
-    },
-    {
-      accessorKey: "responseHeaders",
-      meta: { title: t.columns.responseHeaders },
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.columns.responseHeaders} />
-      ),
-      size: 250,
-      minSize: 150,
-      maxSize: 400,
-      cell: ({ row }) => {
-        const headers = row.getValue("responseHeaders") as string | null
-        if (!headers) return "-"
-        return <ExpandableCell value={headers} maxLines={3} variant="mono" />
       },
     },
     {

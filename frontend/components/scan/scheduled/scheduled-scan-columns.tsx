@@ -179,19 +179,26 @@ export const createScheduledScanColumns = ({
     },
   },
   {
-    accessorKey: "engineName",
-    size: 120,
-    minSize: 80,
+    accessorKey: "engineNames",
+    size: 150,
+    minSize: 100,
     meta: { title: t.columns.scanEngine },
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t.columns.scanEngine} />
     ),
     cell: ({ row }) => {
-      const engineName = row.getValue("engineName") as string
+      const engineNames = row.original.engineNames || []
+      if (engineNames.length === 0) {
+        return <span className="text-muted-foreground text-sm">-</span>
+      }
       return (
-        <Badge variant="secondary">
-          {engineName}
-        </Badge>
+        <div className="flex flex-wrap gap-1">
+          {engineNames.map((name, index) => (
+            <Badge key={index} variant="secondary">
+              {name}
+            </Badge>
+          ))}
+        </div>
       )
     },
   },
@@ -255,8 +262,8 @@ export const createScheduledScanColumns = ({
   },
   {
     accessorKey: "isEnabled",
-    size: 100,
-    minSize: 80,
+    size: 120,
+    minSize: 100,
     meta: { title: t.columns.status },
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t.columns.status} />

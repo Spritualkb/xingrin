@@ -209,6 +209,7 @@ export function DashboardDataTable() {
           target: t('columns.scanHistory.target'),
           summary: t('columns.scanHistory.summary'),
           engineName: t('columns.scanHistory.engineName'),
+          workerName: t('columns.scanHistory.workerName'),
           createdAt: t('columns.common.createdAt'),
           status: t('columns.common.status'),
           progress: t('columns.scanHistory.progress'),

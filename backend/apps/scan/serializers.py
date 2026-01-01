@@ -7,12 +7,11 @@ from .models import Scan, ScheduledScan
 class ScanSerializer(serializers.ModelSerializer):
     """扫描任务序列化器"""
     target_name = serializers.SerializerMethodField()
-    engine_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Scan
         fields = [
-            'id', 'target', 'target_name', 'engine', 'engine_name',
+            'id', 'target', 'target_name', 'engine_ids', 'engine_names',
             'created_at', 'stopped_at', 'status', 'results_dir',
             'container_ids', 'error_message'
         ]
@@ -24,10 +23,6 @@ class ScanSerializer(serializers.ModelSerializer):
     def get_target_name(self, obj):
         """获取目标名称"""
         return obj.target.name if obj.target else None
-    
-    def get_engine_name(self, obj):
-        """获取引擎名称"""
-        return obj.engine.name if obj.engine else None
 
 
 class ScanHistorySerializer(serializers.ModelSerializer):
@@ -36,11 +31,12 @@ class ScanHistorySerializer(serializers.ModelSerializer):
     为前端扫描历史页面提供优化的数据格式，包括：
     - 扫描汇总统计（子域名、端点、漏洞数量）
     - 进度百分比和当前阶段
+    - 执行节点信息
     """
     
     # 字段映射
     target_name = serializers.CharField(source='target.name', read_only=True)
-    engine_name = serializers.CharField(source='engine.name', read_only=True)
+    worker_name = serializers.CharField(source='worker.name', read_only=True, allow_null=True)
     
     # 计算字段
     summary = serializers.SerializerMethodField()
@@ -53,9 +49,9 @@ class ScanHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Scan
         fields = [
-            'id', 'target', 'target_name', 'engine', 'engine_name', 
-            'created_at', 'status', 'error_message', 'summary', 'progress',
-            'current_stage', 'stage_progress'
+            'id', 'target', 'target_name', 'engine_ids', 'engine_names', 
+            'worker_name', 'created_at', 'status', 'error_message', 'summary', 
+            'progress', 'current_stage', 'stage_progress'
         ]
     
     def get_summary(self, obj):
@@ -105,10 +101,11 @@ class QuickScanSerializer(serializers.Serializer):
         help_text='目标列表，每个目标包含 name 字段'
     )
     
-    # 扫描引擎 ID
-    engine_id = serializers.IntegerField(
+    # 扫描引擎 ID 列表
+    engine_ids = serializers.ListField(
+        child=serializers.IntegerField(),
         required=True,
-        help_text='使用的扫描引擎 ID (必填)'
+        help_text='使用的扫描引擎 ID 列表 (必填)'
     )
     
     def validate_targets(self, value):
@@ -130,6 +127,12 @@ class QuickScanSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"第 {idx + 1} 个目标的 name 不能为空")
         
         return value
+    
+    def validate_engine_ids(self, value):
+        """验证引擎 ID 列表"""
+        if not value:
+            raise serializers.ValidationError("engine_ids 不能为空")
+        return value
 
 
 # ==================== 定时扫描序列化器 ====================
@@ -138,7 +141,6 @@ class ScheduledScanSerializer(serializers.ModelSerializer):
     """定时扫描任务序列化器（用于列表和详情）"""
     
     # 关联字段
-    engine_name = serializers.CharField(source='engine.name', read_only=True)
     organization_id = serializers.IntegerField(source='organization.id', read_only=True, allow_null=True)
     organization_name = serializers.CharField(source='organization.name', read_only=True, allow_null=True)
     target_id = serializers.IntegerField(source='target.id', read_only=True, allow_null=True)
@@ -149,7 +151,7 @@ class ScheduledScanSerializer(serializers.ModelSerializer):
         model = ScheduledScan
         fields = [
             'id', 'name',
-            'engine', 'engine_name',
+            'engine_ids', 'engine_names',
             'organization_id', 'organization_name',
             'target_id', 'target_name',
             'scan_mode',
@@ -178,7 +180,10 @@ class CreateScheduledScanSerializer(serializers.Serializer):
     """
     
     name = serializers.CharField(max_length=200, help_text='任务名称')
-    engine_id = serializers.IntegerField(help_text='扫描引擎 ID')
+    engine_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text='扫描引擎 ID 列表'
+    )
     
     # 组织扫描模式
     organization_id = serializers.IntegerField(
@@ -201,6 +206,12 @@ class CreateScheduledScanSerializer(serializers.Serializer):
     )
     is_enabled = serializers.BooleanField(default=True, help_text='是否立即启用')
     
+    def validate_engine_ids(self, value):
+        """验证引擎 ID 列表"""
+        if not value:
+            raise serializers.ValidationError("engine_ids 不能为空")
+        return value
+    
     def validate(self, data):
         """验证 organization_id 和 target_id 互斥"""
         organization_id = data.get('organization_id')
@@ -219,7 +230,11 @@ class UpdateScheduledScanSerializer(serializers.Serializer):
     """更新定时扫描任务序列化器"""
     
     name = serializers.CharField(max_length=200, required=False, help_text='任务名称')
-    engine_id = serializers.IntegerField(required=False, help_text='扫描引擎 ID')
+    engine_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        help_text='扫描引擎 ID 列表'
+    )
     
     # 组织扫描模式
     organization_id = serializers.IntegerField(
@@ -237,6 +252,12 @@ class UpdateScheduledScanSerializer(serializers.Serializer):
     
     cron_expression = serializers.CharField(max_length=100, required=False, help_text='Cron 表达式')
     is_enabled = serializers.BooleanField(required=False, help_text='是否启用')
+    
+    def validate_engine_ids(self, value):
+        """验证引擎 ID 列表"""
+        if value is not None and not value:
+            raise serializers.ValidationError("engine_ids 不能为空")
+        return value
 
 
 class ToggleScheduledScanSerializer(serializers.Serializer):

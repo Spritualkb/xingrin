@@ -37,7 +37,7 @@ interface StageDetail {
 export interface ScanProgressData {
   id: number
   targetName: string
-  engineName: string
+  engineNames: string[]
   status: string
   progress: number
   currentStage?: ScanStage
@@ -211,7 +211,7 @@ export function ScanProgressDialog({
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t("engine")}</span>
-            <Badge variant="secondary">{data.engineName}</Badge>
+            <Badge variant="secondary">{data.engineNames?.join(", ") || "-"}</Badge>
           </div>
           {data.startedAt && (
             <div className="flex items-center justify-between text-sm">
@@ -359,7 +359,7 @@ export function buildScanProgressData(scan: ScanRecord): ScanProgressData {
   return {
     id: scan.id,
     targetName: scan.targetName,
-    engineName: scan.engineName,
+    engineNames: scan.engineNames || [],
     status: scan.status,
     progress: scan.progress,
     currentStage: scan.currentStage,

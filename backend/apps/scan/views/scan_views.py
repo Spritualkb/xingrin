@@ -9,6 +9,7 @@ import logging
 
 from apps.common.response_helpers import success_response, error_response
 from apps.common.error_codes import ErrorCodes
+from apps.scan.utils.config_merger import ConfigConflictError
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ class ScanViewSet(viewsets.ModelViewSet):
         请求参数：
         {
             "targets": [{"name": "example.com"}, {"name": "https://example.com/api"}],
-            "engine_id": 1
+            "engine_ids": [1, 2]
         }
         
         支持的输入格式：
@@ -133,7 +134,7 @@ class ScanViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         targets_data = serializer.validated_data['targets']
-        engine_id = serializer.validated_data.get('engine_id')
+        engine_ids = serializer.validated_data.get('engine_ids')
         
         try:
             # 提取输入字符串列表
@@ -141,7 +142,7 @@ class ScanViewSet(viewsets.ModelViewSet):
             
             # 1. 使用 QuickScanService 解析输入并创建资产
             quick_scan_service = QuickScanService()
-            result = quick_scan_service.process_quick_scan(inputs, engine_id)
+            result = quick_scan_service.process_quick_scan(inputs, engine_ids[0] if engine_ids else None)
             
             targets = result['targets']
             
@@ -153,17 +154,19 @@ class ScanViewSet(viewsets.ModelViewSet):
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
             
-            # 2. 获取扫描引擎
-            engine_service = EngineService()
-            engine = engine_service.get_engine(engine_id)
-            if not engine:
-                raise ValidationError(f'扫描引擎 ID {engine_id} 不存在')
+            # 2. 准备多引擎扫描
+            scan_service = ScanService()
+            _, merged_configuration, engine_names, engine_ids = scan_service.prepare_initiate_scan_multi_engine(
+                target_id=targets[0].id,  # 使用第一个目标来验证引擎
+                engine_ids=engine_ids
+            )
             
             # 3. 批量发起扫描
-            scan_service = ScanService()
             created_scans = scan_service.create_scans(
                 targets=targets,
-                engine=engine
+                engine_ids=engine_ids,
+                engine_names=engine_names,
+                merged_configuration=merged_configuration
             )
             
             # 检查是否成功创建扫描任务
@@ -192,6 +195,17 @@ class ScanViewSet(viewsets.ModelViewSet):
                 },
                 status_code=status.HTTP_201_CREATED
             )
+        
+        except ConfigConflictError as e:
+            return error_response(
+                code='CONFIG_CONFLICT',
+                message=str(e),
+                details=[
+                    {'key': k, 'engines': [e1, e2]} 
+                    for k, e1, e2 in e.conflicts
+                ],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
             
         except ValidationError as e:
             return error_response(
@@ -214,7 +228,7 @@ class ScanViewSet(viewsets.ModelViewSet):
         请求参数:
         - organization_id: 组织ID (int, 可选)
         - target_id: 目标ID (int, 可选)
-        - engine_id: 扫描引擎ID (int, 必填)
+        - engine_ids: 扫描引擎ID列表 (list[int], 必填)
         
         注意: organization_id 和 target_id 二选一
         
@@ -224,21 +238,38 @@ class ScanViewSet(viewsets.ModelViewSet):
         # 获取请求数据
         organization_id = request.data.get('organization_id')
         target_id = request.data.get('target_id')
-        engine_id = request.data.get('engine_id')
+        engine_ids = request.data.get('engine_ids')
+        
+        # 验证 engine_ids
+        if not engine_ids:
+            return error_response(
+                code=ErrorCodes.VALIDATION_ERROR,
+                message='缺少必填参数: engine_ids',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not isinstance(engine_ids, list):
+            return error_response(
+                code=ErrorCodes.VALIDATION_ERROR,
+                message='engine_ids 必须是数组',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         
         try:
-            # 步骤1：准备扫描所需的数据（验证参数、查询资源、返回目标列表和引擎）
+            # 步骤1：准备多引擎扫描所需的数据
             scan_service = ScanService()
-            targets, engine = scan_service.prepare_initiate_scan(
+            targets, merged_configuration, engine_names, engine_ids = scan_service.prepare_initiate_scan_multi_engine(
                 organization_id=organization_id,
                 target_id=target_id,
-                engine_id=engine_id
+                engine_ids=engine_ids
             )
             
             # 步骤2：批量创建扫描记录并分发扫描任务
             created_scans = scan_service.create_scans(
                 targets=targets,
-                engine=engine
+                engine_ids=engine_ids,
+                engine_names=engine_names,
+                merged_configuration=merged_configuration
             )
             
             # 检查是否成功创建扫描任务
@@ -258,6 +289,17 @@ class ScanViewSet(viewsets.ModelViewSet):
                     'scans': scan_serializer.data
                 },
                 status_code=status.HTTP_201_CREATED
+            )
+        
+        except ConfigConflictError as e:
+            return error_response(
+                code='CONFIG_CONFLICT',
+                message=str(e),
+                details=[
+                    {'key': k, 'engines': [e1, e2]} 
+                    for k, e1, e2 in e.conflicts
+                ],
+                status_code=status.HTTP_400_BAD_REQUEST
             )
             
         except ObjectDoesNotExist as e:

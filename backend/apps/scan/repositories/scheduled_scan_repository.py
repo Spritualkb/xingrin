@@ -29,7 +29,9 @@ class ScheduledScanDTO:
     """
     id: Optional[int] = None
     name: str = ''
-    engine_id: int = 0
+    engine_ids: List[int] = None  # 多引擎支持
+    engine_names: List[str] = None  # 引擎名称列表
+    merged_configuration: str = ''  # 合并后的配置
     organization_id: Optional[int] = None  # 组织扫描模式
     target_id: Optional[int] = None  # 目标扫描模式
     cron_expression: Optional[str] = None
@@ -40,6 +42,11 @@ class ScheduledScanDTO:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     
+    def __post_init__(self):
+        if self.engine_ids is None:
+            self.engine_ids = []
+        if self.engine_names is None:
+            self.engine_names = []
 
 
 @auto_ensure_db_connection
@@ -56,7 +63,7 @@ class DjangoScheduledScanRepository:
     def get_by_id(self, scheduled_scan_id: int) -> Optional[ScheduledScan]:
         """根据 ID 查询定时扫描任务"""
         try:
-            return ScheduledScan.objects.select_related('engine', 'organization', 'target').get(id=scheduled_scan_id)
+            return ScheduledScan.objects.select_related('organization', 'target').get(id=scheduled_scan_id)
         except ScheduledScan.DoesNotExist:
             return None
     
@@ -67,7 +74,7 @@ class DjangoScheduledScanRepository:
         Returns:
             QuerySet
         """
-        return ScheduledScan.objects.select_related('engine', 'organization', 'target').order_by('-created_at')
+        return ScheduledScan.objects.select_related('organization', 'target').order_by('-created_at')
 
     def get_all(self, page: int = 1, page_size: int = 10) -> Tuple[List[ScheduledScan], int]:
         """
@@ -87,7 +94,7 @@ class DjangoScheduledScanRepository:
     def get_enabled(self) -> List[ScheduledScan]:
         """获取所有启用的定时扫描任务"""
         return list(
-            ScheduledScan.objects.select_related('engine', 'target')
+            ScheduledScan.objects.select_related('target')
             .filter(is_enabled=True)
             .order_by('-created_at')
         )
@@ -105,7 +112,9 @@ class DjangoScheduledScanRepository:
         with transaction.atomic():
             scheduled_scan = ScheduledScan.objects.create(
                 name=dto.name,
-                engine_id=dto.engine_id,
+                engine_ids=dto.engine_ids,
+                engine_names=dto.engine_names,
+                merged_configuration=dto.merged_configuration,
                 organization_id=dto.organization_id,  # 组织扫描模式
                 target_id=dto.target_id if not dto.organization_id else None,  # 目标扫描模式
                 cron_expression=dto.cron_expression,
@@ -134,8 +143,12 @@ class DjangoScheduledScanRepository:
                 # 更新基本字段
                 if dto.name:
                     scheduled_scan.name = dto.name
-                if dto.engine_id:
-                    scheduled_scan.engine_id = dto.engine_id
+                if dto.engine_ids is not None:
+                    scheduled_scan.engine_ids = dto.engine_ids
+                if dto.engine_names is not None:
+                    scheduled_scan.engine_names = dto.engine_names
+                if dto.merged_configuration is not None:
+                    scheduled_scan.merged_configuration = dto.merged_configuration
                 if dto.cron_expression is not None:
                     scheduled_scan.cron_expression = dto.cron_expression
                 if dto.is_enabled is not None:

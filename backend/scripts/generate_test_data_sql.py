@@ -570,6 +570,10 @@ class TestDataGenerator:
             'Authentication failed for protected resources.',
         ]
         
+        # 获取引擎名称映射
+        cur.execute("SELECT id, name FROM scan_engine WHERE id = ANY(%s)", (engine_ids,))
+        engine_name_map = {row[0]: row[1] for row in cur.fetchall()}
+        
         ids = []
         # 随机选择目标数量 - 增加到 80-120 个
         num_targets = min(random.randint(80, 120), len(target_ids))
@@ -580,7 +584,10 @@ class TestDataGenerator:
             num_scans = random.randint(3, 15)
             for _ in range(num_scans):
                 status = random.choices(statuses, weights=status_weights)[0]
-                engine_id = random.choice(engine_ids)
+                # 随机选择 1-3 个引擎
+                num_engines = random.randint(1, min(3, len(engine_ids)))
+                selected_engine_ids = random.sample(engine_ids, num_engines)
+                selected_engine_names = [engine_name_map.get(eid, f'Engine-{eid}') for eid in selected_engine_ids]
                 worker_id = random.choice(worker_ids) if worker_ids else None
                 
                 progress = random.randint(10, 95) if status == 'running' else (100 if status == 'completed' else random.randint(0, 50))
@@ -603,20 +610,20 @@ class TestDataGenerator:
                 
                 cur.execute("""
                     INSERT INTO scan (
-                        target_id, engine_id, status, worker_id, progress, current_stage,
+                        target_id, engine_ids, engine_names, merged_configuration, status, worker_id, progress, current_stage,
                         results_dir, error_message, container_ids, stage_progress,
                         cached_subdomains_count, cached_websites_count, cached_endpoints_count,
                         cached_ips_count, cached_directories_count, cached_vulns_total,
                         cached_vulns_critical, cached_vulns_high, cached_vulns_medium, cached_vulns_low,
                         created_at, stopped_at, deleted_at
                     ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                         NOW() - INTERVAL '%s days', %s, NULL
                     )
                     RETURNING id
                 """, (
-                    target_id, engine_id, status, worker_id, progress, stage,
+                    target_id, selected_engine_ids, json.dumps(selected_engine_names), '', status, worker_id, progress, stage,
                     f'/app/results/scan_{target_id}_{random.randint(1000, 9999)}', error_msg, '{}', '{}',
                     subdomains, websites, endpoints, ips, directories, vulns_total,
                     vulns_critical, vulns_high, vulns_medium, vulns_low,
@@ -673,6 +680,10 @@ class TestDataGenerator:
         num_schedules = random.randint(40, 50)
         selected = random.sample(schedule_templates, min(num_schedules, len(schedule_templates)))
         
+        # 获取引擎名称映射
+        cur.execute("SELECT id, name FROM scan_engine WHERE id = ANY(%s)", (engine_ids,))
+        engine_name_map = {row[0]: row[1] for row in cur.fetchall()}
+        
         count = 0
         for name_base, cron_template in selected:
             name = f'{name_base}-{suffix}-{count:02d}'
@@ -684,7 +695,11 @@ class TestDataGenerator:
             )
             enabled = random.random() > 0.3  # 70% 启用
             
-            engine_id = random.choice(engine_ids)
+            # 随机选择 1-3 个引擎
+            num_engines = random.randint(1, min(3, len(engine_ids)))
+            selected_engine_ids = random.sample(engine_ids, num_engines)
+            selected_engine_names = [engine_name_map.get(eid, f'Engine-{eid}') for eid in selected_engine_ids]
+            
             # 随机决定关联组织还是目标
             if org_ids and target_ids:
                 if random.random() > 0.5:
@@ -708,12 +723,12 @@ class TestDataGenerator:
             
             cur.execute("""
                 INSERT INTO scheduled_scan (
-                    name, engine_id, organization_id, target_id, cron_expression, is_enabled,
+                    name, engine_ids, engine_names, merged_configuration, organization_id, target_id, cron_expression, is_enabled,
                     run_count, last_run_time, next_run_time, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW() - INTERVAL '%s days', NOW())
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW() - INTERVAL '%s days', NOW())
                 ON CONFLICT DO NOTHING
             """, (
-                name, engine_id, org_id, target_id, cron, enabled,
+                name, selected_engine_ids, json.dumps(selected_engine_names), '', org_id, target_id, cron, enabled,
                 run_count if has_run else 0,
                 datetime.now() - timedelta(days=random.randint(0, 14), hours=random.randint(0, 23)) if has_run else None,
                 datetime.now() + timedelta(hours=random.randint(1, 336))  # 最多 2 周后

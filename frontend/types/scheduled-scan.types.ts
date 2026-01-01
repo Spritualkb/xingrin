@@ -12,8 +12,8 @@ export type ScanMode = 'organization' | 'target'
 export interface ScheduledScan {
   id: number
   name: string
-  engine: number // Associated scan engine ID
-  engineName: string // Associated scan engine name
+  engineIds: number[] // Associated scan engine ID list
+  engineNames: string[] // Associated scan engine name list
   organizationId: number | null // Organization ID (organization scan mode)
   organizationName: string | null // Organization name
   targetId: number | null // Target ID (target scan mode)
@@ -31,7 +31,7 @@ export interface ScheduledScan {
 // Create scheduled scan request (organizationId and targetId are mutually exclusive)
 export interface CreateScheduledScanRequest {
   name: string
-  engineId: number
+  engineIds: number[] // Engine ID list
   organizationId?: number // Organization scan mode
   targetId?: number // Target scan mode
   cronExpression: string // Cron expression, format: minute hour day month weekday
@@ -41,7 +41,7 @@ export interface CreateScheduledScanRequest {
 // Update scheduled scan request (organizationId and targetId are mutually exclusive)
 export interface UpdateScheduledScanRequest {
   name?: string
-  engineId?: number
+  engineIds?: number[] // Engine ID list
   organizationId?: number // Organization scan mode (clears targetId when set)
   targetId?: number // Target scan mode (clears organizationId when set)
   cronExpression?: string

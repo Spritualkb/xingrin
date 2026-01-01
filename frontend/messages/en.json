@@ -14,6 +14,7 @@
       "target": "Target",
       "summary": "Summary",
       "engineName": "Engine Name",
+      "workerName": "Worker Node",
       "progress": "Progress",
       "subdomains": "Subdomains",
       "websites": "Websites",
@@ -586,7 +587,8 @@
       "capabilities": "{count} capabilities",
       "noConfig": "No config",
       "initiating": "Initiating...",
-      "startScan": "Start Scan"
+      "startScan": "Start Scan",
+      "selectedCount": "{count} engines selected"
     },
     "cron": {
       "everyMinute": "Every minute",
@@ -713,7 +715,8 @@
         "organizationMode": "Organization Scan",
         "organizationModeHint": "In organization scan mode, all targets under this organization will be dynamically fetched at execution",
         "noAvailableTarget": "No available targets",
-        "selected": "Selected"
+        "selected": "Selected",
+        "selectedEngines": "{count} engines selected"
       },
       "presets": {
         "everyHour": "Every Hour",
@@ -1631,13 +1634,18 @@
   },
   "quickScan": {
     "title": "Quick Scan",
+    "description": "Quickly create scan tasks for multiple targets",
     "steps": {
       "enterTargets": "Enter Targets",
       "selectEngine": "Select Engine",
       "confirmScan": "Confirm Scan"
     },
+    "step1Title": "Enter Targets",
+    "step2Title": "Select Engines",
+    "step3Title": "Confirm",
+    "step1Hint": "Enter scan targets in the left input box, one per line",
     "step": "Step {current}/{total} · {title}",
-    "targetPlaceholder": "Enter one target per line, supported formats:\n\nDomain: example.com, sub.example.com\nIP Address: 192.168.1.1, 10.0.0.1\nCIDR: 192.168.0.0/24, 10.0.0.0/8\nURL: https://example.com/api/v1",
+    "targetPlaceholder": "Enter one target per line, supported formats:\n\nDomain: example.com, sub.example.com\nIP Address: 192.168.1.1, 10.0.0.1\nCIDR: 192.168.1.0/24, 10.0.0.0/8\nURL: https://example.com/api/v1",
     "supportedFormats": "Supported: Domain, IP, CIDR, URL",
     "validTargets": "{count} valid targets",
     "invalidTargets": "{count} invalid",
@@ -1648,12 +1656,20 @@
     "scanTargets": "Scan Targets",
     "totalTargets": "{count} targets total",
     "previous": "Previous",
+    "back": "Back",
     "next": "Next",
     "startScan": "Start Scan",
     "creating": "Creating...",
     "selectEngineHint": "Select an engine on the left to view configuration",
     "moreErrors": "{count} more errors...",
     "lineError": "Line {lineNumber}: {error}",
+    "loading": "Loading...",
+    "loadFailed": "Failed to load",
+    "selectedCount": "{count} selected",
+    "confirmTargets": "{count} scan targets",
+    "andMore": "{count} more...",
+    "selectedEngines": "Selected Engines",
+    "confirmSummary": "Will scan {targetCount} targets with {engineCount} engines",
     "toast": {
       "noValidTarget": "Please enter at least one valid target",
       "hasInvalidInputs": "{count} invalid inputs, please fix before continuing",
@@ -1662,7 +1678,8 @@
       "createFailed": "Failed to create scan task",
       "createSuccess": "Created {count} scan tasks",
       "createSuccessDesc": "{created} targets succeeded, {failed} failed",
-      "targetsFailed": "{count} targets failed"
+      "targetsFailed": "{count} targets failed",
+      "configConflict": "Engine configuration conflict"
     }
   },
   "notificationDrawer": {

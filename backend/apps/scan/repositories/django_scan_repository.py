@@ -16,7 +16,6 @@ from django.utils import timezone
 
 from apps.scan.models import Scan
 from apps.targets.models import Target
-from apps.engine.models import ScanEngine
 from apps.common.definitions import ScanStatus
 from apps.common.decorators import auto_ensure_db_connection
 
@@ -40,7 +39,7 @@ class DjangoScanRepository:
         
         Args:
             scan_id: 扫描任务 ID
-            prefetch_relations: 是否预加载关联对象（engine, target）
+            prefetch_relations: 是否预加载关联对象（target, worker）
                               默认 False，只在需要展示关联信息时设为 True
             for_update: 是否加锁（用于更新场景）
         
@@ -56,7 +55,7 @@ class DjangoScanRepository:
             
             # 预加载关联对象（性能优化：默认不加载）
             if prefetch_relations:
-                queryset = queryset.select_related('engine', 'target')
+                queryset = queryset.select_related('target', 'worker')
             
             return queryset.get(id=scan_id)
         except Scan.DoesNotExist:  # type: ignore  # pylint: disable=no-member
@@ -79,7 +78,7 @@ class DjangoScanRepository:
         
         Note:
             - 使用默认的阻塞模式（等待锁释放）
-            - 不包含关联对象（engine, target），如需关联对象请使用 get_by_id()
+            - 不包含关联对象（target, worker），如需关联对象请使用 get_by_id()
         """
         try:
             return Scan.objects.select_for_update().get(id=scan_id)  # type: ignore  # pylint: disable=no-member
@@ -103,7 +102,9 @@ class DjangoScanRepository:
     
     def create(self,
         target: Target,
-        engine: ScanEngine,
+        engine_ids: List[int],
+        engine_names: List[str],
+        merged_configuration: str,
         results_dir: str,
         status: ScanStatus = ScanStatus.INITIATED
     ) -> Scan:
@@ -112,7 +113,9 @@ class DjangoScanRepository:
         
         Args:
             target: 扫描目标
-            engine: 扫描引擎
+            engine_ids: 引擎 ID 列表
+            engine_names: 引擎名称列表
+            merged_configuration: 合并后的 YAML 配置
             results_dir: 结果目录
             status: 初始状态
         
@@ -121,7 +124,9 @@ class DjangoScanRepository:
         """
         scan = Scan(
             target=target,
-            engine=engine,
+            engine_ids=engine_ids,
+            engine_names=engine_names,
+            merged_configuration=merged_configuration,
             results_dir=results_dir,
             status=status,
             container_ids=[]
@@ -231,14 +236,14 @@ class DjangoScanRepository:
         获取所有扫描任务
         
         Args:
-            prefetch_relations: 是否预加载关联对象（engine, target）
+            prefetch_relations: 是否预加载关联对象（target, worker）
         
         Returns:
             Scan QuerySet
         """
         queryset = Scan.objects.all()  # type: ignore  # pylint: disable=no-member
         if prefetch_relations:
-            queryset = queryset.select_related('engine', 'target')
+            queryset = queryset.select_related('target', 'worker')
         return queryset.order_by('-created_at')
     
     

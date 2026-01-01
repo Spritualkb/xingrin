@@ -57,6 +57,7 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
       target: tColumns("scanHistory.target"),
       summary: tColumns("scanHistory.summary"),
       engineName: tColumns("scanHistory.engineName"),
+      workerName: tColumns("scanHistory.workerName"),
       createdAt: tColumns("common.createdAt"),
       status: tColumns("common.status"),
       progress: tColumns("scanHistory.progress"),
@@ -367,7 +368,7 @@ export function ScanHistoryList({ hideToolbar = false }: ScanHistoryListProps) {
               {selectedScans.map((scan) => (
                 <li key={scan.id} className="flex items-center justify-between">
                   <span className="font-medium">{scan.targetName}</span>
-                  <span className="text-muted-foreground text-xs">{scan.engineName}</span>
+                  <span className="text-muted-foreground text-xs">{scan.engineNames?.join(", ") || "-"}</span>
                 </li>
               ))}
             </ul>

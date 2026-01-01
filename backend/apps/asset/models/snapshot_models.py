@@ -27,6 +27,12 @@ class SubdomainSnapshot(models.Model):
             models.Index(fields=['scan']),
             models.Index(fields=['name']),
             models.Index(fields=['-created_at']),
+            # pg_trgm GIN 索引，支持 LIKE '%keyword%' 模糊搜索
+            GinIndex(
+                name='subdomain_snap_name_trgm',
+                fields=['name'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 唯一约束：同一次扫描中，同一个子域名只能记录一次
@@ -96,6 +102,16 @@ class WebsiteSnapshot(models.Model):
                 fields=['response_headers'],
                 opclasses=['gin_trgm_ops']
             ),
+            GinIndex(
+                name='ws_snap_url_trgm',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
+            GinIndex(
+                name='ws_snap_title_trgm',
+                fields=['title'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 唯一约束：同一次扫描中，同一个URL只能记录一次
@@ -145,6 +161,12 @@ class DirectorySnapshot(models.Model):
             models.Index(fields=['status']),  # 状态码索引，优化筛选
             models.Index(fields=['content_type']),  # content_type索引，优化内容类型搜索
             models.Index(fields=['-created_at']),
+            # pg_trgm GIN 索引，支持 LIKE '%keyword%' 模糊搜索
+            GinIndex(
+                name='dir_snap_url_trgm',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 唯一约束：同一次扫描中，同一个目录URL只能记录一次
@@ -297,6 +319,16 @@ class EndpointSnapshot(models.Model):
             GinIndex(
                 name='ep_snap_resp_hdr_trgm',
                 fields=['response_headers'],
+                opclasses=['gin_trgm_ops']
+            ),
+            GinIndex(
+                name='ep_snap_url_trgm',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
+            GinIndex(
+                name='ep_snap_title_trgm',
+                fields=['title'],
                 opclasses=['gin_trgm_ops']
             ),
         ]

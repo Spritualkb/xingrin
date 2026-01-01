@@ -20,11 +20,19 @@ class Scan(models.Model):
 
     target = models.ForeignKey('targets.Target', on_delete=models.CASCADE, related_name='scans', help_text='扫描目标')
 
-    engine = models.ForeignKey(
-        'engine.ScanEngine',
-        on_delete=models.CASCADE,
-        related_name='scans',
-        help_text='使用的扫描引擎'
+    # 多引擎支持字段
+    engine_ids = ArrayField(
+        models.IntegerField(),
+        default=list,
+        help_text='引擎 ID 列表'
+    )
+    engine_names = models.JSONField(
+        default=list,
+        help_text='引擎名称列表，如 ["引擎A", "引擎B"]'
+    )
+    merged_configuration = models.TextField(
+        default='',
+        help_text='合并后的 YAML 配置'
     )
 
     created_at = models.DateTimeField(auto_now_add=True, help_text='任务创建时间')
@@ -118,12 +126,19 @@ class ScheduledScan(models.Model):
     # 基本信息
     name = models.CharField(max_length=200, help_text='任务名称')
     
-    # 关联的扫描引擎
-    engine = models.ForeignKey(
-        'engine.ScanEngine',
-        on_delete=models.CASCADE,
-        related_name='scheduled_scans',
-        help_text='使用的扫描引擎'
+    # 多引擎支持字段
+    engine_ids = ArrayField(
+        models.IntegerField(),
+        default=list,
+        help_text='引擎 ID 列表'
+    )
+    engine_names = models.JSONField(
+        default=list,
+        help_text='引擎名称列表，如 ["引擎A", "引擎B"]'
+    )
+    merged_configuration = models.TextField(
+        default='',
+        help_text='合并后的 YAML 配置'
     )
     
     # 关联的组织（组织扫描模式：执行时动态获取组织下所有目标）

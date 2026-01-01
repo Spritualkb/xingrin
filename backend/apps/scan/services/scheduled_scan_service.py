@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 
 from apps.scan.models import ScheduledScan
 from apps.scan.repositories import DjangoScheduledScanRepository, ScheduledScanDTO
+from apps.scan.utils.config_merger import merge_engine_configs, ConfigConflictError
 from apps.engine.repositories import DjangoEngineRepository
 from apps.targets.services import TargetService
 
@@ -57,8 +58,9 @@ class ScheduledScanService:
         
         流程：
         1. 验证参数
-        2. 创建数据库记录
-        3. 计算并设置 next_run_time
+        2. 合并引擎配置
+        3. 创建数据库记录
+        4. 计算并设置 next_run_time
         
         Args:
             dto: 定时扫描 DTO
@@ -68,14 +70,30 @@ class ScheduledScanService:
         
         Raises:
             ValidationError: 参数验证失败
+            ConfigConflictError: 引擎配置冲突
         """
         # 1. 验证参数
         self._validate_create_dto(dto)
         
-        # 2. 创建数据库记录
+        # 2. 合并引擎配置
+        engines = []
+        engine_names = []
+        for engine_id in dto.engine_ids:
+            engine = self.engine_repo.get_by_id(engine_id)
+            if engine:
+                engines.append((engine.name, engine.configuration or ''))
+                engine_names.append(engine.name)
+        
+        merged_configuration = merge_engine_configs(engines)
+        
+        # 设置 DTO 的合并配置和引擎名称
+        dto.engine_names = engine_names
+        dto.merged_configuration = merged_configuration
+        
+        # 3. 创建数据库记录
         scheduled_scan = self.repo.create(dto)
         
-        # 3. 如果有 cron 表达式且已启用，计算下次执行时间
+        # 4. 如果有 cron 表达式且已启用，计算下次执行时间
         if scheduled_scan.cron_expression and scheduled_scan.is_enabled:
             next_run_time = self._calculate_next_run_time(scheduled_scan)
             if next_run_time:
@@ -96,11 +114,13 @@ class ScheduledScanService:
         if not dto.name:
             raise ValidationError('任务名称不能为空')
         
-        if not dto.engine_id:
+        if not dto.engine_ids:
             raise ValidationError('必须选择扫描引擎')
         
-        if not self.engine_repo.get_by_id(dto.engine_id):
-            raise ValidationError(f'扫描引擎 ID {dto.engine_id} 不存在')
+        # 验证所有引擎是否存在
+        for engine_id in dto.engine_ids:
+            if not self.engine_repo.get_by_id(engine_id):
+                raise ValidationError(f'扫描引擎 ID {engine_id} 不存在')
         
         # 验证扫描模式（organization_id 和 target_id 互斥）
         if not dto.organization_id and not dto.target_id:
@@ -138,10 +158,27 @@ class ScheduledScanService:
         
         Returns:
             更新后的 ScheduledScan 对象
+        
+        Raises:
+            ConfigConflictError: 引擎配置冲突
         """
         existing = self.repo.get_by_id(scheduled_scan_id)
         if not existing:
             return None
+        
+        # 如果引擎变更，重新合并配置
+        if dto.engine_ids is not None:
+            engines = []
+            engine_names = []
+            for engine_id in dto.engine_ids:
+                engine = self.engine_repo.get_by_id(engine_id)
+                if engine:
+                    engines.append((engine.name, engine.configuration or ''))
+                    engine_names.append(engine.name)
+            
+            merged_configuration = merge_engine_configs(engines)
+            dto.engine_names = engine_names
+            dto.merged_configuration = merged_configuration
         
         # 更新数据库记录
         scheduled_scan = self.repo.update(scheduled_scan_id, dto)
@@ -292,21 +329,25 @@ class ScheduledScanService:
         立即触发扫描（支持组织扫描和目标扫描两种模式）
         
         复用 ScanService 的逻辑，与 API 调用保持一致。
+        使用存储的 merged_configuration 而不是重新合并。
         """
         from apps.scan.services.scan_service import ScanService
         
         scan_service = ScanService()
         
-        # 1. 准备扫描所需数据（复用 API 的逻辑）
-        targets, engine = scan_service.prepare_initiate_scan(
+        # 1. 准备扫描所需数据（使用存储的多引擎配置）
+        targets, _, _, _ = scan_service.prepare_initiate_scan_multi_engine(
             organization_id=scheduled_scan.organization_id,
             target_id=scheduled_scan.target_id,
-            engine_id=scheduled_scan.engine_id
+            engine_ids=scheduled_scan.engine_ids
         )
         
-        # 2. 创建扫描任务，传递定时扫描名称用于通知显示
+        # 2. 创建扫描任务，使用存储的合并配置
         created_scans = scan_service.create_scans(
-            targets, engine,
+            targets=targets,
+            engine_ids=scheduled_scan.engine_ids,
+            engine_names=scheduled_scan.engine_names,
+            merged_configuration=scheduled_scan.merged_configuration,
             scheduled_scan_name=scheduled_scan.name
         )
         

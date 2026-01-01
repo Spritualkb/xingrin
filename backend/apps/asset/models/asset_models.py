@@ -35,6 +35,12 @@ class Subdomain(models.Model):
             models.Index(fields=['name', 'target']),  # 复合索引，优化 get_by_names_and_target_id 批量查询
             models.Index(fields=['target']),     # 优化从target_id快速查找下面的子域名
             models.Index(fields=['name']),            # 优化从name快速查找子域名，搜索场景
+            # pg_trgm GIN 索引，支持 LIKE '%keyword%' 模糊搜索
+            GinIndex(
+                name='subdomain_name_trgm_idx',
+                fields=['name'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 普通唯一约束：name + target 组合唯一
@@ -148,6 +154,16 @@ class Endpoint(models.Model):
                 fields=['response_headers'],
                 opclasses=['gin_trgm_ops']
             ),
+            GinIndex(
+                name='endpoint_url_trgm_idx',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
+            GinIndex(
+                name='endpoint_title_trgm_idx',
+                fields=['title'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 普通唯一约束：url + target 组合唯一
@@ -255,6 +271,16 @@ class WebSite(models.Model):
                 fields=['response_headers'],
                 opclasses=['gin_trgm_ops']
             ),
+            GinIndex(
+                name='website_url_trgm_idx',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
+            GinIndex(
+                name='website_title_trgm_idx',
+                fields=['title'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 普通唯一约束：url + target 组合唯一
@@ -331,6 +357,12 @@ class Directory(models.Model):
             models.Index(fields=['target']),     # 优化从target_id快速查找下面的目录
             models.Index(fields=['url']),        # URL索引，优化搜索和唯一约束
             models.Index(fields=['status']),     # 状态码索引，优化筛选
+            # pg_trgm GIN 索引，支持 LIKE '%keyword%' 模糊搜索
+            GinIndex(
+                name='directory_url_trgm_idx',
+                fields=['url'],
+                opclasses=['gin_trgm_ops']
+            ),
         ]
         constraints = [
             # 普通唯一约束：target + url 组合唯一

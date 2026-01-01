@@ -17,6 +17,7 @@ from ..serializers import (
 )
 from ..services.scheduled_scan_service import ScheduledScanService
 from ..repositories import ScheduledScanDTO
+from ..utils.config_merger import ConfigConflictError
 from apps.common.pagination import BasePagination
 from apps.common.response_helpers import success_response, error_response
 from apps.common.error_codes import ErrorCodes
@@ -67,7 +68,7 @@ class ScheduledScanViewSet(viewsets.ModelViewSet):
             data = serializer.validated_data
             dto = ScheduledScanDTO(
                 name=data['name'],
-                engine_id=data['engine_id'],
+                engine_ids=data['engine_ids'],
                 organization_id=data.get('organization_id'),
                 target_id=data.get('target_id'),
                 cron_expression=data.get('cron_expression', '0 2 * * *'),
@@ -80,6 +81,16 @@ class ScheduledScanViewSet(viewsets.ModelViewSet):
             return success_response(
                 data=response_serializer.data,
                 status_code=status.HTTP_201_CREATED
+            )
+        except ConfigConflictError as e:
+            return error_response(
+                code='CONFIG_CONFLICT',
+                message=str(e),
+                details=[
+                    {'key': k, 'engines': [e1, e2]} 
+                    for k, e1, e2 in e.conflicts
+                ],
+                status_code=status.HTTP_400_BAD_REQUEST
             )
         except ValidationError as e:
             return error_response(
@@ -98,7 +109,7 @@ class ScheduledScanViewSet(viewsets.ModelViewSet):
             data = serializer.validated_data
             dto = ScheduledScanDTO(
                 name=data.get('name'),
-                engine_id=data.get('engine_id'),
+                engine_ids=data.get('engine_ids'),
                 organization_id=data.get('organization_id'),
                 target_id=data.get('target_id'),
                 cron_expression=data.get('cron_expression'),
@@ -109,6 +120,16 @@ class ScheduledScanViewSet(viewsets.ModelViewSet):
             response_serializer = ScheduledScanSerializer(scheduled_scan)
             
             return success_response(data=response_serializer.data)
+        except ConfigConflictError as e:
+            return error_response(
+                code='CONFIG_CONFLICT',
+                message=str(e),
+                details=[
+                    {'key': k, 'engines': [e1, e2]} 
+                    for k, e1, e2 in e.conflicts
+                ],
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         except ValidationError as e:
             return error_response(
                 code=ErrorCodes.VALIDATION_ERROR,
