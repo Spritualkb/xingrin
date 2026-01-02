@@ -1,8 +1,7 @@
 """
-创建资产搜索物化视图和刷新状态表
+创建资产搜索 IMMV（增量维护物化视图）
 
-物化视图用于加速资产搜索，避免实时 JOIN 大表。
-刷新状态表用于控制物化视图的刷新时机（防抖机制）。
+使用 pg_ivm 扩展创建 IMMV，数据变更时自动增量更新，无需手动刷新。
 """
 
 from django.db import migrations
@@ -15,68 +14,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # 1. 创建刷新状态表
+        # 1. 确保 pg_ivm 扩展已启用
         migrations.RunSQL(
-            sql="""
-                CREATE TABLE IF NOT EXISTS asset_search_refresh_status (
-                    id SERIAL PRIMARY KEY,
-                    needs_refresh BOOLEAN DEFAULT FALSE,
-                    last_refresh_at TIMESTAMP WITH TIME ZONE,
-                    last_refresh_duration_ms INTEGER,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-                );
-                
-                -- 插入初始记录（单例模式，只有一条记录）
-                INSERT INTO asset_search_refresh_status (id, needs_refresh)
-                VALUES (1, FALSE)
-                ON CONFLICT (id) DO NOTHING;
-            """,
-            reverse_sql="""
-                DROP TABLE IF EXISTS asset_search_refresh_status;
-            """
+            sql="CREATE EXTENSION IF NOT EXISTS pg_ivm;",
+            reverse_sql="-- pg_ivm extension kept for other uses"
         ),
         
-        # 2. 创建物化视图
+        # 2. 使用 pg_ivm 创建 IMMV
         migrations.RunSQL(
             sql="""
-                CREATE MATERIALIZED VIEW asset_search_view AS
-                SELECT 
-                    w.id,
-                    w.url,
-                    w.host,
-                    w.title,
-                    w.tech,
-                    w.status_code,
-                    w.webserver,
-                    w.response_headers,
-                    w.response_body,
-                    w.content_type,
-                    w.created_at,
-                    w.target_id,
-                    COALESCE(
-                        json_agg(
-                            json_build_object(
-                                'id', v.id,
-                                'name', v.vuln_type,
-                                'vuln_type', v.vuln_type,
-                                'severity', v.severity,
-                                'url', v.url
-                            )
-                        ) FILTER (WHERE v.id IS NOT NULL),
-                        '[]'::json
-                    ) AS vulnerabilities
-                FROM website w
-                LEFT JOIN vulnerability v ON w.target_id = v.target_id
-                GROUP BY w.id, w.url, w.host, w.title, w.tech, w.status_code, 
-                         w.webserver, w.response_headers, w.response_body, 
-                         w.content_type, w.created_at, w.target_id;
+                SELECT pgivm.create_immv('asset_search_view', $$
+                    SELECT 
+                        w.id,
+                        w.url,
+                        w.host,
+                        w.title,
+                        w.tech,
+                        w.status_code,
+                        w.response_headers,
+                        w.response_body,
+                        w.created_at,
+                        w.target_id
+                    FROM website w
+                $$);
             """,
-            reverse_sql="""
-                DROP MATERIALIZED VIEW IF EXISTS asset_search_view;
-            """
+            reverse_sql="SELECT pgivm.drop_immv('asset_search_view');"
         ),
         
-        # 3. 创建唯一索引（支持 CONCURRENTLY 刷新）
+        # 3. 创建唯一索引（用于标识）
         migrations.RunSQL(
             sql="""
                 CREATE UNIQUE INDEX IF NOT EXISTS asset_search_view_id_idx 

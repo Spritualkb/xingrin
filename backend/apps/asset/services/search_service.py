@@ -282,13 +282,9 @@ class AssetSearchService:
                 title,
                 tech,
                 status_code,
-                webserver,
                 response_headers,
                 response_body,
-                content_type,
-                created_at,
-                target_id,
-                vulnerabilities
+                target_id
             FROM asset_search_view
             WHERE {where_clause}
             ORDER BY created_at DESC

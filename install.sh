@@ -272,6 +272,43 @@ get_accelerated_image() {
     echo "$image"
 }
 
+# 检测远程 PostgreSQL 是否有 pg_ivm 扩展
+check_pg_ivm() {
+    local db_host="$1"
+    local db_port="$2"
+    local db_user="$3"
+    local db_password="$4"
+    local db_name="$5"
+    
+    info "检测 pg_ivm 扩展..."
+    
+    # 尝试创建 pg_ivm 扩展
+    if docker run --rm \
+        -e PGPASSWORD="$db_password" \
+        postgres:15 \
+        psql "postgresql://$db_user@$db_host:$db_port/$db_name" \
+        -c "CREATE EXTENSION IF NOT EXISTS pg_ivm;" 2>/dev/null; then
+        success "pg_ivm 扩展已启用"
+        return 0
+    else
+        echo
+        error "pg_ivm 扩展未安装或无法启用"
+        echo
+        echo -e "${YELLOW}=========================================="
+        echo -e "pg_ivm 是必需的扩展，用于增量维护物化视图"
+        echo -e "要求: PostgreSQL 13+ 版本"
+        echo -e "==========================================${RESET}"
+        echo
+        echo -e "请在远程 PostgreSQL 服务器上执行以下命令一键安装:"
+        echo
+        echo -e "  ${BOLD}curl -sSL https://raw.githubusercontent.com/yyhuni/xingrin/main/docker/scripts/install-pg-ivm.sh | sudo bash${RESET}"
+        echo
+        echo -e "安装完成后，请重新运行 install.sh"
+        echo -e "${YELLOW}==========================================${RESET}"
+        return 1
+    fi
+}
+
 # 显示安装总结信息
 show_summary() {
     echo
@@ -552,6 +589,11 @@ if [ -f "$DOCKER_DIR/.env.example" ]; then
             psql "postgresql://$db_user@$db_host:$db_port/postgres" \
             -c "CREATE DATABASE $prefect_db;" 2>/dev/null || true
         success "数据库准备完成"
+        
+        # 检测 pg_ivm 扩展
+        if ! check_pg_ivm "$db_host" "$db_port" "$db_user" "$db_password" "$db_name"; then
+            exit 1
+        fi
         
         sed_inplace "s/^DB_HOST=.*/DB_HOST=$db_host/" "$DOCKER_DIR/.env"
         sed_inplace "s/^DB_PORT=.*/DB_PORT=$db_port/" "$DOCKER_DIR/.env"

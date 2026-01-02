@@ -26,6 +26,7 @@ import json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.request import Request
+from django.db import connection
 
 from apps.common.response_helpers import success_response, error_response
 from apps.common.error_codes import ErrorCodes
@@ -64,6 +65,117 @@ class AssetSearchView(APIView):
         super().__init__(**kwargs)
         self.service = AssetSearchService()
     
+    def _parse_headers(self, headers_data) -> dict:
+        """解析响应头为字典"""
+        if not headers_data:
+            return {}
+        try:
+            return json.loads(headers_data)
+        except (json.JSONDecodeError, TypeError):
+            result = {}
+            for line in str(headers_data).split('\n'):
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    result[key.strip()] = value.strip()
+            return result
+    
+    def _format_result(self, result: dict, vulnerabilities_by_url: dict) -> dict:
+        """格式化单个搜索结果"""
+        website_url = result.get('url', '')
+        vulns = vulnerabilities_by_url.get(website_url, [])
+        
+        return {
+            'url': website_url,
+            'host': result.get('host', ''),
+            'title': result.get('title', ''),
+            'technologies': result.get('tech', []) or [],
+            'statusCode': result.get('status_code'),
+            'responseHeaders': self._parse_headers(result.get('response_headers')),
+            'responseBody': result.get('response_body', ''),
+            'vulnerabilities': [
+                {
+                    'id': v.get('id'),
+                    'name': v.get('vuln_type', ''),
+                    'vulnType': v.get('vuln_type', ''),
+                    'severity': v.get('severity', 'info'),
+                }
+                for v in vulns
+            ],
+        }
+    
+    def _get_vulnerabilities_by_url_prefix(self, website_urls: list) -> dict:
+        """
+        根据 URL 前缀批量查询漏洞数据
+        
+        漏洞 URL 是 website URL 的子路径，使用前缀匹配：
+        - website.url: https://example.com
+        - vulnerability.url: https://example.com/api/users?id=1
+        
+        Args:
+            website_urls: website URL 列表，格式为 [(url, target_id), ...]
+        
+        Returns:
+            dict: {website_url: [vulnerability_list]}
+        """
+        if not website_urls:
+            return {}
+        
+        try:
+            with connection.cursor() as cursor:
+                # 构建 OR 条件：每个 website URL 作为前缀匹配
+                # 同时限制 target_id 以提高性能
+                conditions = []
+                params = []
+                for url, target_id in website_urls:
+                    conditions.append("(v.url LIKE %s AND v.target_id = %s)")
+                    params.extend([url + '%', target_id])
+                
+                if not conditions:
+                    return {}
+                
+                where_clause = " OR ".join(conditions)
+                
+                cursor.execute(f"""
+                    SELECT v.id, v.vuln_type, v.severity, v.url, v.target_id
+                    FROM vulnerability v
+                    WHERE {where_clause}
+                    ORDER BY 
+                        CASE v.severity 
+                            WHEN 'critical' THEN 1 
+                            WHEN 'high' THEN 2 
+                            WHEN 'medium' THEN 3 
+                            WHEN 'low' THEN 4 
+                            ELSE 5 
+                        END
+                """, params)
+                
+                # 获取所有漏洞
+                all_vulns = []
+                for row in cursor.fetchall():
+                    all_vulns.append({
+                        'id': row[0],
+                        'vuln_type': row[1],
+                        'name': row[1],
+                        'severity': row[2],
+                        'url': row[3],
+                        'target_id': row[4],
+                    })
+                
+                # 按 website URL 前缀分组
+                result = {url: [] for url, _ in website_urls}
+                for vuln in all_vulns:
+                    vuln_url = vuln['url']
+                    # 找到匹配的 website URL（最长前缀匹配）
+                    for website_url, target_id in website_urls:
+                        if vuln_url.startswith(website_url) and vuln['target_id'] == target_id:
+                            result[website_url].append(vuln)
+                            break
+                
+                return result
+        except Exception as e:
+            logger.error(f"批量查询漏洞失败: {e}")
+            return {}
+    
     def get(self, request: Request):
         """搜索资产"""
         # 获取搜索查询
@@ -88,77 +200,25 @@ class AssetSearchView(APIView):
         page = max(1, page)
         page_size = min(max(1, page_size), 100)
         
-        try:
-            # 获取总数
-            total = self.service.count(query)
-            
-            # 计算分页
-            total_pages = (total + page_size - 1) // page_size if total > 0 else 1
-            offset = (page - 1) * page_size
-            
-            # 获取搜索结果
-            all_results = self.service.search(query)
-            
-            # 手动分页
-            results = all_results[offset:offset + page_size]
-            
-            # 格式化结果
-            formatted_results = []
-            for result in results:
-                # 解析响应头为字典
-                response_headers = {}
-                if result.get('response_headers'):
-                    try:
-                        response_headers = json.loads(result['response_headers'])
-                    except (json.JSONDecodeError, TypeError):
-                        headers_str = result['response_headers']
-                        for line in headers_str.split('\n'):
-                            if ':' in line:
-                                key, value = line.split(':', 1)
-                                response_headers[key.strip()] = value.strip()
-                
-                # 解析漏洞列表
-                vulnerabilities = result.get('vulnerabilities', [])
-                if isinstance(vulnerabilities, str):
-                    try:
-                        vulnerabilities = json.loads(vulnerabilities)
-                    except (json.JSONDecodeError, TypeError):
-                        vulnerabilities = []
-                
-                # 格式化漏洞数据
-                formatted_vulns = []
-                for v in (vulnerabilities or []):
-                    formatted_vulns.append({
-                        'id': v.get('id'),
-                        'name': v.get('name', v.get('vuln_type', '')),
-                        'vulnType': v.get('vuln_type', ''),
-                        'severity': v.get('severity', 'info'),
-                        'url': v.get('url', ''),
-                    })
-                
-                formatted_results.append({
-                    'url': result.get('url', ''),
-                    'host': result.get('host', ''),
-                    'title': result.get('title', ''),
-                    'technologies': result.get('tech', []) or [],
-                    'statusCode': result.get('status_code'),
-                    'responseHeaders': response_headers,
-                    'responseBody': result.get('response_body', ''),
-                    'vulnerabilities': formatted_vulns,
-                })
-            
-            return success_response(data={
-                'results': formatted_results,
-                'total': total,
-                'page': page,
-                'pageSize': page_size,
-                'totalPages': total_pages,
-            })
-            
-        except Exception as e:
-            logger.exception("搜索失败")
-            return error_response(
-                code=ErrorCodes.SERVER_ERROR,
-                message=f'Search failed: {str(e)}',
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # 获取总数和搜索结果
+        total = self.service.count(query)
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        offset = (page - 1) * page_size
+        
+        all_results = self.service.search(query)
+        results = all_results[offset:offset + page_size]
+        
+        # 批量查询漏洞数据（按 URL 前缀匹配）
+        website_urls = [(r.get('url'), r.get('target_id')) for r in results if r.get('url') and r.get('target_id')]
+        vulnerabilities_by_url = self._get_vulnerabilities_by_url_prefix(website_urls) if website_urls else {}
+        
+        # 格式化结果
+        formatted_results = [self._format_result(r, vulnerabilities_by_url) for r in results]
+        
+        return success_response(data={
+            'results': formatted_results,
+            'total': total,
+            'page': page,
+            'pageSize': page_size,
+            'totalPages': total_pages,
+        })
