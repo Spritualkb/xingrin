@@ -35,6 +35,7 @@ from rest_framework.views import APIView
 from rest_framework.request import Request
 from django.http import StreamingHttpResponse
 from django.db import connection, transaction
+from django.utils.decorators import method_decorator
 
 from apps.common.response_helpers import success_response, error_response
 from apps.common.error_codes import ErrorCodes
@@ -315,7 +316,7 @@ class AssetSearchExportView(APIView):
         
         return headers, formatters
     
-    @transaction.non_atomic_requests
+    @method_decorator(transaction.non_atomic_requests)
     def get(self, request: Request):
         """导出搜索结果为 CSV（流式导出，无数量限制）"""
         from apps.common.utils import generate_csv_rows
